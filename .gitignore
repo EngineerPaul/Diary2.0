@@ -5,3 +5,4 @@ django_cache/
 db.sqlite3
 media/
 venv/
+_redis_data/
