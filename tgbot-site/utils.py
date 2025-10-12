@@ -1,9 +1,15 @@
+import socket
+import time
+from typing import Dict
+
 from datetime import datetime, timedelta
 from config import MAX_YEAR
 
 
-def get_date(str_date):
-    # format ДД.ММ.ГГГГ ЧЧ:ММ
+def get_date(str_date: str) -> Dict:
+    """ Check a date format. Format must be like ДД.ММ.ГГГГ ЧЧ:ММ.
+    (like '30.01.2001 10.00') """
+
     # str_date = '30.01.2001 10.00'
     if len(str_date) != 16:
         return {
@@ -41,8 +47,27 @@ def get_date(str_date):
         }
 
 
-def get_now_format():
+def get_now_format() -> str:
+    """ Get now date like 'ДД.ММ.ГГГГ ЧЧ:ММ' format """
+
     now = datetime.now()
     now = (f'{now.day:0>{2}}.{now.month:0>{2}}.{now.year} '
            f'{now.hour:0>{2}}.{now.minute:0>{2}}')
     return now
+
+
+def check_connection(tries: int = 5):
+    """ Checking internet connection.
+    The docker container establishes a connection with a delay. """
+
+    for _ in range(tries):
+        try:
+            sock = socket.create_connection(("www.google.com", 80))
+            print('Internet connection established successfully')
+            print(f'Socket: {sock}')
+            break
+        except BaseException:
+            print('Error: connection not established. Try again in 3s')
+            time.sleep(3)
+        else:
+            sock.close()
