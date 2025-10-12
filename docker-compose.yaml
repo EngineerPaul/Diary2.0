@@ -18,10 +18,12 @@ services:							# словарь всех контенеров
       - ./tgserver/.env					# расположение файла
     depends_on:
       - redis
+      - celery_worker
+      - celery_beat
 
   redis:
     image: redis:8.2.2-alpine
-    container_name: redis_container
+    container_name: tgserver_redis
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_USER=${REDIS_USER}
@@ -44,15 +46,36 @@ services:							# словарь всех контенеров
         echo "appendonly yes" >> /usr/local/etc/redis/redis.conf &&
         echo "appendfsync everysec" >> /usr/local/etc/redis/redis.conf &&
         echo "user default on nopass ~* +@all" > /usr/local/etc/redis/users.acl &&
-        echo "user $REDIS_USER on >$REDIS_USER_PASSWORD ~* +@all" >> /usr/local/etc/redis/users.acl &&
+        echo "user $REDIS_USER on >$REDIS_USER_PASSWORD ~* &* +@all" >> /usr/local/etc/redis/users.acl &&
         redis-server /usr/local/etc/redis/redis.conf --aclfile /usr/local/etc/redis/users.acl
       '
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping"]
-      interval: 30s
+      interval: 300s
       timeout: 10s
       retries: 5
     restart: unless-stopped
     tty: true
     stdin_open: true
 
+  celery_worker:
+    container_name: tgserver_celery_worker
+    build:
+      context: ./tgserver
+      dockerfile: dockerfile
+    command: ["celery", '-A', 'celery_client', 'worker']
+    env_file:
+      - ./tgserver/.env
+    depends_on:
+      - redis
+
+  celery_beat:
+    container_name: tgserver_celery_beat
+    build:
+      context: ./tgserver
+      dockerfile: dockerfile
+    command: ["celery", '-A', 'celery_client', 'beat']
+    env_file:
+      - ./tgserver/.env
+    depends_on:
+      - redis

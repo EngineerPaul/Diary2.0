@@ -4,6 +4,8 @@ from datetime import datetime
 
 
 class ReminderCreater(BaseModel):
+    """ Schema for creating new reminder using the TG Bot """
+
     nickname: str = Field(max_length=33, min_length=6)
     title: str = Field(max_length=1000)
     mode: Literal['hour', 'day']

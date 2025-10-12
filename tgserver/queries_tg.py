@@ -7,10 +7,10 @@ BOT = TeleBot(TG_TOKEN)
 
 
 async def send_msg_bot(chat_id, text, user_id, reminder_id):
+    """ Send message in the TG chat """
     # @router.post("/test-send")
 
     user_id = user_id
-
     markup = get_markup(
         user_id=user_id,
         reminder_id=reminder_id

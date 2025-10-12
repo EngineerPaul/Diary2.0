@@ -9,4 +9,11 @@ RUN pip install --upgrade pip
 COPY ./requirements.txt .
 RUN pip install -r requirements.txt
 
+RUN addgroup -S app_user_group && adduser -S app_user -G app_user_group
+RUN mkdir beatdata
+# про beatdata смотреть в help.txt
+RUN chown -R app_user:app_user_group beatdata
+
+USER app_user
+
 COPY . .

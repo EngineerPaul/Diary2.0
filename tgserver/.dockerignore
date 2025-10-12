@@ -2,3 +2,5 @@
 /__pycache__
 .env
 /venv
+req_freeze.txt
+help.txt

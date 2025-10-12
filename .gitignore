@@ -6,3 +6,5 @@ db.sqlite3
 media/
 venv/
 _redis_data/
+req_freeze.txt
+.env

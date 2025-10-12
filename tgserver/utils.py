@@ -2,6 +2,8 @@ from telebot import types
 
 
 def get_markup(user_id, reminder_id):
+    """ Creating repeat bunntons for TG msg """
+
     markup = types.InlineKeyboardMarkup()
 
     data = f'rep_hour,{reminder_id},{user_id}'

@@ -15,23 +15,29 @@ redis_client = redis.Redis(
 
 
 def redis_set(key, var):
+    """ Saving variable in the redis """
+
     json_var = json.dumps(var)
     if (not json_var):
         return "The variable isn't serialized to JSON"
-    if type(key) != str:
+    if type(key) is not str:
         return "The key must be of str type"
     redis_client.set(key, json_var)
     return True
 
 
 def redis_get(key):
+    """ Getting variable from the redis """
+
     var = redis_client.get(key)
-    if var == None:
+    if var is None:
         return f"The {key} key doens't exist"
     var = json.loads(var)
     return var
 
 
 def redis_del(key):
+    """ Removing variable from the redis """
+
     response = redis_client.delete(key)
     return response
