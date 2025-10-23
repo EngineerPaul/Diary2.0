@@ -1296,3 +1296,70 @@ let mobileSettings = {
     }
 }
 mobileSettings.run()
+
+const settingsGear = {
+    ddArea: document.getElementById('objectsList'),
+    gearMenu: document.getElementById('gearContextMenu'),
+    elId: null,
+    elType: null,
+    offTimer: null,
+    timerValue: 5000,  // time of disappearance, ms
+
+    displayGearMenu: function(event) {
+        let gear = event.target.closest('.content-svg')
+        if (!(gear)) return
+        
+        event.preventDefault()
+        let elemObj = gear.closest('.dd-object')
+
+        this.gearMenu.style.display = 'block'
+        this.gearMenu.style.left = event.pageX + 'px'
+        this.gearMenu.style.top = event.pageY + 'px'
+        
+        this.elId = elemObj.id
+        this.elType = elemObj.classList.contains('folder')?'folder':'record'
+
+        clearTimeout(this.offTimer)
+        this.offTimer = setTimeout(this.hideGearMenu.bind(this), this.timerValue)
+    },
+    hideGearMenu: function(event) {
+        if (event) {
+            let menu = event.target.closest('.gear-context-menu')
+            if (menu) return
+        }
+        
+        this.gearMenu.style.display = ''
+        this.elId = null
+        this.elType = null
+    },
+    renameEvent: function(event) {
+        
+        console.log(`Переименовать объект ${this.elType} id=${this.elId}`)
+        this.hideGearMenu()
+    },
+    paintEvent: function(event) {
+        
+        console.log(`Перекрасить объект ${this.elType} id=${this.elId}`)
+        this.hideGearMenu()
+    },
+    delEvent: function(event) {
+        
+        console.log(`Удалить объект ${this.elType} id=${this.elId}`)
+        this.hideGearMenu()
+    },
+    run: function() {
+        this.ddArea.addEventListener('click', this.displayGearMenu.bind(this))
+        this.ddArea.addEventListener('contextmenu', this.displayGearMenu.bind(this))
+
+        const gearRename = document.getElementById('gearRename')
+        const gearPaint = document.getElementById('gearPaint')
+        const gearDel = document.getElementById('gearDel')
+        gearRename.addEventListener('click', this.renameEvent.bind(this))
+        gearPaint.addEventListener('click', this.paintEvent.bind(this))
+        gearDel.addEventListener('click', this.delEvent.bind(this))
+
+        document.addEventListener('pointerdown', this.hideGearMenu.bind(this))
+        document.addEventListener('keydown', this.hideGearMenu.bind(this))
+    }
+}
+settingsGear.run()

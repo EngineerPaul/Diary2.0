@@ -187,3 +187,48 @@ label.switch {
         color: #e93c3c;
     }
 }
+
+.gear-context-menu {
+    position: absolute;
+    display: none;
+    /* font-family: 'Montserrat', sans-serif; */
+
+    .menu {
+        
+        display: flex;
+        flex-direction: column;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 10px 20px rgb(64 64 64 / 20%);
+        padding: 10px 0;
+        list-style: none;
+        margin: 0;
+
+        li {
+            position: relative;
+            display: flex;
+            width: 100%;
+            align-items: center;
+            padding: 10px 30px 10px 15px;
+            color: #000;
+            font-weight: 500;
+            transition: 0.2s linear;
+
+            &:hover {
+                background:#e2e3e7;
+                color: #4b00ff;
+            }
+            i {
+                padding-right: 5px;
+            }
+            &.trash {
+                color: rgb(253, 44, 44);
+
+                &:hover {
+                    background:#fc572e;
+                    color: white;
+                }
+            }
+        }
+    }
+}
