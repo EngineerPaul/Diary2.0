@@ -1,0 +1,4 @@
+Django==5.2.7
+djangorestframework==3.16.1
+dotenv==1.1.1
+whitenoise==6.11.0

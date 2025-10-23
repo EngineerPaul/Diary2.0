@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    .marker {
+        margin-right: 3px;
+    }
+    .datetime {
+        display: inline-block;
+
+        p {
+            display: inline-block;
+        }
+    }
+    .coll2 span {
+        white-space: pre-wrap;
+    }
+</style>
+
+<div class="content">
+<div class="content-notes">
+    <div class="management-bar">
+        <div class="management-bar-left">
+            <div class="btn-default" id="modalCreateBtn" data-modal="modalCreater">
+                Создать
+            </div>
+            <div class="btn-default" id="modalCreateFBtn" data-modal="modalFCreater">
+                Создать папку
+            </div>
+        </div>
+        <div class="search-block">
+            <div class="search-bar">
+                <input id="searchQueryInput" type="text" name="searchQueryInput" placeholder="Поиск" value="" />
+                <button id="searchQuerySubmit" type="submit" name="searchQuerySubmit">
+                    <svg viewBox="0 0 24 24">
+                        <path fill="#666666" d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" />
+                    </svg>
+                </button>
+            </div>
+            <div id="searchDropdown" class="dropdown-content">
+                <!-- генерация контента через скрипт -->
+            </div>
+        </div>
+        <div class="management-bar-right">
+            <div class="btn-default" id="modalSortBtn" data-modal="modalSorter">
+                Сортировка
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div class="content-window">
+        <div class="folder-path" id="path">
+        </div>
+        <div class="dd-area" id="objectsList">
+            <!-- генерация контента через скрипт -->
+        </div>
+    </div>
+</div>
+<div class="modal-block modal-content" id="modalBlock">
+    <div class="global-shadow" id="globalShadow">
+        <div class="modal-cart modal-createN" id="modalCreater">
+            <div class="modal-cart-header">
+                <div class="modal-title">
+                    <p>Создание заметки</p>
+                </div>
+                <div class="modal-header-right">
+                    <div class="modal-cross" id="modalCross">
+                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512.021 512.021" xml:space="preserve">
+                            <path d="M301.258,256.01L502.645,54.645c12.501-12.501,12.501-32.769,0-45.269c-12.501-12.501-32.769-12.501-45.269,0l0,0   L256.01,210.762L54.645,9.376c-12.501-12.501-32.769-12.501-45.269,0s-12.501,32.769,0,45.269L210.762,256.01L9.376,457.376   c-12.501,12.501-12.501,32.769,0,45.269s32.769,12.501,45.269,0L256.01,301.258l201.365,201.387   c12.501,12.501,32.769,12.501,45.269,0c12.501-12.501,12.501-32.769,0-45.269L301.258,256.01z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="modal-cart-content modal-create">
+                <form action="create_note_api" autocomplete="off">
+                    {% csrf_token %}
+                    <label for="fNoteName">
+                        Название:
+                        <input class="modal-input" type="text" id="fNoteName" name="fNoteName" required>
+                        <div class="error">Invalid value.</div>
+                    </label>
+                    <label for="fNoteContent">
+                        Содержание:
+                        <textarea class="modal-input" name="fNoteContent" id="fNoteContent" required rows="3"></textarea>
+                        <div class="error">Invalid value.</div>
+                    </label>
+                    Маркер:<br>
+                    <div class="form-marker">
+                        <label>
+                            <input type="radio" name="marker" checked>
+                            <div class="marker" data-color="none" ></div>
+                        </label>
+                        <label>
+                            <input type="radio" name="marker">
+                            <div class="marker" data-color="green"></div>
+                        </label>
+                        <label>
+                            <input type="radio" name="marker">
+                            <div class="marker" data-color="yellow"></div>
+                        </label>
+                        <label>
+                            <input type="radio" name="marker">
+                            <div class="marker" data-color="red"></div>
+                        </label>
+                    </div>
+                    <button class="submitButton btn-default" type="button">Создать</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal-cart modal-createF" id="modalFCreater">
+            <div class="modal-cart-header">
+                <div class="modal-title">
+                    <p>Создание папки</p>
+                </div>
+                <div class="modal-header-right">
+                    <div class="modal-cross" id="modalCross">
+                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512.021 512.021" xml:space="preserve">
+                            <path d="M301.258,256.01L502.645,54.645c12.501-12.501,12.501-32.769,0-45.269c-12.501-12.501-32.769-12.501-45.269,0l0,0   L256.01,210.762L54.645,9.376c-12.501-12.501-32.769-12.501-45.269,0s-12.501,32.769,0,45.269L210.762,256.01L9.376,457.376   c-12.501,12.501-12.501,32.769,0,45.269s32.769,12.501,45.269,0L256.01,301.258l201.365,201.387   c12.501,12.501,32.769,12.501,45.269,0c12.501-12.501,12.501-32.769,0-45.269L301.258,256.01z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="modal-cart-content">
+                <form action="create_note_api" method="POST" autocomplete="off">
+                    {% csrf_token %}
+                    <label for="fFolderName">
+                        Название папки:
+                        <input class="modal-input" type="text" id="fFolderName" name="fFolderName" required>
+                    </label>
+                    Маркер:<br>
+                    <div class="form-marker">
+                        <label>
+                            <input type="radio" name="marker" checked>
+                            <div class="marker" data-color="none" ></div>
+                        </label>
+                        <label>
+                            <input type="radio" name="marker">
+                            <div class="marker" data-color="green"></div>
+                        </label>
+                        <label>
+                            <input type="radio" name="marker">
+                            <div class="marker" data-color="yellow"></div>
+                        </label>
+                        <label>
+                            <input type="radio" name="marker">
+                            <div class="marker" data-color="red"></div>
+                        </label>
+                    </div>
+                    <button class="submitButton btn-default" type="button">Создать</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal-cart modal-sort" id="modalSorter">
+            <div class="modal-cart-header">
+                <div class="modal-title">
+                    <p>Сортировка</p>
+                </div>
+                <div class="modal-header-right">
+                    <div class="modal-cross" id="modalCross">
+                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512.021 512.021" xml:space="preserve">
+                            <path d="M301.258,256.01L502.645,54.645c12.501-12.501,12.501-32.769,0-45.269c-12.501-12.501-32.769-12.501-45.269,0l0,0   L256.01,210.762L54.645,9.376c-12.501-12.501-32.769-12.501-45.269,0s-12.501,32.769,0,45.269L210.762,256.01L9.376,457.376   c-12.501,12.501-12.501,32.769,0,45.269s32.769,12.501,45.269,0L256.01,301.258l201.365,201.387   c12.501,12.501,32.769,12.501,45.269,0c12.501-12.501,12.501-32.769,0-45.269L301.258,256.01z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="modal-cart-content">
+                <form class="form-sort" action="">
+                    <label for="sortCustom">
+                        <input type="radio" id="sortCustom" name="sortModal" checked>
+                        Пользовательская
+                    </label>
+                    <label for="sortByCreatedDate">
+                        <input type="radio" id="sortByCreatedDate" name="sortModal">
+                        По дате создания
+                    </label>
+                    <label for="sortByUpdatedDate">
+                        <input type="radio" id="sortByUpdatedDate" name="sortModal">
+                        По дате изменения
+                    </label>
+                    <label for="sortByAlphabet">
+                        <input type="radio" id="sortByAlphabet" name="sortModal">
+                        По алфавиту
+                    </label>
+                    <label for="sortSave">
+                        <input type="checkbox" id="sortSave" name="sortSave">
+                        Cохранить как пользовательскую
+                    </label>
+                    <button class="submitButton btn-default" type="button">Применить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+
+
+
+<script src="{% static 'js/content.js' %}"></script>
+
+{% endblock content %}

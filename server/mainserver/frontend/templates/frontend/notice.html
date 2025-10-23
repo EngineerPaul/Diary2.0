@@ -1,0 +1,1070 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="notice-content">
+<div class="title">
+    <p class="blockName">Theme: </p>
+    <div class="theme">
+        <input type="text" placeholder="Название темы">
+    </div>
+    <svg class="cross" viewBox="0 0 512.021 512.021">
+        <path d="M301.258,256.01L502.645,54.645c12.501-12.501,12.501-32.769,0-45.269c-12.501-12.501-32.769-12.501-45.269,0l0,0   L256.01,210.762L54.645,9.376c-12.501-12.501-32.769-12.501-45.269,0s-12.501,32.769,0,45.269L210.762,256.01L9.376,457.376   c-12.501,12.501-12.501,32.769,0,45.269s32.769,12.501,45.269,0L256.01,301.258l201.365,201.387   c12.501,12.501,32.769,12.501,45.269,0c12.501-12.501,12.501-32.769,0-45.269L301.258,256.01z"></path>
+    </svg>
+</div>
+
+<div class="date-field">
+    Выбор даты срабатывания
+    <div class="newDateBtnList" id="newDateBtnList"></div>
+    <button class="btn-default" id="addDateBtn">Добавить дату</button>
+</div>
+
+<div class="content" id="content">
+
+    #content
+
+</div>
+<div class="creation-area">
+    <div class="creation-area-block">
+        <button class="create-button">Добавить заметку</button>
+        <button class="create-button">Добавить картинки</button>
+    </div>
+</div>
+</div>
+
+<script>
+let dates = {
+    newDateBtnList: null,
+    errors: [],
+
+    // btns navigation
+    openDateCreation: function(event) { // display buttons for choice date creation type
+        if (this.newDateBtnList.innerHTML !== '') {
+            newDateBtnList.innerHTML = ''
+            newDateBtnList.style.height = 0 + "px"
+            return
+        }
+
+        let field1 = this.createElement(
+            tag = 'div',
+            classList = ['newDateBtnField'],
+            parent = this.newDateBtnList,
+            params = {},
+        )
+        let field2 = this.createElement(
+            tag = 'div',
+            classList = ['newDateBtnField'],
+            parent = this.newDateBtnList,
+            params = {},
+        )
+        let OneDayBtn = this.createElement(
+            tag = 'button',
+            classList = ['btn-default', 'newDateBtn'],
+            parent = field1,
+            params = {textContent: 'Одиночная'},
+        )
+        let periodicBtn = this.createElement(
+            tag = 'button',
+            classList = ['btn-default', 'newDateBtn'],
+            parent = field2,
+            params = {textContent: 'Периодическая'},
+        )
+        
+        this.newDateBtnList.style.height = this.newDateBtnList.scrollHeight + "px"
+        
+        OneDayBtn.addEventListener('click', this.viewOneDayField.bind(this))
+        periodicBtn.addEventListener('click', this.openDateCreation2.bind(this))
+    },
+    openDateCreation2: function(event) { // display buttons for choice date creation type of every month date
+        this.newDateBtnList.innerHTML = ''
+
+        let field2 = this.createElement(
+            tag = 'div',
+            classList = ['newDateBtnField'],
+            parent = this.newDateBtnList,
+            params = {},
+        )
+        let field3 = this.createElement(
+            tag = 'div',
+            classList = ['newDateBtnField'],
+            parent = this.newDateBtnList,
+            params = {},
+        )
+        let field4 = this.createElement(
+            tag = 'div',
+            classList = ['newDateBtnField'],
+            parent = this.newDateBtnList,
+            params = {},
+        )
+        let field5 = this.createElement(
+            tag = 'div',
+            classList = ['newDateBtnField'],
+            parent = this.newDateBtnList,
+            params = {},
+        )
+        
+        let everyDayBtn = this.createElement(
+            tag = 'button',
+            classList = ['btn-default'],
+            parent = field2,
+            params = {textContent: 'Ежедневная дата'},
+        )
+        let everyWeekBtn = this.createElement(
+            tag = 'button',
+            classList = ['btn-default'],
+            parent = field3,
+            params = {textContent: 'Еженедельная дата'},
+        )
+        let everyMonthBtn = this.createElement(
+            tag = 'button',
+            classList = ['btn-default'],
+            parent = field4,
+            params = {textContent: 'Ежемесячная дата'},
+        )
+        let everyYearBtn = this.createElement(
+            tag = 'button',
+            classList = ['btn-default'],
+            parent = field5,
+            params = {textContent: 'Ежегодная дата'},
+        )
+        this.newDateBtnList.style.height = this.newDateBtnList.scrollHeight + "px"
+
+        everyDayBtn.addEventListener('click', this.viewEveryDayField.bind(this))
+        everyWeekBtn.addEventListener('click', this.viewEveryWeekField.bind(this))
+        everyMonthBtn.addEventListener('click', this.viewEveryMonthField.bind(this))
+        everyYearBtn.addEventListener('click', this.viewEveryYearField.bind(this))
+        
+    },
+    
+    // forms views
+    viewOneDayField: function() { // display one day form
+        this.newDateBtnList.innerHTML = ''
+        let dateForm = this.createElement(
+            tag = 'form',
+            classList = ['dateForm',],
+            parent = this.newDateBtnList,
+            params = {id: 'dateForm'},
+        )
+        
+        let dateRow = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = dateForm,
+            params = {},
+        )
+        let timeRow = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = dateForm,
+            params = {},
+        )
+        let error = this.createElement(
+            tag = 'div',
+            classList = ['dateError',],
+            parent = dateForm,
+            params = {id: 'errorsField'},
+        )
+        let submitBtn = this.createElement(
+            tag = 'button',
+            classList = ['btn-default'],
+            parent = dateForm,
+            params = {type: "submit", textContent: 'Применить'},
+        )
+
+        let dateLabel = this.createElement(
+            tag = 'div',
+            classList = ['dateFormLabel'],
+            parent = dateRow,
+            params = {textContent: 'Дата:'},
+        )
+        let date = this.createElement(
+            tag = 'input',
+            classList = ['dateFormInput', 'form-control'],
+            parent = dateRow,
+            params = {id: 'date', name: 'date', type: 'text', placeholder: 'дд.мм.гггг'},
+        )
+        this.createAirDatePicker(date)
+        
+        let timeLabel = this.createElement(
+            tag = 'div',
+            classList = ['dateFormLabel'],
+            parent = timeRow,
+            params = {textContent: 'Время:'},
+        )
+        let time = this.createElement(
+            tag = 'input',
+            classList = ['dateFormInput', 'form-control'],
+            parent = timeRow,
+            params = {type: "text", id: 'time', name: 'time', placeholder: '00:00'},
+        )
+
+        this.newDateBtnList.style.height = dateForm.scrollHeight + "px"
+
+        time.addEventListener('input', this.timeInAutoFill.bind(this))
+        time.addEventListener('paste', (e) => e.preventDefault())
+        time.addEventListener('keydown', this.timeInput.bind(this))
+        submitBtn.addEventListener('click', this.OneDaySubmit.bind(this))
+    },
+    viewEveryDayField: function() { // display every day form
+        this.newDateBtnList.innerHTML = ''
+        let dateForm = this.createElement(
+            tag = 'form',
+            classList = ['dateForm',],
+            parent = this.newDateBtnList,
+            params = {id: 'dateForm'},
+        )
+
+        let periodicRow = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = dateForm,
+            params = {},
+        )
+        let timeRow = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = dateForm,
+            params = {},
+        )
+        let error = this.createElement(
+            tag = 'div',
+            classList = ['dateError',],
+            parent = dateForm,
+            params = {id: 'errorsField'},
+        )
+        let submitBtn = this.createElement(
+            tag = 'button',
+            classList = ['btn-default'],
+            parent = dateForm,
+            params = {type: "submit", textContent: 'Применить'},
+        )
+
+        let periodicLabel = this.createElement(
+            tag = 'div',
+            classList = ['dateFormLabel'],
+            parent = periodicRow,
+            params = {textContent: 'Периодичность:'},
+        )
+        let periodic = this.createElement(
+            tag = 'input',
+            classList = ['dateFormInput', 'form-control'],
+            parent = periodicRow,
+            params = {type: "text", id: 'periodic', name: 'periodic'},
+        )
+        let periodicSpan = this.createElement(
+            tag = 'span',
+            classList = [],
+            parent = periodicRow,
+            params = {textContent: 'дней', style: 'align-content: center;'},
+        )
+        
+        let timeLabel = this.createElement(
+            tag = 'div',
+            classList = ['dateFormLabel'],
+            parent = timeRow,
+            params = {textContent: 'Время:'},
+        )
+        let time = this.createElement(
+            tag = 'input',
+            classList = ['dateFormInput', 'form-control'],
+            parent = timeRow,
+            params = {type: "text", id: 'time', name: 'time', placeholder: '00:00'},
+        )
+        
+        this.newDateBtnList.style.height = dateForm.scrollHeight + "px"
+        // let h = 0
+        // for (let child of this.newDateBtnList.children) {
+        //     h += child.offsetHeight
+        // }
+        // this.newDateBtnList.style.height = h + "px"
+
+        periodic.addEventListener('keydown', this.numInput.bind(this))
+        time.addEventListener('input', this.timeInAutoFill.bind(this))
+        time.addEventListener('paste', (e) => e.preventDefault())
+        time.addEventListener('keydown', this.timeInput.bind(this))
+        submitBtn.addEventListener('click', this.EveryDaySubmit.bind(this))
+    },
+    viewEveryWeekField: function() { // display every week form
+        this.newDateBtnList.innerHTML = ''
+        let dateForm = this.createElement(
+            tag = 'form',
+            classList = ['dateForm',],
+            parent = this.newDateBtnList,
+            params = {id: 'dateForm'},
+        )
+
+        let dateRow = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = dateForm,
+            params = {},
+        )
+        let periodicRow = this.createElement(
+            tag = 'div',
+            classList = [],
+            parent = dateForm,
+            params = {},
+        )
+        let timeRow = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = dateForm,
+            params = {},
+        )
+        let error = this.createElement(
+            tag = 'div',
+            classList = ['dateError',],
+            parent = dateForm,
+            params = {id: 'errorsField'},
+        )
+        let submitBtn = this.createElement(
+            tag = 'button',
+            classList = ['btn-default'],
+            parent = dateForm,
+            params = {type: "submit", textContent: 'Применить'},
+        )
+
+        // week day
+        let weekDayLabel = this.createElement(
+            tag = 'div',
+            classList = ['dateFormLabel'],
+            parent = dateRow,
+            params = {textContent: 'День недели:'},
+        )
+        let weekDay = this.createElement(
+            tag = 'select',
+            classList = ['form-control'],
+            parent = dateRow,
+            params = {name: 'weekDays'},
+        )
+        let weekDays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 
+                        'Пятница', 'Суббота', 'Воскресенье']
+        for (let i=0; i<weekDays.length; i++) {
+            let weekDayOption = this.createElement(
+                tag = 'option',
+                classList = [],
+                parent = weekDay,
+                params = {textContent: weekDays[i], value: i+1},
+            )
+        }
+
+        // periodicity 1
+        let periodicRow1 = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = periodicRow,
+            params = {},
+        )
+        let periodicLabel = this.createElement(
+            tag = 'div',
+            classList = ['dateFormLabel'],
+            parent = periodicRow1,
+            params = {textContent: 'Периодичность:'},
+        )
+        let periodic = this.createElement(
+            tag = 'input',
+            classList = ['dateFormInput', 'form-control'],
+            parent = periodicRow1,
+            params = {type: "text", id: 'periodic', name: 'periodic',},
+        )
+        let periodicSpan = this.createElement(
+            tag = 'span',
+            classList = [],
+            parent = periodicRow1,
+            params = {textContent: 'недель'},
+        )
+        // periodicity 2
+        let periodicRow2 = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = periodicRow,
+            params = {},
+        )
+        let periodicFirstWeek = this.createElement(
+            tag = 'label',
+            classList = ['switch'],
+            parent = periodicRow2,
+            params = {},
+        )
+        let periodicFirstInput = this.createElement(
+            tag = 'input',
+            classList = [],
+            parent = periodicFirstWeek,
+            params = {type: 'checkbox', id: 'firstWeekCheckbox', name: 'firstWeekCheckbox',},
+        )
+        let periodicFirstSpan = this.createElement(
+            tag = 'span',
+            classList = ['slider', 'round'],
+            parent = periodicFirstWeek,
+            params = {},
+        )
+        let periodicFirstSpanText = this.createElement(
+            tag = 'span',
+            classList = [],
+            parent = periodicRow2,
+            params = {textContent: 'первая неделя месяца'},
+        )
+        // periodicity 3
+        let periodicRow3 = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = periodicRow,
+            params = {},
+        )
+        let periodicLastWeek = this.createElement(
+            tag = 'label',
+            classList = ['switch'],
+            parent = periodicRow3,
+            params = {},
+        )
+        let periodicLastInput = this.createElement(
+            tag = 'input',
+            classList = [],
+            parent = periodicLastWeek,
+            params = {type: 'checkbox', id: 'lastWeekCheckbox', name: 'lastWeekCheckbox',},
+        )
+        let periodicLastSpan = this.createElement(
+            tag = 'span',
+            classList = ['slider', 'round'],
+            parent = periodicLastWeek,
+            params = {},
+        )
+        let periodicLastSpanText = this.createElement(
+            tag = 'span',
+            classList = [],
+            parent = periodicRow3,
+            params = {textContent: 'последняя неделя месяца'},
+        )
+
+        let timeLabel = this.createElement(
+            tag = 'div',
+            classList = ['dateFormLabel'],
+            parent = timeRow,
+            params = {textContent: 'Время:'},
+        )
+        let time = this.createElement(
+            tag = 'input',
+            classList = ['dateFormInput', 'form-control'],
+            parent = timeRow,
+            params = {type: "text", id: 'time', name: 'time', placeholder: '00:00'},
+        )
+        
+        this.newDateBtnList.style.height = dateForm.scrollHeight + "px"
+        periodic.addEventListener('keydown', this.numInput.bind(this))
+        time.addEventListener('input', this.timeInAutoFill.bind(this))
+        time.addEventListener('paste', (e) => e.preventDefault())
+        time.addEventListener('keydown', this.timeInput.bind(this))
+        periodic.addEventListener('input', this.weekPeriodicityLimiter.bind(this))
+        periodicFirstInput.addEventListener('input', this.weekPeriodicityLimiter.bind(this))
+        periodicLastInput.addEventListener('input', this.weekPeriodicityLimiter.bind(this))
+        submitBtn.addEventListener('click', this.EveryWeekSubmit.bind(this))
+    },
+    viewEveryMonthField: function() { // display every month form
+        this.newDateBtnList.innerHTML = ''
+        let dateForm = this.createElement(
+            tag = 'form',
+            classList = ['dateForm',],
+            parent = this.newDateBtnList,
+            params = {id: 'dateForm'},
+        )
+
+        let dayRow = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = dateForm,
+            params = {},
+        )
+        let periodicRow = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = dateForm,
+            params = {},
+        )
+        let timeRow = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = dateForm,
+            params = {},
+        )
+        let error = this.createElement(
+            tag = 'div',
+            classList = ['dateError',],
+            parent = dateForm,
+            params = {id: 'errorsField'},
+        )
+        let submitBtn = this.createElement(
+            tag = 'button',
+            classList = ['btn-default'],
+            parent = dateForm,
+            params = {type: "submit", textContent: 'Применить'},
+        )
+
+        let dayLabel = this.createElement(
+            tag = 'div',
+            classList = ['dateFormLabel'],
+            parent = dayRow,
+            params = {textContent: 'День месяца:'},
+        )
+        let day = this.createElement(
+            tag = 'input',
+            classList = ['dateFormInput', 'form-control'],
+            parent = dayRow,
+            params = {
+                id: 'day', name: 'day', placeholder: '00',
+            },
+        )
+        
+        let periodicLabel = this.createElement(
+            tag = 'div',
+            classList = ['dateFormLabel'],
+            parent = periodicRow,
+            params = {textContent: 'Периодичность:'},
+        )
+        let periodic = this.createElement(
+            tag = 'input',
+            classList = ['dateFormInput', 'form-control'],
+            parent = periodicRow,
+            params = {type: "text", id: 'periodic', 
+                name: 'periodic', placeholder: '0'},
+        )
+        let periodicSpan = this.createElement(
+            tag = 'span',
+            classList = [],
+            parent = periodicRow,
+            params = {textContent: 'месяцев'},
+        )
+        
+        let timeLabel = this.createElement(
+            tag = 'div',
+            classList = ['dateFormLabel'],
+            parent = timeRow,
+            params = {textContent: 'Время:'},
+        )
+        let time = this.createElement(
+            tag = 'input',
+            classList = ['dateFormInput', 'form-control'],
+            parent = timeRow,
+            params = {type: "text", id: 'time', name: 'time', placeholder: '00:00'},
+        )
+        
+        this.newDateBtnList.style.height = dateForm.scrollHeight + "px"
+        day.addEventListener('keydown', this.numInput.bind(this))
+        day.addEventListener('keydown', this.dayInput.bind(this))
+        periodic.addEventListener('keydown', this.numInput.bind(this))
+        time.addEventListener('input', this.timeInAutoFill.bind(this))
+        time.addEventListener('paste', (e) => e.preventDefault())
+        time.addEventListener('keydown', this.timeInput.bind(this))
+        submitBtn.addEventListener('click', this.EveryMonthSubmit.bind(this))
+    },
+    viewEveryYearField: function() { // display every year form
+        this.newDateBtnList.innerHTML = ''
+        let dateForm = this.createElement(
+            tag = 'form',
+            classList = ['dateForm',],
+            parent = this.newDateBtnList,
+            params = {id: 'dateForm'},
+        )
+
+        let dayRow = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = dateForm,
+            params = {},
+        )
+        let monthRow = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = dateForm,
+            params = {},
+        )
+        let periodicRow = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = dateForm,
+            params = {},
+        )
+        let timeRow = this.createElement(
+            tag = 'div',
+            classList = ['dateFormRow'],
+            parent = dateForm,
+            params = {},
+        )
+        let error = this.createElement(
+            tag = 'div',
+            classList = ['dateError',],
+            parent = dateForm,
+            params = {id: 'errorsField'},
+        )
+        let submitBtn = this.createElement(
+            tag = 'button',
+            classList = ['btn-default'],
+            parent = dateForm,
+            params = {type: "submit", textContent: 'Применить'},
+        )
+
+        let dayLabel = this.createElement(
+            tag = 'div',
+            classList = ['dateFormLabel'],
+            parent = dayRow,
+            params = {textContent: 'День месяца:'},
+        )
+        let day = this.createElement(
+            tag = 'input',
+            classList = ['dateFormInput', 'form-control'],
+            parent = dayRow,
+            params = {id: 'day', name: 'day', placeholder: '00',},
+        )
+
+        let monthLabel = this.createElement(
+            tag = 'div',
+            classList = ['dateFormLabel'],
+            parent = monthRow,
+            params = {textContent: 'Месяц:'},
+        )
+        let month = this.createElement(
+            tag = 'input',
+            classList = ['dateFormInput', 'form-control'],
+            parent = monthRow,
+            params = {id: 'month', name: 'month', placeholder: '00',},
+        )
+        
+        let periodicLabel = this.createElement(
+            tag = 'div',
+            classList = ['dateFormLabel'],
+            parent = periodicRow,
+            params = {textContent: 'Периодичность:'},
+        )
+        let periodic = this.createElement(
+            tag = 'input',
+            classList = ['dateFormInput', 'form-control'],
+            parent = periodicRow,
+            params = {type: "text", id: 'periodic', name: 'periodic'},
+        )
+        let periodicSpan = this.createElement(
+            tag = 'span',
+            classList = [],
+            parent = periodicRow,
+            params = {textContent: 'лет'},
+        )
+        
+        let timeLabel = this.createElement(
+            tag = 'div',
+            classList = ['dateFormLabel'],
+            parent = timeRow,
+            params = {textContent: 'Время:'},
+        )
+        let time = this.createElement(
+            tag = 'input',
+            classList = ['dateFormInput', 'form-control'],
+            parent = timeRow,
+            params = {type: "text", id: 'time', name: 'time', placeholder: '00:00'},
+        )
+        
+        this.newDateBtnList.style.height = dateForm.scrollHeight + "px"
+        day.addEventListener('keydown', this.numInput.bind(this))
+        day.addEventListener('keydown', this.dayInput.bind(this))
+        periodic.addEventListener('keydown', this.numInput.bind(this))
+        time.addEventListener('input', this.timeInAutoFill.bind(this))
+        time.addEventListener('paste', (e) => e.preventDefault())
+        time.addEventListener('keydown', this.timeInput.bind(this))
+        submitBtn.addEventListener('click', this.EveryMonthSubmit.bind(this))
+    },
+    
+    // form fields limiters
+    timeInAutoFill: function(event) { // time input decorator
+        let time = document.getElementById('time')
+        if (time.value.length === 1 && Number(time.value) > 2) {
+            time.value = "0" + time.value + ":" + "00"
+            time.selectionStart = 3
+            time.selectionEnd = 3
+        } else if (time.value.length === 2 && Number(time.value) < 24) {
+            time.value = time.value + ":" + "00"
+            time.selectionStart = 3
+            time.selectionEnd = 3
+        }
+    },
+    timeInput: function(event) { // time input decorator
+        let colonId = event.target.value.indexOf(':')
+        if (colonId && event.key == ':') { // запрет второго двоеточия
+            event.preventDefault()
+            return
+        }
+        if (['Backspace', 'Delete'].includes(event.key)) { // запрет на стирание двоеточия
+            let start = event.target.selectionStart
+            let end = event.target.selectionEnd
+            if (event.target.value.slice(start, end) === event.target.value) return
+            if (event.target.value.slice(start, end).includes(':')) {
+                event.preventDefault()
+                return
+            }
+            if (event.key === 'Backspace' && event.target.value[event.target.selectionStart-1] === ':') {
+                event.preventDefault()
+                return
+            }
+            if (event.key === 'Delete' && event.target.value[event.target.selectionStart] === ':') {
+                event.preventDefault()
+                return
+            }
+        }
+        let normalkeys = ['Backspace', 'Delete', 'ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', ':']
+        if (normalkeys.includes(event.key)) return // разрешение клавиш 
+        if (!event.key.match(/\d/)) { // отключение ненужных клавиш
+            event.preventDefault()
+            return
+        }
+        if (event.target.selectionStart === 2) event.target.selectionStart = 3
+        if (event.target.value.length >= 5) {
+            let pos = event.target.selectionStart
+            if (pos === 5) {
+                event.preventDefault()
+                return
+            }
+            
+            event.target.value = event.target.value.slice(0, pos) + event.key + event.target.value.slice(pos+1)
+            event.target.selectionStart = pos + 1
+            event.target.selectionEnd = pos + 1
+            event.preventDefault()
+            return
+        }
+    },
+    numInput: function(event) { // input is num only
+        let normalkeys = ['Backspace', 'Delete', 'ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown']
+        if (event.key.match(/\d/) || normalkeys.includes(event.key)) {
+            return
+        }
+        event.preventDefault()
+    },
+    dayInput: function(event) { // day max is 31
+        if (Number(event.target.value)*10 + Number(event.key) > 31) {
+            event.target.value = 31
+            event.preventDefault()
+        }
+    },
+    weekPeriodicityLimiter: function(event) { // week period one of three
+        let form = document.getElementById('dateForm')
+        let numField = form.periodic
+        let firstField = form.firstWeekCheckbox
+        let lastField = form.lastWeekCheckbox
+
+        if (numField != event.target) numField.value = ''
+        if (firstField != event.target) firstField.checked = false
+        if (lastField != event.target) lastField.checked = false
+    },
+
+    // forms submit
+    OneDaySubmit: function(event) { // send one day ajax
+        event.preventDefault()
+        let form = document.getElementById('dateForm')
+        this.dateOneDayValid(form)
+
+        let errorsField = document.getElementById('errorsField')
+        errorsField.innerHTML = ''
+        if (this.errors.length) {
+            this.displayErrors()
+            return
+        }
+        this.ajaxBlank(
+            noticeId=1,  // getting from content (from url)
+            date=form.date.value,
+            time=form.time.value,
+            type='single',
+            periodicity=null,
+            day=null,
+            month=null
+        )
+    },
+    EveryDaySubmit: function(event) { // send every day ajax
+        event.preventDefault()
+        let form = document.getElementById('dateForm')
+        this.dateDayValid(form)
+
+        let errorsField = document.getElementById('errorsField')
+        errorsField.innerHTML = ''
+        if (this.errors.length) {
+            this.displayErrors()
+            return
+        }
+        this.ajaxBlank(
+            noticeId=1,  // getting from content (from url)
+            date=null,
+            time=form.time.value,
+            type='one',
+            periodicity=form.periodic.value,
+            day=null,
+            month=null
+        )
+    },
+    EveryWeekSubmit: function(event) { // send every week ajax
+        event.preventDefault()
+        let form = document.getElementById('dateForm')
+        this.dateWeekValid(form)
+
+        let periodicity = null
+        if (form.periodic.value) periodicity=form.periodic.value
+        if (form.firstWeekCheckbox.checked) periodicity=form.firstWeekCheckbox.checked
+        if (form.lastWeekCheckbox.checked) periodicity=form.lastWeekCheckbox.checked
+        if (!periodicity) this.errors.push('Периодичность не установлена')
+
+        let errorsField = document.getElementById('errorsField')
+        errorsField.innerHTML = ''
+        if (this.errors.length) {
+            this.displayErrors()
+            return
+        }
+        this.ajaxBlank(
+            noticeId=1,  // getting from content (from url)
+            date=null,
+            time=form.time.value,
+            type='week',
+            periodicity=periodicity, // first or last or 1-99
+            day=form.weekDays.value,
+            month=null
+        )
+    },
+    EveryMonthSubmit: function(event) { // send every month ajax
+        event.preventDefault()
+        let form = document.getElementById('dateForm')
+        this.dateMonthValid(form)
+
+        let errorsField = document.getElementById('errorsField')
+        errorsField.innerHTML = ''
+        if (this.errors.length) {
+            this.displayErrors()
+            return
+        }
+        this.ajaxBlank(
+            noticeId=1,  // getting from content (from url)
+            date=null,
+            time=form.time.value,
+            type='month',
+            periodicity=form.periodic.value,
+            day=form.day.value,
+            month=null
+        )
+    },
+    EverYearSubmit: function(event) { // send every year ajax
+        event.preventDefault()
+        let form = document.getElementById('dateForm')
+        this.dateYearValid(form)
+
+        let errorsField = document.getElementById('errorsField')
+        errorsField.innerHTML = ''
+        if (this.errors.length) {
+            this.displayErrors()
+            return
+        }
+        this.ajaxBlank(
+            noticeId=1,  // getting from content (from url)
+            date=null,
+            time=form.time.value,
+            type='year',
+            periodicity=form.periodic.value,
+            day=form.day.value,
+            month=form.month.value
+        )
+    },
+
+    // forms validation
+    dateOneDayValid: function(form) { // validation of the one day form
+        this.errors = []
+        this.datePickerValid(form.date.value)
+        this.timeValid(form.time.value)
+        if (this.errors.length != 0) return
+
+        let dateObj = {
+            y: form.date.value.slice(6,),
+            m: form.date.value.slice(3,5),
+            d: form.date.value.slice(0,2),
+            h: form.time.value.slice(0,2),
+            mm: form.time.value.slice(3,5)
+        }
+        let date = new Date(dateObj.y, dateObj.m-1, dateObj.d, 
+            dateObj.h, dateObj.mm)
+        let now = new Date()
+        if (date<now) {  // date добавить время
+            this.errors.push(`Указана прошедшая дата`)
+            return
+        }
+    },
+    dateDayValid: function(form) { // validation of the every day form
+        this.errors = []
+        this.numValid(
+            value=form.periodic.value,
+            fieldName='Периодичность',
+            min=1,
+            max=999
+        )
+        this.timeValid(form.time.value)
+    },
+    dateWeekValid: function(form) { // validation of the every week form
+        this.errors = []
+        this.numValid(
+            value=form.weekDays.value,
+            fieldName='День недели',
+            min=1,
+            max=7
+        )
+        if (form.periodic.value) {
+            this.numValid(
+                value=form.periodic.value,
+                fieldName='Периодичность',
+                min=1,
+                max=99
+            )
+        }
+        this.timeValid(form.time.value)
+    },
+    dateMonthValid: function(form) { // validation of the every month form
+        this.errors = []
+        this.numValid(
+            value=form.day.value,
+            fieldName='День',
+            min=1,
+            max=31
+        )
+        this.numValid(
+            value=form.periodic.value,
+            fieldName='Периодичность',
+            min=1,
+            max=36
+        )
+        this.timeValid(form.time.value)
+    },
+    dateYearValid: function(form) { // validation of the every year form
+        this.errors = []
+        this.numValid(
+            value=form.day.value,
+            fieldName='День',
+            min=1,
+            max=31
+        )
+        this.numValid(
+            value=form.day.value,
+            fieldName='Месяц',
+            min=1,
+            max=12
+        )
+        this.numValid(
+            value=form.periodic.value,
+            fieldName='Периодичность',
+            min=1,
+            max=5
+        )
+        this.timeValid(form.time.value)
+    },
+    timeValid: function(timeStr) { // validation of the time field
+        if (
+            !/^\d{2}\:\d{2}$/.test(timeStr) ||
+            Number(timeStr.slice(0,2)) > 23 ||
+            Number(timeStr.slice(3,5)) > 59
+        ) {
+            this.errors.push(`Неверный формат времени`)
+            return false
+        }
+        return true
+    },
+    numValid: function(value, fieldName, min, max) { // validation of the number field
+        let num = Number(value)
+        if (isNaN(num)) {
+            this.errors.push(`В поле ${fieldName} должно быть указано число`)
+            return false
+        }
+        if (num<min) {
+            this.errors.push(`Минимальное значение в поле ${fieldName}: ${min}`)
+            return false
+        }
+        if (num>max) {
+            this.errors.push(`Максимальное значение в поле ${fieldName}: ${max}`)
+            return false
+        }
+        return true
+    },
+    datePickerValid: function(dateStr) { // validation of the datePicker field
+        let datePattern = /^\d{2}\.\d{2}\.\d{4}$/
+        if (!datePattern.test(dateStr)) {
+            this.errors.push('Неверный формат даты')
+        }
+    },
+
+    displayErrors: function() { // show validation errors
+        let errorsField = document.getElementById('errorsField')
+        
+        for (let error of this.errors)  {
+            this.createElement(
+                tag = 'p',
+                classList = [],
+                parent = errorsField,
+                params = {textContent: error},
+            )
+            console.log('Error:', error)
+        }
+        let dateForm = document.getElementById('dateForm')
+        this.newDateBtnList.style.height = dateForm.scrollHeight + "px"
+    },
+    ajaxBlank: function(noticeId, date, time, type, periodicity, day, month) {
+        // date - oneday only like "yyyy-mm-dd"
+        // time like "hh:mm"
+        // type - one of single, day, week, month, year
+        // periodicity - first/last or integer number
+        // day - integer number of 1 to 31 (for every month)
+        // month - integer number of 1 to 12 (for every year)
+        console.log('Эмуляция ajax запроса')
+        // 1. отправить данные на сервер
+        // 2. получить новые данные с сервера
+        // 3. отобразить новые данные
+    },
+
+    createElement: function(tag, classList, parent, params) { // create usual HTML elem
+        let element = document.createElement(tag)
+        for (let i=0; i<classList.length; i++) {
+            element.classList.add(classList[i])
+        }
+        for (let param of Object.keys(params)) {
+            element[param] = params[param]
+        }
+        parent.appendChild(element)
+        return element
+    },
+    createSVG: function(parent, className, viewBox, pathLst) { // create usual HTML svg elem
+        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+        svg.setAttributeNS(null, 'class', className)
+        svg.setAttributeNS(null, 'viewBox', viewBox)
+        for (let i=0; i < pathLst.length; i++) {
+            let svgPath = document.createElementNS("http://www.w3.org/2000/svg", 'path')
+            svgPath.setAttributeNS(null, 'd', pathLst[i])
+            svg.appendChild(svgPath)
+        }
+        parent.append(svg)
+        return svg
+        // https://ru.stackoverflow.com/questions/1123250/%D0%9A%D0%B0%D0%BA-%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%B8%D1%82%D1%8C-svg-%D0%BA%D0%BE%D0%B4-%D0%BD%D0%B0-%D1%81%D0%B0%D0%B9%D1%82-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-js    
+    },
+    createAirDatePicker: function(field) { // create datepicker object in the one day form
+        // https://air-datepicker.com/ru
+        // https://www.jsdelivr.com/package/npm/air-datepicker
+        new AirDatepicker(field, {
+            minDate: new Date(),
+            dateFormat: 'dd.MM.yyyy',
+            isMobile: isMobile(),
+            autoClose: true,
+            // inline: true,
+        })
+        .selectDate(new Date())
+    },
+    run: function() {
+        this.newDateBtnList = document.getElementById('newDateBtnList')
+        let addDateBtn = document.getElementById('addDateBtn')
+        addDateBtn.addEventListener('click', this.openDateCreation.bind(this))
+    }
+}
+dates.run()
+
+function isMobile() {
+    // https://sky.pro/media/kak-opredelit-tip-ustrojstva-polzovatelya-s-pomoshhyu-javascript/
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isMobile = /mobile|iphone|ipad|ipod|android|blackberry|mini|windows\sce|palm/i.test(userAgent);
+    if (isMobile) return true
+    else return false
+}
+</script>
+
+{% endblock content %}
