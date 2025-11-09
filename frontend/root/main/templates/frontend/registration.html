@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h4>Регистрация</h4>
+<div>
+    <p>Перейти на страницу <a href="{% url 'login_url' %}">Авторизации</a></p>
+</div>
+<form id="formRegistration">
+    <label>username:</label>
+    <input type="text" name="username" value=""> <br>
+    <label>password:</label>
+    <input type="text" name="password" value=""> <br>
+    <button>Отправить</button>
+</form>
+
+<script type="module" src="{% static 'js/registration.js' %}"></script>
+{% endblock content %}

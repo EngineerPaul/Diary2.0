@@ -7,4 +7,5 @@ media/
 venv/
 _redis_data/
 req_freeze.txt
-.env
+.vscode/
+server_test/

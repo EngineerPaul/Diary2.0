@@ -1,0 +1,46 @@
+{% load static %}
+
+<div class="header">
+    <div class="header-row">
+        <div class="header-fields" id="sections">
+            <div class="header-field" id="notes">
+                <div class="header-field-title">
+                    Заметки
+                </div>
+            </div>
+            <div class="header-field" id="notices">
+                <div class="header-field-title">
+                    Напоминания
+                </div>
+            </div>
+        </div>
+        <div class="header-settings">
+            <a href="{% url 'settings_url' %}">Настройки</a>
+            <a id="loginBTN" href="{% url 'registration_url' %}" style="display: none;">Войти</a>
+            <a id="logoutBTN" href="{% url 'login_url' %}" style="display: none;">Выйти</a>
+        </div>
+    </div>
+    <hr>
+</div>
+
+
+<script>
+const headerSection = {
+    sections: document.getElementById('sections'),
+
+    changeSection: function(event) {  // choice section from among notes or notices
+        let sec = event.target.closest('.header-field')
+        if (!sec) return
+        let sectionName = event.target.closest('.header-field').id
+        sessionStorage.setItem('section', sectionName)
+        event.preventDefault()
+    },
+    run: function() {
+        this.sections.addEventListener('click', this.changeSection.bind(this))
+    }
+}
+headerSection.run()
+</script>
+
+
+<script type="module" src="{% static 'js/header.js' %}"></script>
