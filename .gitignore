@@ -9,3 +9,4 @@ _redis_data/
 req_freeze.txt
 .vscode/
 server_test/
+migrations/
