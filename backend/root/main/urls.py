@@ -1,7 +1,8 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework import routers
 
 from .views.views import (
-    PublickAPI, SecretAPI,
+    PublickAPI, SecretAPI, UploadTestViewSet
 )
 from .views.filesystem import (
     BlankFileSystemAPI, RecordsFSAPI,
@@ -12,6 +13,8 @@ from .views.content import (
 )
 
 
+router = routers.DefaultRouter()
+router.register(r'test-upload', UploadTestViewSet)
 
 urlpatterns = [
     path('publick', PublickAPI.as_view()),
@@ -37,3 +40,5 @@ urlpatterns = [
 
 
 ]
+
+urlpatterns += [path("", include(router.urls))]

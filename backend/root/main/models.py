@@ -95,3 +95,28 @@ class Image(models.Model):
     # created_at = models.DateTimeField(auto_now_add=True)
     # changed_at = models.DateTimeField(auto_now=True)
     # url = models.FileField()
+
+
+
+
+def get_unique_path(instance, filename):
+    """ Создание уникального пути для сохранения файлов """
+
+    import uuid
+    import os
+    from datetime import datetime
+
+    ext = os.path.splitext(filename)[1].lower()
+    unique_name = f'{uuid.uuid4().hex}{ext}'
+    date = datetime.now()
+    date = f'{date.month}.{date.year}'
+    user_id = instance.user_id
+    path = os.path.join("uploads", "test-records", f"user_{user_id}",
+                        date, unique_name)
+    return path
+
+
+class UploadedTest(models.Model):
+    title = models.CharField()
+    file = models.ImageField(upload_to=get_unique_path)
+    user_id = models.IntegerField()

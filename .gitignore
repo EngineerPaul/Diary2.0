@@ -10,3 +10,4 @@ req_freeze.txt
 .vscode/
 server_test/
 migrations/
+media_files/

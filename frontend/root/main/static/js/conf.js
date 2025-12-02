@@ -9,8 +9,8 @@ export const Urls = {
     'logoutUrl': 'logout',
     'authStatusCheck': 'auth-check',
 
-    'publickUrl': 'publick',  // server doesn't exist
-    'secretUrl': 'secret',  // server doesn't exist
+    'publickUrl': 'api/publick',
+    'secretUrl': 'api/secret',
 }
 
 export const AJAX = {
