@@ -11,3 +11,4 @@ req_freeze.txt
 server_test/
 migrations/
 media_files/
+test_imgs/

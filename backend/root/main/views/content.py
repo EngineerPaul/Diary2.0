@@ -1,12 +1,14 @@
+import os
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction
+from django.conf import settings
 
 from main.permissions import CustomPermission
 
 from main.models import (
-    RecordFolder, Record, Message, Note, Image,
+    Record, Message, Note, Image,
 )
 
 
@@ -17,41 +19,53 @@ class BlankDataAPI(APIView):
         """ Создать тестовые данные """
 
         self.test_truncate()
-        self.test_set_data()
+        self.test_set_data(request)
         return Response(status=status.HTTP_201_CREATED)
 
     def test_truncate(self):
         """Очистить тестовые БД"""
 
-        Record.objects.all().delete()
+        # Record.objects.all().delete()
         Message.objects.all().delete()
         Note.objects.all().delete()
         Image.objects.all().delete()
 
-    def test_set_data(self):
+    def test_set_data(self, request):
         """Создать тестовые данные: 1 record, 1 note, 2 imgGr"""
 
-        folder = RecordFolder.objects.create(
-            user_id=1, parent_id=None,
-            title='folder'
-        )
-        record = Record.objects.create(
-            user_id=1, folder_id=folder,
-            title='record title'
-        )
+        user_id = 1
+
+        record = Record.objects.first()  # он уже должен лежать в root
 
         msg1 = Message.objects.create(record_id=record)
         note1 = Note.objects.create(msg_id=msg1, text='any text')
 
         msg2 = Message.objects.create(record_id=record)
-        image2 = Image.objects.create(msg_id=msg2, url='image2_url')
+        img_2_path = r"C:\Users\Engineer Paul\Desktop\Python_temp\Django\Diary2.0\test_imgs\1.jpg"
+        image2 = self.create_image_from_file(msg2, img_2_path, user_id)
 
         msg3 = Message.objects.create(record_id=record)
-        image4 = Image.objects.create(msg_id=msg3, url='image4_url')
+        img_4_path = r"C:\Users\Engineer Paul\Desktop\Python_temp\Django\Diary2.0\test_imgs\2.jpg"
+        image4 = self.create_image_from_file(msg3, img_4_path, user_id)
 
-        image3 = Image.objects.create(msg_id=msg2, url='image3_url')
+        img_3_path = r"C:\Users\Engineer Paul\Desktop\Python_temp\Django\Diary2.0\test_imgs\3.jpg"
+        image3 = self.create_image_from_file(msg2, img_3_path, user_id)
 
-        note1, image2, image4, image3
+        imgs = Image.objects.all()
+        print(imgs)
+        for img in imgs:
+            print(img.file)
+            full_url = request.build_absolute_uri(img.file.url)
+            print(full_url)
+
+    def create_image_from_file(self, msg, file_path, user_id):
+        """Создать Image из файла на диске"""
+        with open(file_path, 'rb') as f:
+            filename = os.path.basename(file_path)
+            image = Image(msg_id=msg, name=filename, user_id=user_id)
+            # добавить файл можно только через save
+            image.file.save(filename, f, save=True)
+        return image
 
 
 class RecordContentAPI(APIView):
@@ -60,16 +74,14 @@ class RecordContentAPI(APIView):
     def get(self, request, record_id: int):
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
-        record_id = record_id
-        record_id = Record.objects.last().id  # получаем id последнего (если он создан) Record
+        user_id = 1  # исправить. для работы без токена
 
         record = self.get_record(user_id, record_id)
         if not record:
-            msg = 'Errof: Запись не найдена'
+            msg = 'Error: Запись не найдена'
             return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
 
-        messages = self.get_messages_qs(record_id)
+        messages = self.get_messages_qs(request, record_id)
 
         messages_dict = self.get_messages_dict(messages)
         # print(*messages_dict, sep='\n')
@@ -97,7 +109,7 @@ class RecordContentAPI(APIView):
         except Record.DoesNotExist:
             return None
 
-    def get_messages_qs(self, record_id: int):
+    def get_messages_qs(self, request, record_id: int):
         """Получить все messages (с контентом) по record_id"""
 
         messages = Message.objects.prefetch_related('notes', 'images')
@@ -105,8 +117,13 @@ class RecordContentAPI(APIView):
         messages = list(messages.values(
             'id',
             'notes__pk', 'notes__msg_id', 'notes__text',
-            'images__pk', 'images__msg_id', 'images__url'
+            'images__pk', 'images__msg_id', 'images__name', 'images__file'
         ))
+
+        for msg in messages:
+            if msg.get('images__file'):
+                relative_url = f"{settings.MEDIA_URL}{msg['images__file']}"
+                msg['images__url'] = request.build_absolute_uri(relative_url)
         # print(*messages, sep='\n')
         return messages
 
@@ -150,6 +167,7 @@ class RecordContentAPI(APIView):
 
         response[-1][add_type].append({
             'image_id': message['images__pk'],
+            'name': message['images__name'],
             'url': message['images__url']
         })
 
@@ -189,8 +207,7 @@ class NoteAPI(APIView):
         user_id = request.user_info['id']
         user_id = 1  # для работы без токена
 
-        text = request.data['text']
-        record_id = request.data['record_id']
+        text = request.data.get('text')
 
         if not text:
             msg = 'Error: отсутствует текст'
@@ -223,7 +240,10 @@ class NoteAPI(APIView):
         user_id = request.user_info['id']
         user_id = 1  # для работы без токена
 
-        text = request.data['text']
+        text = request.data.get('text')
+        if not text:
+            return Response('Error: текст не передан', status=status.HTTP_400_BAD_REQUEST)
+
         try:
             note = Note.objects.select_related(
                 'msg_id', 'msg_id__record_id'
@@ -258,9 +278,7 @@ class NoteAPI(APIView):
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            with transaction.atomic():
-                note.msg_id.delete()
-                note.delete()
+            note.msg_id.delete()
         except transaction.TransactionManagementError:
             msg = 'Transaction error: запись не удалена'
             return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
@@ -281,13 +299,14 @@ class ImageAPI(APIView):
 
         try:
             image = Image.objects.select_related('msg_id', 'msg_id__record_id')
-            image = image.get(image_id=image_id, msg_id__record_id=record_id,
+            image = image.get(pk=image_id, msg_id__record_id=record_id,
                               msg_id__record_id__user_id=user_id)
         except Image.DoesNotExist:
             msg = 'Error: картинка не найдена'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(image.url, status=status.HTTP_200_OK)
+        url = request.build_absolute_uri(image.file.url)
+        return Response(url, status=status.HTTP_200_OK)
 
     def post(self, request, record_id):
         """ Add the image to the existing message """
@@ -295,21 +314,22 @@ class ImageAPI(APIView):
         user_id = request.user_info['id']
         user_id = 1  # для работы без токена
 
-        new_url = request.data['file_name']
-        msg_id = request.data['message_id']
-        if not (new_url and msg_id):
+        file = request.FILES.get('file')
+        msg_id = request.data.get('message_id')
+        if not (file and msg_id):
             msg = 'Error: данные не переданы'
             return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             message = Message.objects.select_related('record_id').get(
-                record_id=record_id, msg_id=msg_id, record_id__user_id=user_id
+                pk=msg_id, record_id_id=record_id, record_id__user_id=user_id
             )
         except Message.DoesNotExist:
             msg = 'Error: сообщение не найдено'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        img = Image.objects.create(msg_id=message, url=new_url)
+        img = Image(msg_id=message, name=file.name, user_id=user_id)
+        img.file.save(file.name, file, save=True)
 
         msg = f'Картинка {img.pk} добавлена'
         return Response(data=msg, status=status.HTTP_201_CREATED)
@@ -321,8 +341,8 @@ class ImageAPI(APIView):
         user_id = 1  # для работы без токена
 
         try:
-            img = Image.objects.select_related(
-                'msg_id', 'msg_id__record_id', 'images'
+            img = Image.objects.prefetch_related('msg_id__images').select_related(
+                'msg_id', 'msg_id__record_id'
             ).get(
                 pk=image_id, msg_id__record_id=record_id,
                 msg_id__record_id__user_id=user_id,
@@ -333,10 +353,12 @@ class ImageAPI(APIView):
 
         try:
             with transaction.atomic():
+                img.file.delete(save=False)
                 if len(img.msg_id.images.all()) == 1:
                     img.msg_id.delete()  # img должна удалиться каскадно
                 else:
                     img.delete()
+
         except transaction.TransactionManagementError:
             msg = 'Transaction error: картинка не удалена'
             return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
@@ -355,15 +377,22 @@ class ImagesAPI(APIView):
         user_id = 1  # для работы без токена
 
         try:
-            message = Message.objects.select_related('record_id', 'images').get(
-                msg_id=msg_id, msg_id__record_id=record_id,
-                msg_id__record_id__user_id=user_id
+            message = Message.objects.prefetch_related(
+                'images'
+            ).select_related('record_id').get(
+                pk=msg_id, record_id_id=record_id,
+                record_id__user_id=user_id
             )
         except Message.DoesNotExist:
             msg = 'Error: сообщение не найдено'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        images = list(message.images.all().values('url'))
+        images = []
+        for img in message.images.all():
+            images.append({
+                'name': img.name,
+                'url': request.build_absolute_uri(img.file.url)
+            })
         # msg_id = request.data['message_id']
         return Response(data=images, status=status.HTTP_200_OK)
 
@@ -374,19 +403,21 @@ class ImagesAPI(APIView):
         user_id = 1  # для работы без токена
 
         try:
-            record = Record.objects.get(record_id=record_id, user_id=user_id)
+            record = Record.objects.get(pk=record_id, user_id=user_id)
         except Record.DoesNotExist:
             msg = 'Error: заметка не найдена'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
+        files = request.FILES.getlist('files')
+        if not files:
+            return Response('Error: файлы не переданы', status=status.HTTP_400_BAD_REQUEST)
+
         try:
             with transaction.atomic():
                 message = Message.objects.create(record_id=record)
-
-                files = []
-                for file in request.data['url']:
-                    files.append(Image(msg_id=message, url=file))
-                Image.objects.bulk_create(files)
+                for file in files:
+                    img = Image(msg_id=message, name=file.name, user_id=user_id)
+                    img.file.save(file.name, file, save=True)
         except transaction.TransactionManagementError:
             msg = 'Error: Ошибка сохранения картинок'
             return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
@@ -401,14 +432,22 @@ class ImagesAPI(APIView):
         user_id = 1  # для работы без токена
 
         try:
-            message = Message.objects.select_related('record_id').get(
-                msg_id=msg_id, msg_id__record_id=record_id,
-                msg_id__record_id__user_id=user_id
+            message = Message.objects.prefetch_related('images').select_related('record_id').get(
+                pk=msg_id, record_id_id=record_id,
+                record_id__user_id=user_id
             )
         except Message.DoesNotExist:
             msg = 'Error: сообщение не найдено'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        message.delete()
-        msg = f'Блок картинок {message.pk} удален'
+        try:
+            with transaction.atomic():
+                for img in message.images.all():
+                    img.file.delete(save=False)
+                message.delete()
+        except Exception:
+            msg = 'Error: ошибка удаления блока картинок'
+            return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
+
+        msg = f'Блок картинок {msg_id} удален'
         return Response(data=msg, status=status.HTTP_200_OK)

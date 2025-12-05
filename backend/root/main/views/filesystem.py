@@ -18,9 +18,10 @@ class BlankFileSystemAPI(APIView):
     def get(self, request):
         """ Перезапуск базы данных """
         self.test_truncate()
-        self.set_blank()
+        # self.set_blank()
+        self.set_blank_over()
 
-        self.get_blanc()
+        # self.get_blanc()
 
         return Response()
 
@@ -53,6 +54,96 @@ class BlankFileSystemAPI(APIView):
         f_r.add_record(r2.pk)
         # f_r.insert_record(pk, 1)
         f_r.save()
+
+    def set_blank_over(self):
+        print('set_blank_over works')
+        user_id = 1
+
+        root = RecordFolder.objects.create(
+            user_id=user_id, parent_id=None, title='root', color='white')
+
+        folder_1 = RecordFolder.objects.create(
+            user_id=user_id, parent_id=root, title='Папка 1', color='white')
+        folder_2 = RecordFolder.objects.create(
+            user_id=user_id, parent_id=root, title='Папка 2', color='white')
+        folder_3 = RecordFolder.objects.create(
+            user_id=user_id, parent_id=root, title='Папка 3', color='white')
+        folder_4 = RecordFolder.objects.create(
+            user_id=user_id, parent_id=root, title='Папка 4', color='white')
+
+        folder_1_1 = RecordFolder.objects.create(
+            user_id=user_id, parent_id=folder_1, title='Папка 1.1', color='white')
+        folder_1_2 = RecordFolder.objects.create(
+            user_id=user_id, parent_id=folder_1, title='Папка 1.2', color='white')
+        folder_1_3 = RecordFolder.objects.create(
+            user_id=user_id, parent_id=folder_1, title='Папка 1.3', color='white')
+        folder_3_1 = RecordFolder.objects.create(
+            user_id=user_id, parent_id=folder_3, title='Папка 3.1', color='white')
+        folder_4_1 = RecordFolder.objects.create(
+            user_id=user_id, parent_id=folder_4, title='Папка 4.1', color='white')
+
+        folder_1_1_1 = RecordFolder.objects.create(
+            user_id=user_id, parent_id=folder_1_1, title='Папка 1.1.1', color='white')
+        folder_3_1_1 = RecordFolder.objects.create(
+            user_id=user_id, parent_id=folder_3_1, title='Папка 3.1.1', color='white')
+        folder_3_1_1_1 = RecordFolder.objects.create(
+            user_id=user_id, parent_id=folder_3_1_1, title='Папка 3.1.1.1', color='white')
+
+        root.add_folder(folder_1.pk)
+        root.add_folder(folder_2.pk)
+        root.add_folder(folder_3.pk)
+        root.add_folder(folder_4.pk)
+
+        folder_1.add_folder(folder_1_1.pk)
+        folder_1.add_folder(folder_1_2.pk)
+        folder_1.add_folder(folder_1_3.pk)
+
+        folder_3.add_folder(folder_3_1.pk)
+        folder_4.add_folder(folder_4_1.pk)
+
+        folder_1_1.add_folder(folder_1_1_1.pk)
+        folder_3_1.add_folder(folder_3_1_1.pk)
+        folder_3_1_1.add_folder(folder_3_1_1_1.pk)
+
+
+        record_1 = Record.objects.create(user_id=user_id, folder_id=root,
+                                         title='record 1', color='white')
+        record_2 = Record.objects.create(user_id=user_id, folder_id=root,
+                                         title='record 2', color='white')
+        record_3 = Record.objects.create(user_id=user_id, folder_id=root,
+                                         title='record 3', color='white')
+        record_4 = Record.objects.create(user_id=user_id, folder_id=root,
+                                         title='record 4', color='white')
+
+        record_1_1 = Record.objects.create(user_id=user_id, folder_id=folder_1,
+                                           title='record 1', color='white')
+        record_1_2 = Record.objects.create(user_id=user_id, folder_id=folder_1,
+                                           title='record 1', color='white')
+        record_2_1 = Record.objects.create(user_id=user_id, folder_id=folder_2,
+                                           title='record 1', color='white')
+        record_2_2 = Record.objects.create(user_id=user_id, folder_id=folder_2,
+                                           title='record 1', color='white')
+        record_3_1 = Record.objects.create(user_id=user_id, folder_id=folder_3,
+                                           title='record 1', color='white')
+
+        root.add_record(record_1.pk)
+        root.add_record(record_2.pk)
+        root.add_record(record_3.pk)
+        root.add_record(record_4.pk)
+
+        folder_1.add_record(record_1_1.pk)
+        folder_1.add_record(record_1_2.pk)
+        folder_2.add_record(record_2_1.pk)
+        folder_2.add_record(record_2_2.pk)
+        folder_3.add_record(record_3_1.pk)
+
+
+        RecordFolder.objects.bulk_update(
+            objs=[root, folder_1, folder_3, folder_4, folder_1_1, folder_3_1,
+                  folder_3_1_1],
+            fields=['nested_folders', 'nested_records']
+        )
+        print('Record: ', Record.objects.all())
 
     def get_blanc(self):
         """ Вывод новых данных """

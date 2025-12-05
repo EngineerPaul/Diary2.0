@@ -88,17 +88,6 @@ class Note(models.Model):
     # changed_at = models.DateTimeField(auto_now=True)
 
 
-class Image(models.Model):
-    msg_id = models.ForeignKey(
-        Message, on_delete=models.CASCADE, related_name='images')
-    url = models.CharField(max_length=100)
-    # created_at = models.DateTimeField(auto_now_add=True)
-    # changed_at = models.DateTimeField(auto_now=True)
-    # url = models.FileField()
-
-
-
-
 def get_unique_path(instance, filename):
     """ Создание уникального пути для сохранения файлов """
 
@@ -114,6 +103,16 @@ def get_unique_path(instance, filename):
     path = os.path.join("uploads", "test-records", f"user_{user_id}",
                         date, unique_name)
     return path
+
+
+class Image(models.Model):
+    msg_id = models.ForeignKey(
+        Message, on_delete=models.CASCADE, related_name='images')
+    name = models.CharField()
+    file = models.ImageField(upload_to=get_unique_path)
+    user_id = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    changed_at = models.DateTimeField(auto_now=True)
 
 
 class UploadedTest(models.Model):
