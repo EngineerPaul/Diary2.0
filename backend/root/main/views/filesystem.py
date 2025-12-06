@@ -8,6 +8,7 @@ from main.permissions import CustomPermission
 from main.models import (
     RecordFolder, Record, colors
 )
+from .utils import set_children
 
 
 class BlankFileSystemAPI(APIView):
@@ -21,7 +22,7 @@ class BlankFileSystemAPI(APIView):
         # self.set_blank()
         self.set_blank_over()
 
-        # self.get_blanc()
+        # self.get_blank()
 
         return Response()
 
@@ -137,15 +138,14 @@ class BlankFileSystemAPI(APIView):
         folder_2.add_record(record_2_2.pk)
         folder_3.add_record(record_3_1.pk)
 
-
         RecordFolder.objects.bulk_update(
-            objs=[root, folder_1, folder_3, folder_4, folder_1_1, folder_3_1,
-                  folder_3_1_1],
+            objs=[root, folder_1, folder_2, folder_3, folder_4, folder_1_1,
+                  folder_3_1, folder_3_1_1],
             fields=['nested_folders', 'nested_records']
         )
         print('Record: ', Record.objects.all())
 
-    def get_blanc(self):
+    def get_blank(self):
         """ Вывод новых данных """
         folders = RecordFolder.objects.all()
         record = Record.objects.all()
@@ -173,32 +173,19 @@ class RecordsFSAPI(APIView):
             'nested_folders', 'nested_records'
         )
         records = Record.objects.filter(user_id=user_id).values(
-            'pk', 'title', 'color', 'changed_at'
+            'pk', 'folder_id', 'title', 'color', 'changed_at'
         )
-        folders = self.set_children(list(folders))
+
+        for folder in folders:
+            set_children(folder)
+
+        # folders = self.set_children(list(folders))
 
         response = {
             "folders": folders,
             "records": list(records)
         }
         return Response(response, status=status.HTTP_200_OK)
-
-    def set_children(self, folder_list: list):
-        """ Creating the children field in every folder and deletion nested
-        fields """
-
-        for folder in folder_list:
-            nested_folders, nested_records = [], []
-            if folder['nested_folders']:
-                nested_folders = folder['nested_folders'].split(',')
-            if folder['nested_records']:
-                nested_records = folder['nested_records'].split(',')
-            nested_objects = [f'f{f_id}' for f_id in nested_folders] + \
-                             [f'n{r_id}' for r_id in nested_records]
-            folder['children'] = ','.join(nested_objects)
-            del folder['nested_folders']
-            del folder['nested_records']
-        return folder_list
 
 
 class RecordsAPI(APIView):
@@ -212,13 +199,14 @@ class RecordsAPI(APIView):
         user_id = request.user_info['id']
         user_id = 1  # для работы без токена
 
-        try:
-            record = Record.objects.filter(pk=record_id, user_id=user_id)
-            record = record.values('pk', 'title', 'color', 'changed_at')
-        except Record.DoesNotExist:
+        record = Record.objects.filter(pk=record_id, user_id=user_id).values(
+            'pk', 'folder_id', 'title', 'color', 'changed_at'
+        ).first()
+
+        if record is None:
             msg = 'Error: заметка не найдена'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
-        return Response(record, status.HTTP_200_OK)
+        return Response(record, status=status.HTTP_200_OK)
 
     def post(self, request):
         """ Creating the new records """
@@ -332,16 +320,7 @@ class RecordFoldersAPI(APIView):
             msg = 'Error: папка не найдена'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        nested_folders, nested_records = [], []
-        if folder['nested_folders']:
-            nested_folders = folder['nested_folders'].split(',')
-        if folder['nested_records']:
-            nested_records = folder['nested_records'].split(',')
-        nested_objects = [f'f{f_id}' for f_id in nested_folders] + \
-                         [f'n{r_id}' for r_id in nested_records]
-        folder['children'] = ','.join(nested_objects)
-        del folder['nested_folders']
-        del folder['nested_records']
+        set_children(folder)
 
         return Response(folder, status=status.HTTP_200_OK)
 
