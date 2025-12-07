@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from main.permissions import CustomPermission
-from main.serializers import UploadTestSerializer
+from main.serializers.serializers import UploadTestSerializer
 from main.models import UploadedTest
 
 

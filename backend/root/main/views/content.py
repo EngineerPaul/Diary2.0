@@ -10,6 +10,11 @@ from main.permissions import CustomPermission
 from main.models import (
     Record, Message, Note, Image,
 )
+from main.serializers.contentSerializer import (
+    NoteGetSerializer, NoteWriteSerializer,
+    ImageGetSerializer, ImageCreateSerializer,
+    ImagesGetSerializer, ImagesCreateSerializer
+)
 
 
 class BlankDataAPI(APIView):
@@ -69,9 +74,19 @@ class BlankDataAPI(APIView):
 
 
 class RecordContentAPI(APIView):
+    """Вывод всей информации (детали и контент) по всей заметке"""
     # permission_classes = [CustomPermission]  # откл для работы без токена
 
     def get(self, request, record_id: int):
+        """Получение всего контента заметки в одном запросе.
+        Инфа самой заметки - response['record'],
+        Контент заметки - response['messages'].
+        В контент уже вложены тексты сообщений и адресы картинок.
+        response['messages'] = list(
+            dict(msg_id, type,
+                (note_id, text) или (list(image_id, name, url))
+            )
+        )"""
 
         user_id = request.user_info['id']
         user_id = 1  # исправить. для работы без токена
@@ -84,13 +99,11 @@ class RecordContentAPI(APIView):
         messages = self.get_messages_qs(request, record_id)
 
         messages_dict = self.get_messages_dict(messages)
-        # print(*messages_dict, sep='\n')
 
         response = {
             'record': record,
             'messages': messages_dict
         }
-        # print(*response.values(), sep='\n')
 
         return Response(data=response, status=status.HTTP_200_OK)
 
@@ -128,15 +141,15 @@ class RecordContentAPI(APIView):
         return messages
 
     def get_messages_dict(self, content_list: list):
-        """Формируем готовые msg объекты без линих полей"""
+        """Формируем готовые msg объекты без лишних полей"""
 
-        response = []
+        messages_dict = []
         for mes in content_list:
             if mes['notes__pk']:
-                self.add_note(mes, response)
+                self.add_note(mes, messages_dict)
             elif mes['images__pk']:
-                self.add_image(mes, response)
-        return response
+                self.add_image(mes, messages_dict)
+        return messages_dict
 
     def add_note(self, message: dict, response: list, add_type='note'):
         """Формируем Note объект для response"""
@@ -194,12 +207,7 @@ class NoteAPI(APIView):
             msg = 'Error: запись не найдена'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        response_note = {
-            "pk": note.pk,
-            "user_id": note.msg_id.record_id.user_id,
-            'text': note.text,
-        }
-        return Response(data=response_note, status=status.HTTP_200_OK)
+        return Response(NoteGetSerializer(note).data, status=status.HTTP_200_OK)
 
     def post(self, request, record_id):
         """ Creating the new note """
@@ -207,15 +215,9 @@ class NoteAPI(APIView):
         user_id = request.user_info['id']
         user_id = 1  # для работы без токена
 
-        text = request.data.get('text')
-
-        if not text:
-            msg = 'Error: отсутствует текст'
-            return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
-
-        if len(text) >= 10_000:
-            msg = 'Error: текст слишком длинный'
-            return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
+        serializer = NoteWriteSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             record = Record.objects.get(pk=record_id, user_id=user_id)
@@ -226,7 +228,7 @@ class NoteAPI(APIView):
         try:
             with transaction.atomic():
                 message = Message.objects.create(record_id=record)
-                note = Note.objects.create(msg_id=message, text=text)
+                note = serializer.save(msg_id=message)
         except transaction.TransactionManagementError:
             msg = 'Transaction error: запись не удалена'
             return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
@@ -240,10 +242,6 @@ class NoteAPI(APIView):
         user_id = request.user_info['id']
         user_id = 1  # для работы без токена
 
-        text = request.data.get('text')
-        if not text:
-            return Response('Error: текст не передан', status=status.HTTP_400_BAD_REQUEST)
-
         try:
             note = Note.objects.select_related(
                 'msg_id', 'msg_id__record_id'
@@ -253,13 +251,11 @@ class NoteAPI(APIView):
             msg = 'Error: запись не найдена'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        if (note.text == text):
-            msg = 'Текст не изменен'
-            return Response(data=msg, status=status.HTTP_200_OK)
+        serializer = NoteWriteSerializer(note, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        note.text = text
-        note.save()
-
+        serializer.save()
         return Response('Новый текст сохранен', status=status.HTTP_200_OK)
 
     def delete(self, request, record_id, note_id):
@@ -305,8 +301,8 @@ class ImageAPI(APIView):
             msg = 'Error: картинка не найдена'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        url = request.build_absolute_uri(image.file.url)
-        return Response(url, status=status.HTTP_200_OK)
+        serializer = ImageGetSerializer(image, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, record_id):
         """ Add the image to the existing message """
@@ -314,11 +310,9 @@ class ImageAPI(APIView):
         user_id = request.user_info['id']
         user_id = 1  # для работы без токена
 
-        file = request.FILES.get('file')
-        msg_id = request.data.get('message_id')
-        if not (file and msg_id):
-            msg = 'Error: данные не переданы'
-            return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
+        msg_id = request.data.get('msg_id')
+        if not msg_id:
+            return Response('Error: msg_id обязателен', status=status.HTTP_400_BAD_REQUEST)
 
         try:
             message = Message.objects.select_related('record_id').get(
@@ -328,8 +322,14 @@ class ImageAPI(APIView):
             msg = 'Error: сообщение не найдено'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        img = Image(msg_id=message, name=file.name, user_id=user_id)
-        img.file.save(file.name, file, save=True)
+        serializer = ImageCreateSerializer(
+            data=request.data,
+            context={'user_id': user_id, 'message': message}
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        img = serializer.save()
 
         msg = f'Картинка {img.pk} добавлена'
         return Response(data=msg, status=status.HTTP_201_CREATED)
@@ -387,14 +387,10 @@ class ImagesAPI(APIView):
             msg = 'Error: сообщение не найдено'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        images = []
-        for img in message.images.all():
-            images.append({
-                'name': img.name,
-                'url': request.build_absolute_uri(img.file.url)
-            })
-        # msg_id = request.data['message_id']
-        return Response(data=images, status=status.HTTP_200_OK)
+        serializer = ImagesGetSerializer(
+            message.images.all(), many=True, context={'request': request}
+        )
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, record_id):
         """ Creating the new images block """
@@ -408,21 +404,22 @@ class ImagesAPI(APIView):
             msg = 'Error: заметка не найдена'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        files = request.FILES.getlist('files')
-        if not files:
-            return Response('Error: файлы не переданы', status=status.HTTP_400_BAD_REQUEST)
+        serializer = ImagesCreateSerializer(
+            data=request.data, many=True,
+            context={'user_id': user_id, 'record': record}
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             with transaction.atomic():
                 message = Message.objects.create(record_id=record)
-                for file in files:
-                    img = Image(msg_id=message, name=file.name, user_id=user_id)
-                    img.file.save(file.name, file, save=True)
-        except transaction.TransactionManagementError:
-            msg = 'Error: Ошибка сохранения картинок'
+                serializer.save(msg_id=message)
+        except (transaction.TransactionManagementError, ValueError) as e:
+            msg = f'Error: Ошибка сохранения картинок - {e}'
             return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
 
-        msg = f'Блок картинок {message.pk} сохранены'
+        msg = f'Блок картинок {message.pk} сохранен'
         return Response(data=msg, status=status.HTTP_201_CREATED)
 
     def delete(self, request, record_id, msg_id):
