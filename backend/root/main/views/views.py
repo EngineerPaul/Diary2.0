@@ -8,7 +8,7 @@ from main.serializers.serializers import UploadTestSerializer
 from main.models import UploadedTest
 
 
-class PublickAPI(APIView):
+class PublicAPI(APIView):
     # authentication_classes = []
 
     def get(self, request):

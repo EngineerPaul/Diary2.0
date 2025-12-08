@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework import routers
 
 from .views.views import (
-    PublickAPI, SecretAPI, UploadTestViewSet
+    PublicAPI, SecretAPI, UploadTestViewSet
 )
 from .views.filesystem import (
     BlankFileSystemAPI, RecordsFSAPI,
@@ -13,32 +13,103 @@ from .views.content import (
 )
 
 
-router = routers.DefaultRouter()
-router.register(r'test-upload', UploadTestViewSet)
+urlpatterns = []
 
-urlpatterns = [
-    path('publick', PublickAPI.as_view()),
-    path('secret', SecretAPI.as_view()),
-
-    # file-system
-    path('file-system/set-test', BlankFileSystemAPI.as_view()),
-    path('file-system', RecordsFSAPI.as_view()),
-    path('file-system/records/<int:record_id>/', RecordsAPI.as_view()),
-    path('file-system/records', RecordsAPI.as_view()),
-    path('file-system/folders/<int:folder_id>/', RecordFoldersAPI.as_view()),
-    path('file-system/folders', RecordFoldersAPI.as_view()),
-
-    # content
-    path('records/<int:record_id>/', RecordContentAPI.as_view()),
-    path('records/set-content', BlankDataAPI.as_view()),
-    path('records/<int:record_id>/notes/<int:note_id>/', NoteAPI.as_view()),
-    path('records/<int:record_id>/notes/', NoteAPI.as_view()),
-    path('records/<int:record_id>/images/<int:image_id>/', ImageAPI.as_view()),
-    path('records/<int:record_id>/images/', ImageAPI.as_view()),
-    path('records/<int:record_id>/images-group/<int:msg_id>/', ImagesAPI.as_view()),
-    path('records/<int:record_id>/images-group/', ImagesAPI.as_view()),
-
-
+test_urls = [
+    path(  # get test publick content
+        route='public/',
+        view=PublicAPI.as_view(),
+        name='get_test_public_content'
+    ),
+    path(  # get test secret content
+        route='secret/',
+        view=SecretAPI.as_view(),
+        name='get_test_secret_content'
+    ),
 ]
+urlpatterns += test_urls
 
-urlpatterns += [path("", include(router.urls))]
+file_system_urls = [
+    path(  # create test filesystem content
+        route='set-test/',
+        view=BlankFileSystemAPI.as_view(),
+        name='create_test_fs_content'
+    ),
+    path(  # get all records and folders
+        route='',
+        view=RecordsFSAPI.as_view(),
+        name='get_fs_content'
+    ),
+    path(  # post record
+        route='records/',
+        view=RecordsAPI.as_view(),
+        name='create_record'
+    ),
+    path(  # patch/delete record
+        route='records/<int:record_id>/',
+        view=RecordsAPI.as_view(),
+        name='change_record'
+    ),
+    path(  # post folders
+        route='folders/',
+        view=RecordFoldersAPI.as_view(),
+        name='create_folder'
+    ),
+    path(  # patch/delete folders
+        route='folders/<int:folder_id>/',
+        view=RecordFoldersAPI.as_view(),
+        name='change_folder'
+    ),
+]
+urlpatterns += [path("file-system/", include(file_system_urls))]
+
+records_urls = [
+    path(  # create test messages
+        route='set-content/',
+        view=BlankDataAPI.as_view(),
+        name='create_test_record_content'
+    ),
+    path(  # get details and messages
+        route='<int:record_id>/',
+        view=RecordContentAPI.as_view(),
+        name='get_all_content'
+    ),
+    path(  # post note
+        route='<int:record_id>/notes/',
+        view=NoteAPI.as_view(),
+        name='create_note'
+    ),
+    path(  # get/patch/delete note
+        route='<int:record_id>/notes/<int:note_id>/',
+        view=NoteAPI.as_view(),
+        name='get_note'
+    ),
+    path(  # post image
+        route='<int:record_id>/images/',
+        view=ImageAPI.as_view(),
+        name='create_image'
+    ),
+    path(  # get/delete image
+        route='<int:record_id>/images/<int:image_id>/',
+        view=ImageAPI.as_view(),
+        name='get_image'
+    ),
+    path(  # post images group
+        route='<int:record_id>/images-group/',
+        view=ImagesAPI.as_view(),
+        name='create_image_group'
+    ),
+    path(  # get/delete images group
+        route='<int:record_id>/images-group/<int:msg_id>/',
+        view=ImagesAPI.as_view(),
+        name='get_image_group'
+    ),
+]
+urlpatterns += [path("records/", include(records_urls))]
+
+
+# === Router URLs ===
+test_router = routers.DefaultRouter()  # test file upload
+test_router.register(r'test-upload', UploadTestViewSet)
+
+urlpatterns += [path("", include(test_router.urls))]
