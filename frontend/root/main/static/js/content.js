@@ -1,3 +1,5 @@
+import * as conf from "./conf.js";
+
 let session = {
     section: sessionStorage.getItem('section')?
              sessionStorage.getItem('section'):
@@ -188,13 +190,21 @@ let content = {
     notesRoot: null,  // root folder id
     noticesRoot: null,  // root folder id
 
-    Note: function(record_id, note_name, order_id, color, parent_id) {
+    // Note: function(record_id, note_name, order_id, color, parent_id) {
+    //     // create note object using new notation
+    //     this.record_id = record_id  // name like notice
+    //     this.title = note_name
+    //     this.order_id = order_id
+    //     this.color = color
+    //     this.parent_id = parent_id  // folder id
+    // },
+    Note: function({pk, title, folder_id, color, changed_at}) {
         // create note object using new notation
-        this.record_id = record_id  // name like notice
-        this.title = note_name
-        this.order_id = order_id
+        this.record_id = parseInt(pk)  // name like notice
+        this.title = title
+        this.parent_id = parseInt(folder_id)  // folder id
         this.color = color
-        this.parent_id = parent_id  // folder id
+        this.changed_at = changed_at
     },
     Notice: function(record_id, notice_name, order_id, color, parent_id, date, time) {
         // create notice object using new notation
@@ -215,55 +225,64 @@ let content = {
         this.parent_id = parent_id
         this.children = children  // str of object ids like 'f9,f10,n7,n9,n5,n4,n12'
     },
+    NoteFolder: function({pk, parent_id, title, color, changed_at, children}) {
+        // create folder object using new notation
+        this.folder_id = parseInt(pk)
+        this.parent_id = parent_id === null ? null : parseInt(parent_id)
+        this.title = title
+        this.color = color
+        this.changed_at = changed_at
+        this.children = children  // str of object ids like 'f9,f10,n7,n9,n5,n4,n12'
+    },
 
-    getContentAJAX: function(url, token) { // заглушка
+    getContentAJAX: async function(url, token) { // заглушка
         // getting list like content from the server by url
 
         // сейчас работает заглушка. В зависимости от url вовращается разный контент
         // f - folder, n - note/notice
-        let notes = [  // заглушка
-            [7, 'record 1', 1, null, 7],
-            [11, 'record 1.1', 1, 'red', 9],
-            [24, 'record 1.1.1', 1, 'yellow', 8],
-            [34, 'record 1.2.1', 1, 'green', 21],
-            [29, 'record 1.3.1', 1, null, 22],
-            [17, 'record 2.1', 1, null, 10],
-            [21, 'record 3.1', 1, 'red', 16],
-            [55, 'record 3.1.1', 1, 'green', 17],
-            [56, 'record 4.1.1', 1, 'yellow', 27],
+        // let notes = [  // заглушка
+        //     [7, 'record 1', 1, null, 7],
+        //     [11, 'record 1.1', 1, 'red', 9],
+        //     [24, 'record 1.1.1', 1, 'yellow', 8],
+        //     [34, 'record 1.2.1', 1, 'green', 21],
+        //     [29, 'record 1.3.1', 1, null, 22],
+        //     [17, 'record 2.1', 1, null, 10],
+        //     [21, 'record 3.1', 1, 'red', 16],
+        //     [55, 'record 3.1.1', 1, 'green', 17],
+        //     [56, 'record 4.1.1', 1, 'yellow', 27],
 
-            [9, 'record 2', 2, null, 7],
-            [13, 'record 1.2', 2, 'yellow', 9],
-            [27, 'record 1.1.2', 2, 'red', 8],
-            [41, 'record 1.2.2', 2, null, 21],
-            [18, 'record 2.2', 2, null, 10],
-            [53, 'record 3.1.2', 2, 'green', 17],
-            [61, 'record 4.1.2', 2, 'red', 27],
+        //     [9, 'record 2', 2, null, 7],
+        //     [13, 'record 1.2', 2, 'yellow', 9],
+        //     [27, 'record 1.1.2', 2, 'red', 8],
+        //     [41, 'record 1.2.2', 2, null, 21],
+        //     [18, 'record 2.2', 2, null, 10],
+        //     [53, 'record 3.1.2', 2, 'green', 17],
+        //     [61, 'record 4.1.2', 2, 'red', 27],
 
-            [5, 'record 3', 3, null, 7],
-            [4, 'record 4', 4, 'yellow', 7],
-            [12, 'record 5', 5, 'red', 7],
-            [14, 'record 6', 6, null, 7],
-            [26, 'record 7', 7, null, 7],
-            [32, 'record 8', 8, 'green', 7],
-            [19, 'record 9', 9, 'green', 7],
-            [47, 'record 10', 10, null, 7],
-        ]
-        let noteFolders = [
-            [7, 'root', 1, null, 0, 'f9,f10,f16,f14,n7,n9,n5,n4,n12,n14,n26,n32,n19,n47'],
-            [8, 'папка 1.1', 1, null, 9, 'f23,n24,n27'],
-            [9, 'папка 1', 1, null, 7, 'f8,f21,f22,n11,n13'],
-            [17, 'папка 3.1', 1, null, 16, 'f34,n55,n53'],
-            [23, 'папка 1.1.1', 1, null, 8, ''],
-            [27, 'папка 4.1', 1, null, 14, 'n56,n61'],
-            [34, 'папка 3.1.1', 1, null, 17, 'f36'],
-            [36, 'папка 3.1.1.1', 1, null, 34, ''],
-            [10, 'папка 2', 2, 'red', 7, 'n17,n18'],
-            [21, 'папка 1.2', 2, 'yellow', 9, 'n34,n41'],
-            [16, 'папка 3', 3, 'green', 7, 'f17'],
-            [22, 'папка 1.3', 3, null, 9, 'n29'],
-            [14, 'папка 4', 4, 'yellow', 7, 'f27'],
-        ]
+        //     [5, 'record 3', 3, null, 7],
+        //     [4, 'record 4', 4, 'yellow', 7],
+        //     [12, 'record 5', 5, 'red', 7],
+        //     [14, 'record 6', 6, null, 7],
+        //     [26, 'record 7', 7, null, 7],
+        //     [32, 'record 8', 8, 'green', 7],
+        //     [19, 'record 9', 9, 'green', 7],
+        //     [47, 'record 10', 10, null, 7],
+        // ]
+        // let noteFolders = [
+        //     [7, 'root', 1, null, 0, 'f9,f10,f16,f14,n7,n9,n5,n4,n12,n14,n26,n32,n19,n47'],
+        //     [8, 'папка 1.1', 1, null, 9, 'f23,n24,n27'],
+        //     [9, 'папка 1', 1, null, 7, 'f8,f21,f22,n11,n13'],
+        //     [17, 'папка 3.1', 1, null, 16, 'f34,n55,n53'],
+        //     [23, 'папка 1.1.1', 1, null, 8, ''],
+        //     [27, 'папка 4.1', 1, null, 14, 'n56,n61'],
+        //     [34, 'папка 3.1.1', 1, null, 17, 'f36'],
+        //     [36, 'папка 3.1.1.1', 1, null, 34, ''],
+        //     [10, 'папка 2', 2, 'red', 7, 'n17,n18'],
+        //     [21, 'папка 1.2', 2, 'yellow', 9, 'n34,n41'],
+        //     [16, 'папка 3', 3, 'green', 7, 'f17'],
+        //     [22, 'папка 1.3', 3, null, 9, 'n29'],
+        //     [14, 'папка 4', 4, 'yellow', 7, 'f27'],
+        // ]
         let notices = [
             [7, 'notice 1', 1, null, 7, '15.05.2025', '12:00'],
             [11, 'notice 1.1', 1, 'red', 9, '15.05.2025', '12:00'],
@@ -309,11 +328,12 @@ let content = {
         ]
         
         let lst = null
-        if (url==ContentSettings.urls.getNotes) {
-            lst = notes
-        } else if (url==ContentSettings.urls.getNoteFolders) {
-            lst = noteFolders
-        } else if (url==ContentSettings.urls.getNotices) {
+        // if (url==ContentSettings.urls.getNotes) {
+        //     lst = notes
+        // } else if (url==ContentSettings.urls.getNoteFolders) {
+        //     lst = noteFolders
+        // }  
+        if (url==ContentSettings.urls.getNotices) {
             lst = notices
         } else if (url==ContentSettings.urls.getNoticeFolders) {
             lst = noticeFolders
@@ -323,8 +343,64 @@ let content = {
         }
         return lst
     },
-    getListOfObjects: function(url, objClass) {
-        let listOfLists = this.getContentAJAX(url, ContentSettings.token)
+    getContentAJAX2: async function(url) {  // getting FS content from server
+        // получение уведомлений также будет через эту функцию (отдельным запросом)
+        const options = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        }
+        const response = await conf.AJAX.send(url, options)
+
+        if (response === undefined) {
+            console.log(`Error: неопознанная ошибка`)
+        } else if (response.success) {
+            console.log(`Контент получен`)
+        }
+    
+        return response
+    },
+    getListOfObjects2: async function() {  // creating Objects by templates from above
+        // закоментированные строки понадобятся для работы с уведомлениями (удалить комментарий)
+        const recordContentUrl = conf.Domains['server'] + conf.Urls['fileSystem']
+        // noticeContentUrl = conf.Domains['server'] + conf.Urls['???']
+
+        const {folders: recordFolders, records: records} = await this.getContentAJAX2(recordContentUrl)
+        // const {noticeFolders: noticeFolders, notices: notices} = await this.getContentAJAX2(noticeContentUrl)
+
+        const listOfRecordObjects = []
+        for (let i=0;i<records.length;i++) {
+            listOfRecordObjects.push(new this.myNote(records[i]))
+        }
+
+        const listOfRecordFolderObjects = []
+        for (let i=0;i<recordFolders.length;i++) {
+            listOfRecordFolderObjects.push(new this.NoteFolder(recordFolders[i]))
+        }
+
+        // const listOfNoticeObjects = []
+        // for (let i=0;i<notices.length;i++) {
+        //     listOfNoticeObjects.push(new this.myNote(notices[i]))
+        // }
+
+        // const listOfNoticeFolderObjects = []
+        // for (let i=0;i<noticeFolders.length;i++) {
+        //     listOfNoticeFolderObjects.push(new this.myNote(noticeFolders[i]))
+        // }
+
+        // return [listOfRecordObjects, listOfRecordFolderObjects]
+        return {
+            notesList: listOfRecordObjects,
+            noteFoldersList: listOfRecordFolderObjects,
+            // noticesList: listOfNoticeObjects,
+            // noticeFoldersList: listOfNoticeFolderObjects,
+        }
+
+    },
+    getListOfObjects: async function(url, objClass) {  // создание объектов по шаблонам (удалить после получения уведомлений от сервера)
+        let listOfLists = await this.getContentAJAX(url, ContentSettings.token)
         let listOfObjects = []
         for (let i=0;i<listOfLists.length;i++) {
             listOfObjects.push(new objClass(...listOfLists[i]))
@@ -338,8 +414,7 @@ let content = {
         }
         return record_dict
     },
-    getDictOfFolders: function(listOfFolders) {
-        // Getting dictionary of folders by folder_id. Has the following form:
+    getDictOfFolders: function(listOfFolders) {  // Getting dictionary of folders by folder_id. Has the following form:
         // folder_dict = {
         //     folder_id:{
         //         folders:[...], - IDs of folders inside the folder with folder_id
@@ -356,27 +431,37 @@ let content = {
                 info: listOfFolders[folder_i]
             }
 
-            let children = listOfFolders[folder_i].children.split(',')
-            for (let i=0; i<children.length;i++) {
-                if (children[i][0]==='f') {
-                    folderDict[listOfFolders[folder_i].folder_id].folders.push(children[i])
-                } else {
-                    folderDict[listOfFolders[folder_i].folder_id].records.push(children[i])
+            let children = listOfFolders[folder_i].children
+            if (children) {  // если children не пустая строка
+                let childrenList = children.split(',')
+                for (let i=0; i<childrenList.length;i++) {
+                    if (childrenList[i][0]==='f') {
+                        folderDict[listOfFolders[folder_i].folder_id].folders.push(childrenList[i])
+                    } else if (childrenList[i][0]==='n') {
+                        folderDict[listOfFolders[folder_i].folder_id].records.push(childrenList[i])
+                    }
                 }
             } 
 
         }
         return folderDict
     },
-    getContent: function() {
+    getContent: async function() {
 
-        let notesList = this.getListOfObjects(ContentSettings.urls.getNotes, this.Note)
-        let noteFoldersList = this.getListOfObjects(ContentSettings.urls.getNoteFolders, this.Folder)
+        const {
+            notesList: notesList, noteFoldersList: noteFoldersList,  // notes
+            // noticesList: noticesList, noticeFoldersList: noticeFoldersList,  // notices
+        } = await this.getListOfObjects2()
+
+        // удалить загрлушки getListOfObjects
+        // let notesList = await this.getListOfObjects(ContentSettings.urls.getNotes, this.Note)
+        // let noteFoldersList = await this.getListOfObjects(ContentSettings.urls.getNoteFolders, this.Folder)
         let notesDict = this.getDictOfRecords(notesList)
         let noteFoldersDict = this.getDictOfFolders(noteFoldersList)
 
-        let noticesList = this.getListOfObjects(ContentSettings.urls.getNotices, this.Notice)
-        let noticeFoldersList = this.getListOfObjects(ContentSettings.urls.getNoticeFolders, this.Folder)
+        // удалить загрлушки getListOfObjects
+        let noticesList = await this.getListOfObjects(ContentSettings.urls.getNotices, this.Notice)
+        let noticeFoldersList = await this.getListOfObjects(ContentSettings.urls.getNoticeFolders, this.Folder)
         let noticesDict = this.getDictOfRecords(noticesList)
         let noticeFoldersDict = this.getDictOfFolders(noticeFoldersList)
         
@@ -388,12 +473,12 @@ let content = {
         this.notesRoot = noteFoldersList[0].folder_id
         this.noticesRoot = noticeFoldersList[0].folder_id
     },
-    run: function() {
-        this.getContent()
-        
+    run: async function() {
+        await this.getContent()
+        console.log(this.noteFolders)
     }
 }
-content.run()
+await content.run()
 
 let viewContent = {
     // currentType: null,
@@ -430,7 +515,7 @@ let viewContent = {
 
         // display back-folder
         let parent_id = foldersDict[this.currentFolderId].info.parent_id
-        if (parent_id !== 0) {
+        if (parent_id !== null) {
             this.createBackFolder(parent_id)
         }
 
@@ -439,21 +524,21 @@ let viewContent = {
             // console.log('foldersDict[foldersIdList[i]]', foldersDict[foldersIdList[i]])
             // console.log('foldersIdList[i]', foldersIdList[i])
             this.createObject(
-                id=foldersDict[foldersIdList[i]].info.folder_id,
-                title=foldersDict[foldersIdList[i]].info.title,
-                labels=null,
-                color=foldersDict[foldersIdList[i]].info.color,
-                objtype=DADSettings.folderClass,
+                foldersDict[foldersIdList[i]].info.folder_id,  // id
+                foldersDict[foldersIdList[i]].info.title,  // title
+                null,  // labels
+                foldersDict[foldersIdList[i]].info.color,  // color
+                DADSettings.folderClass,  // objtype
             )
         }
         for (let i=0; i<recordsIdList.length; i++) {
             this.createObject(
-                id=recordsDict[recordsIdList[i]].record_id,
-                title=recordsDict[recordsIdList[i]].title,
-                labelsList=null,
-                color=recordsDict[recordsIdList[i]].color,
-                objtype=DADSettings.recordClass,
-                datetime=recordsDict[recordsIdList[i]].date+' '+recordsDict[recordsIdList[i]].time
+                recordsDict[recordsIdList[i]].record_id,  // id
+                recordsDict[recordsIdList[i]].title,  // title
+                null,  // labels
+                recordsDict[recordsIdList[i]].color,  // color
+                DADSettings.recordClass,  // objtype
+                recordsDict[recordsIdList[i]].date+' '+recordsDict[recordsIdList[i]].time  // datetime
             )
         }
 
@@ -531,18 +616,18 @@ let viewContent = {
         coll3.append(labels)
 
         this.createSVG(  // type
-            parent=coll1,
-            className='content-svg',
-            viewBox='2 0 20 24',
-            pathLst=[
+            coll1,  // parent
+            'content-svg',  // className
+            '2 0 20 24',  // viewBox
+            [  // pathLst
                 'm7 12h10v2h-10zm0 6h7v-2h-7zm15-10.414v16.414h-20v-21a3 3 0 0 1 3-3h9.414zm-7-.586h3.586l-3.586-3.586zm5 15v-13h-7v-7h-8a1 1 0 0 0 -1 1v19z',
             ]
         )
         this.createSVG(  // settings
-            parent=coll3,
-            className='content-svg',
-            viewBox='0 0 24 24',
-            pathLst=[
+            coll3,  // parent
+            'content-svg',  // className
+            '0 0 24 24',  // viewBox
+            [  // pathLst
                 'M12,8a4,4,0,1,0,4,4A4,4,0,0,0,12,8Zm0,6a2,2,0,1,1,2-2A2,2,0,0,1,12,14Z',
                 'M21.294,13.9l-.444-.256a9.1,9.1,0,0,0,0-3.29l.444-.256a3,3,0,1,0-3-5.2l-.445.257A8.977,8.977,0,0,0,15,3.513V3A3,3,0,0,0,9,3v.513A8.977,8.977,0,0,0,6.152,5.159L5.705,4.9a3,3,0,0,0-3,5.2l.444.256a9.1,9.1,0,0,0,0,3.29l-.444.256a3,3,0,1,0,3,5.2l.445-.257A8.977,8.977,0,0,0,9,20.487V21a3,3,0,0,0,6,0v-.513a8.977,8.977,0,0,0,2.848-1.646l.447.258a3,3,0,0,0,3-5.2Zm-2.548-3.776a7.048,7.048,0,0,1,0,3.75,1,1,0,0,0,.464,1.133l1.084.626a1,1,0,0,1-1,1.733l-1.086-.628a1,1,0,0,0-1.215.165,6.984,6.984,0,0,1-3.243,1.875,1,1,0,0,0-.751.969V21a1,1,0,0,1-2,0V19.748a1,1,0,0,0-.751-.969A6.984,6.984,0,0,1,7.006,16.9a1,1,0,0,0-1.215-.165l-1.084.627a1,1,0,1,1-1-1.732l1.084-.626a1,1,0,0,0,.464-1.133,7.048,7.048,0,0,1,0-3.75A1,1,0,0,0,4.79,8.992L3.706,8.366a1,1,0,0,1,1-1.733l1.086.628A1,1,0,0,0,7.006,7.1a6.984,6.984,0,0,1,3.243-1.875A1,1,0,0,0,11,4.252V3a1,1,0,0,1,2,0V4.252a1,1,0,0,0,.751.969A6.984,6.984,0,0,1,16.994,7.1a1,1,0,0,0,1.215.165l1.084-.627a1,1,0,1,1,1,1.732l-1.084.626A1,1,0,0,0,18.746,10.125Z'
             ]
@@ -599,7 +684,7 @@ let viewContent = {
         ddArea.addEventListener('click', this.openObject.bind(this))
     }
 }
-viewContent.run()
+viewContent.run()  // запустить после асинхронного получения контента с сервера
 
 let path = {  // Directory of folders at the top 
     pathList: [], // list of objects like [{name, id},...]
@@ -619,9 +704,9 @@ let path = {  // Directory of folders at the top
             id: parentId
         })
 
-        while (parentId!=0) {  // other elems
+        while (parentId != null) {  // other elems
             parentId = currentFolderType[parentId].info.parent_id
-            if (parentId===0) break
+            if (parentId === null) break
             this.pathList.unshift({
                 name: currentFolderType[parentId].info.title,
                 id: parentId

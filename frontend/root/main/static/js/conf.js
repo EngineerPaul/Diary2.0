@@ -9,8 +9,13 @@ export const Urls = {
     'logoutUrl': 'logout',
     'authStatusCheck': 'auth-check',
 
-    'publickUrl': 'api/publick',
-    'secretUrl': 'api/secret',
+    'publickUrl': 'api/publick/',
+    'secretUrl': 'api/secret/',
+
+    // File System API
+    'fileSystem': 'api/file-system/',
+    'fileSystemRecords': 'api/file-system/records/',
+    'fileSystemFolders': 'api/file-system/folders/',
 }
 
 export const AJAX = {

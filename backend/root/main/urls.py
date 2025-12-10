@@ -16,7 +16,7 @@ from .views.content import (
 urlpatterns = []
 
 test_urls = [
-    path(  # get test publick content
+    path(  # get test public content
         route='public/',
         view=PublicAPI.as_view(),
         name='get_test_public_content'
