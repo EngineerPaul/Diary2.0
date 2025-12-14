@@ -1,9 +1,9 @@
-export const Domains = {
+export const Domains = {  // servers domains including ports
     'auth': 'http://127.0.0.1:8001/',
     'server': 'http://127.0.0.1:8002/',
 }
 
-export const Urls = {
+export const Urls = {  // backend urls
     // authentication
     'registrationUrl': 'registration',
     'loginUrl': 'obtain',
@@ -29,10 +29,9 @@ export const Urls = {
     image: (record_id, image_id) => `api/records/${record_id}/images/${image_id}/`, // get/delete image
     imagesGroups: (record_id) => `api/records/${record_id}/images-group/`, // post images group
     imagesGroup: (record_id, msg_id) => `api/records/${record_id}/images-group/${msg_id}/`, // get/delete images group
-
 }
 
-export const AJAX = {
+export const AJAX = {  // general implementation of AJAX requests
     send: async function(url, options) { // формируется запрос на url с options
         try {
             let response = await fetch(url, options)
@@ -72,26 +71,7 @@ export const AJAX = {
     },
 }
 
-// export const colors = {
-//     'w': 'white',
-//     'g': 'green',
-//     'b': 'blue',
-//     'y': 'yellow',
-//     'r': 'red',
-// }
-
-export const colors = {
-    'white': 'w',
-    'green': 'g',
-    'blue': 'b',
-    'yellow': 'y',
-    'red': 'r'
-}
-
-export const reversColors = {
-    'w': 'white',
-    'g': 'green',
-    'b': 'blue',
-    'y': 'yellow',
-    'r': 'red'
+export const colors = {  // file system object colors mapping
+    forward: {'white': 'w', 'green': 'g', 'blue': 'b', 'yellow': 'y', 'red': 'r'},
+    revers: {'w': 'white', 'g': 'green', 'b': 'blue', 'y': 'yellow', 'r': 'red'},
 }

@@ -6,16 +6,7 @@ let session = {
              'notes',
 }
 session.section
-const ContentSettings = {
-    urls: {
-        getNotes: 'drf/get-content/getNotes',
-        getNoteFolders: 'drf/get-content/getNoteFolders',
-        getNotices: 'drf/get-content/getNotices',
-        getNoticeFolders: 'drf/get-content/getNoticeFolders',
-    },
-    token: '',  // authorization
-    
-}
+
 const DADSettings = {  // general settings for DAD
     "DADObjectHeight": '58px',  // минимальный размер папок и записей
     "putBeetwenArea": 14.5,  // высота области (px) для логики "перемещения между" (в противовес перемещению внутрь)
@@ -36,13 +27,12 @@ const classNames = {
 }
 
 let modals = {
-    modal: null,
+    modal: null,     // link to the currently open modal (DOM-element)
     mode: 'create',  // 'create' или 'edit'
     editId: null,    // ID редактируемого объекта
     editType: null,  // 'record' или 'folder'
 
-    sort: {
-        that: this,
+    sort: { // blank
 
         byAlphabet: function() {
             console.log('сортировка по алфавиту')
@@ -54,27 +44,26 @@ let modals = {
             console.log('пользовательская сортировка')
         },
     },
-    hideModal: function(event) {
+    hideModal: function(event) {  // modal closing
         if (
-            (event.target != globalShadow) &&
-            // (event.currentTarget != modalCross) &&
-            (event.key != 'Escape')
+            (event.target != globalShadow) &&  // outside click
+            // (event.currentTarget != modalCross) &&  // hideModalCross func
+            (event.key != 'Escape')  // esc click
         ) return
         if (!this.modal) return
         modalBlock.style['display'] = 'none'
-        // console.log('modal', modal)
         console.log('this.modal', this.modal)
         this.modal.style['display'] = 'none'
         this.resetMode()
     },
-    hideModalCross: function(event) {
-        if (event.target.closest('.modal-cross')) {
+    hideModalCross: function(event) {  // modal closing
+        if (event.target.closest('.modal-cross')) {  // cross click
             modalBlock.style['display'] = 'none'
             this.modal.style['display'] = 'none'
             this.resetMode()
         }
     },
-    resetMode: function() {
+    resetMode: function() {  // reset modal settings for create and edit forms
         // Сброс режима и UI при закрытии модалки
         this.mode = 'create'
         this.editId = null
@@ -95,39 +84,33 @@ let modals = {
             document.getElementById('crtRecordFolderForm').reset()
         }
     },
-    getModal: function(event) {
-        console.log(this.modal)
+    getModal: function(event) {  // select modal for 3 btn of creation and sort
+        // сейчас функция не учитывает, что может быть сортировка (исправить-удалить)
         this.modal = document.getElementById(event.target.dataset.modal)
         this.modal.style['display'] = 'block'
-        console.log('target = ',event.target)
-        console.log('modal = ', event.target.dataset.modal)
         modalBlock.style['display'] = 'block'
         
-        // Устанавливаем режим создания
+        // the creation mode on
         this.mode = 'create'
         this.editId = null
         this.editType = null
     },
-    openEditModal: function(type, id) {
-        // Открытие модалки в режиме редактирования
+    openEditModal: function(type, id) {  // openning modal using edit mode 
         this.mode = 'edit'
         this.editId = parseInt(id)
         this.editType = type
         
-        let modalId, form, titleText, data
+        let modalId, form, titleText, data  // defining current form data
         
         if (type === 'record') {
             modalId = 'modalRecord'
             form = document.getElementById('crtRecordForm')
             titleText = 'Редактирование заметки'
             data = content.notes[id]
-            
-            // Заполняем форму данными
+
             form.fNoteName.value = data.title
             // form.fNoteContent.value = data.description || ''
-            
-            // Устанавливаем цвет (marker) - преобразуем 'w' -> 'white' для радио-кнопок
-            const colorValue = conf.reversColors[data.color] || 'white'
+            const colorValue = conf.colors.revers[data.color] || 'white'
             const markerRadio = form.querySelector(`input[name="marker"][value="${colorValue}"]`)
             if (markerRadio) markerRadio.checked = true
             
@@ -136,27 +119,21 @@ let modals = {
             form = document.getElementById('crtRecordFolderForm')
             titleText = 'Редактирование папки'
             data = content.noteFolders[id].info
-            
-            // Заполняем форму данными
+
             form.fFolderName.value = data.title
-            
-            // Устанавливаем цвет (marker) - преобразуем 'w' -> 'white' для радио-кнопок
-            const colorValue = conf.reversColors[data.color] || 'white'
+            const colorValue = conf.colors.revers[data.color] || 'white'
             const markerRadio = form.querySelector(`input[name="marker"][value="${colorValue}"]`)
             if (markerRadio) markerRadio.checked = true
         }
         
+        // fill the form using current data
         this.modal = document.getElementById(modalId)
-        
-        // Меняем заголовок и текст кнопки
         this.modal.querySelector('.modal-title p').textContent = titleText
         this.modal.querySelector('button[type="submit"]').textContent = 'Сохранить'
-        
-        // Показываем модалку
+
         this.modal.style.display = 'block'
         modalBlock.style.display = 'block'
     },
-
     run: function() {
         modalBlock.addEventListener('click', this.hideModal.bind(this))
         document.addEventListener('click', this.hideModalCross.bind(this))
@@ -171,7 +148,7 @@ let modals = {
 modals.run()
 
 const forms = {
-    handleRecordSubmit: async function(event) {
+    handleRecordSubmit: async function(event) {  // select form action by mode (create / update) for records
         event.preventDefault()
         
         if (modals.mode === 'edit') {
@@ -180,16 +157,14 @@ const forms = {
             await this.createRecord(event)
         }
     },
-    createRecord: async function(event) {
+    createRecord: async function(event) {  // creation a new record (ajax and ui)
         const form = event.target
         const data = {
             folder_id: parseInt(viewContent.currentFolderId),
             title: form.fNoteName.value,
             // description: form.fNoteContent.value,
-            color: conf.colors[form.marker.value],
+            color: conf.colors.forward[form.marker.value],
         }
-        console.log(data)
-        const currentFolder = viewContent.currentFolderId
 
         const url = conf.Domains['server'] + conf.Urls.FSRecords
         const options = {
@@ -212,23 +187,23 @@ const forms = {
                 pk: parseInt(response.data['pk']),
                 title: response.data['title'],
                 folder_id: parseInt(response.data['folder_id']),
-                color: conf.reversColors[response.data['color']],
+                color: conf.colors.revers[response.data['color']],
                 changed_at: response.data['changed_at']
             }
-            content.change.addNote(resp_data)  // изменить данные в content и отобразить
-            // закрыть модалку
+            content.change.addNote(resp_data)
+
             modalBlock.style['display'] = 'none'
             modals.modal.style['display'] = 'none'
         }
         
     },
-    updateRecord: async function(event) {
+    updateRecord: async function(event) {  // updating the record (ajax and ui)
         const form = event.target
         const id = modals.editId
         const data = {
             title: form.fNoteName.value,
             // description: form.fNoteContent.value,
-            color: conf.colors[form.marker.value],
+            color: conf.colors.forward[form.marker.value],
         }
         console.log('Обновление записи:', id, data)
 
@@ -249,22 +224,19 @@ const forms = {
         }
         
         if (response.success) {
-            // Обновляем данные в content
             content.notes[id].title = response.data['title']
             content.notes[id].color = response.data['color']  // цвет уже в коротком формате ('w', 'g', 'y', 'r')
             content.notes[id].changed_at = response.data['changed_at']
             
-            // Перерисовываем контент
             viewContent.removeObjects()
             viewContent.displayItems()
             
-            // закрыть модалку
             modalBlock.style['display'] = 'none'
             modals.modal.style['display'] = 'none'
             modals.resetMode()
         }
     },
-    handleFolderSubmit: async function(event) {
+    handleFolderSubmit: async function(event) {  // select form action by mode (create / update) for folders
         event.preventDefault()
         
         if (modals.mode === 'edit') {
@@ -273,12 +245,12 @@ const forms = {
             await this.createRecordFolder(event)
         }
     },
-    createRecordFolder: async function(event) {
+    createRecordFolder: async function(event) {  // creation a new record folder (ajax and ui)
         const form = event.target
         const data = {
             parent_id: parseInt(viewContent.currentFolderId),
             title: form.fFolderName.value,
-            color: conf.colors[form.marker.value],
+            color: conf.colors.forward[form.marker.value],
         }
         console.log(data)
 
@@ -303,23 +275,23 @@ const forms = {
                 pk: parseInt(response.data['pk']),
                 parent_id: parseInt(response.data['parent_id']),
                 title: response.data['title'],
-                color: conf.reversColors[response.data['color']],
+                color: conf.colors.revers[response.data['color']],
                 changed_at: response.data['changed_at'],
                 children: response.data['children'] || ''
             }
-            content.change.addNoteFolder(resp_data)  // изменить данные в content и отобразить
-            // закрыть модалку
+            content.change.addNoteFolder(resp_data)
+
             modalBlock.style['display'] = 'none'
             modals.modal.style['display'] = 'none'
         }
         
     },
-    updateRecordFolder: async function(event) {
+    updateRecordFolder: async function(event) {  // updating the record folder (ajax and ui)
         const form = event.target
         const id = modals.editId
         const data = {
             title: form.fFolderName.value,
-            color: conf.colors[form.marker.value],
+            color: conf.colors.forward[form.marker.value],
         }
         console.log('Обновление папки:', id, data)
 
@@ -355,11 +327,11 @@ const forms = {
             modals.resetMode()
         }
     },
-    createNotice: async function(event) {
+    createNotice: async function(event) {  // blank for creation a notice
         event.preventDefault()
 
     },
-    createNoticeFolder: async function(event) {
+    createNoticeFolder: async function(event) {  // blank for creation a new notice folder
         event.preventDefault()
 
     },
@@ -480,16 +452,14 @@ let content = {
     //     this.color = color
     //     this.parent_id = parent_id  // folder id
     // },
-    Note: function({pk, title, folder_id, color, changed_at}) {
-        // create note object using new notation
+    Note: function({pk, title, folder_id, color, changed_at}) {  // create note object using new notation
         this.record_id = parseInt(pk)  // name like notice
         this.title = title
         this.parent_id = parseInt(folder_id)  // folder id
         this.color = color
         this.changed_at = changed_at
     },
-    Notice: function(record_id, notice_name, order_id, color, parent_id, date, time) {
-        // create notice object using new notation
+    Notice: function(record_id, notice_name, order_id, color, parent_id, date, time) {  // create notice object using new notation
         this.record_id = record_id  // name like note
         this.title = notice_name
         this.order_id = order_id
@@ -498,8 +468,7 @@ let content = {
         this.date = date
         this.time = time
     },
-    Folder: function(folder_id, folder_name, order_id, color, parent_id, children) {
-        // create folder object using new notation
+    Folder: function(folder_id, folder_name, order_id, color, parent_id, children) {  // create folder object using new notation
         this.folder_id = folder_id
         this.title = folder_name
         this.order_id = order_id
@@ -507,8 +476,7 @@ let content = {
         this.parent_id = parent_id
         this.children = children  // str of object ids like 'f9,f10,n7,n9,n5,n4,n12'
     },
-    NoteFolder: function({pk, parent_id, title, color, changed_at, children}) {
-        // create folder object using new notation
+    NoteFolder: function({pk, parent_id, title, color, changed_at, children}) {  // create folder object using new notation
         this.folder_id = parseInt(pk)
         this.parent_id = parent_id === null ? null : parseInt(parent_id)
         this.title = title
@@ -520,51 +488,7 @@ let content = {
     getContentAJAX: async function(url, token) { // заглушка
         // getting list like content from the server by url
 
-        // сейчас работает заглушка. В зависимости от url вовращается разный контент
-        // f - folder, n - note/notice
-        // let notes = [  // заглушка
-        //     [7, 'record 1', 1, null, 7],
-        //     [11, 'record 1.1', 1, 'red', 9],
-        //     [24, 'record 1.1.1', 1, 'yellow', 8],
-        //     [34, 'record 1.2.1', 1, 'green', 21],
-        //     [29, 'record 1.3.1', 1, null, 22],
-        //     [17, 'record 2.1', 1, null, 10],
-        //     [21, 'record 3.1', 1, 'red', 16],
-        //     [55, 'record 3.1.1', 1, 'green', 17],
-        //     [56, 'record 4.1.1', 1, 'yellow', 27],
-
-        //     [9, 'record 2', 2, null, 7],
-        //     [13, 'record 1.2', 2, 'yellow', 9],
-        //     [27, 'record 1.1.2', 2, 'red', 8],
-        //     [41, 'record 1.2.2', 2, null, 21],
-        //     [18, 'record 2.2', 2, null, 10],
-        //     [53, 'record 3.1.2', 2, 'green', 17],
-        //     [61, 'record 4.1.2', 2, 'red', 27],
-
-        //     [5, 'record 3', 3, null, 7],
-        //     [4, 'record 4', 4, 'yellow', 7],
-        //     [12, 'record 5', 5, 'red', 7],
-        //     [14, 'record 6', 6, null, 7],
-        //     [26, 'record 7', 7, null, 7],
-        //     [32, 'record 8', 8, 'green', 7],
-        //     [19, 'record 9', 9, 'green', 7],
-        //     [47, 'record 10', 10, null, 7],
-        // ]
-        // let noteFolders = [
-        //     [7, 'root', 1, null, 0, 'f9,f10,f16,f14,n7,n9,n5,n4,n12,n14,n26,n32,n19,n47'],
-        //     [8, 'папка 1.1', 1, null, 9, 'f23,n24,n27'],
-        //     [9, 'папка 1', 1, null, 7, 'f8,f21,f22,n11,n13'],
-        //     [17, 'папка 3.1', 1, null, 16, 'f34,n55,n53'],
-        //     [23, 'папка 1.1.1', 1, null, 8, ''],
-        //     [27, 'папка 4.1', 1, null, 14, 'n56,n61'],
-        //     [34, 'папка 3.1.1', 1, null, 17, 'f36'],
-        //     [36, 'папка 3.1.1.1', 1, null, 34, ''],
-        //     [10, 'папка 2', 2, 'red', 7, 'n17,n18'],
-        //     [21, 'папка 1.2', 2, 'yellow', 9, 'n34,n41'],
-        //     [16, 'папка 3', 3, 'green', 7, 'f17'],
-        //     [22, 'папка 1.3', 3, null, 9, 'n29'],
-        //     [14, 'папка 4', 4, 'yellow', 7, 'f27'],
-        // ]
+        // сейчас работает заглушка для notice. В зависимости от url вовращается разный контент
         let notices = [
             [7, 'notice 1', 1, null, 7, '15.05.2025', '12:00'],
             [11, 'notice 1.1', 1, 'red', 9, '15.05.2025', '12:00'],
@@ -610,14 +534,9 @@ let content = {
         ]
         
         let lst = null
-        // if (url==ContentSettings.urls.getNotes) {
-        //     lst = notes
-        // } else if (url==ContentSettings.urls.getNoteFolders) {
-        //     lst = noteFolders
-        // }  
-        if (url==ContentSettings.urls.getNotices) {
+        if (url=='get-notice-url-test') {
             lst = notices
-        } else if (url==ContentSettings.urls.getNoticeFolders) {
+        } else if (url=='get-notice-folder-url-test') {
             lst = noticeFolders
         } else {
             console.log('Content Error: Url doesnt exists!')
@@ -682,7 +601,7 @@ let content = {
 
     },
     getListOfObjects: async function(url, objClass) {  // создание объектов по шаблонам (удалить после получения уведомлений от сервера)
-        let listOfLists = await this.getContentAJAX(url, ContentSettings.token)
+        let listOfLists = await this.getContentAJAX(url, 'token')
         let listOfObjects = []
         for (let i=0;i<listOfLists.length;i++) {
             listOfObjects.push(new objClass(...listOfLists[i]))
@@ -728,22 +647,20 @@ let content = {
         }
         return folderDict
     },
-    getContent: async function() {
+    getContent: async function() {  // getting all content (records, notices and folders) from the server
 
         const {
             notesList: notesList, noteFoldersList: noteFoldersList,  // notes
             // noticesList: noticesList, noticeFoldersList: noticeFoldersList,  // notices
         } = await this.getListOfObjects2()
 
-        // удалить загрлушки getListOfObjects
-        // let notesList = await this.getListOfObjects(ContentSettings.urls.getNotes, this.Note)
-        // let noteFoldersList = await this.getListOfObjects(ContentSettings.urls.getNoteFolders, this.Folder)
+        // удалить заглушки getListOfObjects
         let notesDict = this.getDictOfRecords(notesList)
         let noteFoldersDict = this.getDictOfFolders(noteFoldersList)
 
-        // удалить загрлушки getListOfObjects
-        let noticesList = await this.getListOfObjects(ContentSettings.urls.getNotices, this.Notice)
-        let noticeFoldersList = await this.getListOfObjects(ContentSettings.urls.getNoticeFolders, this.Folder)
+        // удалить заглушки getListOfObjects
+        let noticesList = await this.getListOfObjects('get-notice-url-test', this.Notice)
+        let noticeFoldersList = await this.getListOfObjects('get-notice-folder-url-test', this.Folder)
         let noticesDict = this.getDictOfRecords(noticesList)
         let noticeFoldersDict = this.getDictOfFolders(noticeFoldersList)
         
@@ -757,22 +674,19 @@ let content = {
         console.log(this.notes)
     },
 
-    change: {
-        addNote: function({pk, title, folder_id, color, changed_at}) {
-            const newNote = new content.Note({pk, title, folder_id, color: conf.colors[color], changed_at})
-            console.log(color)
+    change: {  // changes existing objects (using and without AJAX)
+        addNote: function({pk, title, folder_id, color, changed_at}) {  // creation a new record (ajax in form.createRecord)
+            const newNote = new content.Note({pk, title, folder_id, color: conf.colors.forward[color], changed_at})
             content.notes[newNote.record_id] = newNote
             const folder = content.noteFolders[folder_id]
-            console.log('folder', folder)
             folder.records.push('n'+pk)
             folder.info['children'] = folder.folders.join(',') + ',' + folder.records.join(',')
-            console.log('folder', folder)
 
             viewContent.removeObjects()
             viewContent.displayItems()
         },
-        delNote: async function(id) {
-            // отправить запрос на удаление записи
+        delNote: async function(id) {  // deletion the record (including ajax)
+
             const url = conf.Domains['server'] + conf.Urls.FSRecord(id)
             const options = {
                 method: 'DELETE',
@@ -781,7 +695,6 @@ let content = {
                 },
                 credentials: 'include',
             }
-            
             const response = await conf.AJAX.send(url, options)
             
             if (response === undefined) {
@@ -789,19 +702,14 @@ let content = {
                 return false
             }
             
-            console.log(response)
-            
             if (response === 'Заметка успешно удалена') {
-                // получить parent_id записи и удалить из parent folder.records
                 const parentId = content.notes[id].parent_id
                 const parentFolder = content.noteFolders[parentId]
                 const recordIndex = parentFolder.records.indexOf('n' + id)
                 if (recordIndex > -1) {
                     parentFolder.records.splice(recordIndex, 1)
                 }
-                // удалить из content.notes
                 delete content.notes[id]
-                // обновить children родительской папки
                 parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.records.join(',')
                 
                 viewContent.removeObjects()
@@ -812,15 +720,15 @@ let content = {
             }
             return false
         },
-        addNoteFolder: function({pk, parent_id, title, color, changed_at, children}) {
-            const newFolder = new content.NoteFolder({pk, title, parent_id, color: conf.colors[color], changed_at, children})
-            // добавить папку в content.noteFolders
+        addNoteFolder: function({pk, parent_id, title, color, changed_at, children}) {  // creation a new record folder (ajax in form.createFolder)
+            const newFolder = new content.NoteFolder(
+                {pk, title, parent_id, color: conf.colors.forward[color], changed_at, children})
             content.noteFolders[newFolder.folder_id] = {
                 folders: [],
                 records: [],
                 info: newFolder
             }
-            // добавить ссылку на папку в родительскую папку
+
             const parentFolder = content.noteFolders[parent_id]
             parentFolder.folders.push('f' + pk)
             parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.records.join(',')
@@ -828,8 +736,7 @@ let content = {
             viewContent.removeObjects()
             viewContent.displayItems()
         },
-        delNoteFolder: async function(id) {
-            // отправить запрос на удаление папки
+        delNoteFolder: async function(id) {  // deletion the record folder (including ajax)
             const url = conf.Domains['server'] + conf.Urls.FSFolder(id)
             const options = {
                 method: 'DELETE',
@@ -838,7 +745,6 @@ let content = {
                 },
                 credentials: 'include',
             }
-            
             const response = await conf.AJAX.send(url, options)
             
             if (response === undefined) {
@@ -846,20 +752,14 @@ let content = {
                 return false
             }
             
-            console.log(response)
-            
-            // TODO: изменить условие после настройки ответа сервера
             if (response === 'Папка успешно удалена' || response) {
-                // получить parent_id папки и удалить из parent folder.folders
                 const parentId = content.noteFolders[id].info.parent_id
                 const parentFolder = content.noteFolders[parentId]
                 const folderIndex = parentFolder.folders.indexOf('f' + id)
                 if (folderIndex > -1) {
                     parentFolder.folders.splice(folderIndex, 1)
                 }
-                // удалить из content.noteFolders
                 delete content.noteFolders[id]
-                // обновить children родительской папки
                 parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.records.join(',')
                 
                 viewContent.removeObjects()
@@ -870,7 +770,6 @@ let content = {
             }
             return false
         },
-
     },
 
     run: async function() {
@@ -991,7 +890,7 @@ let viewContent = {
         coll2.className = 'coll2'
         coll3.className = 'coll3'
         marker.className = 'marker'
-        marker.dataset['color'] = conf.reversColors[color]
+        marker.dataset['color'] = conf.colors.revers[color]
         if (isNotices&&isRecord) {
             datetimeObj.className = 'datetime'
             datetimeP.textContent = datetime
@@ -1033,7 +932,7 @@ let viewContent = {
             ]
         )
     },
-    createSVG: function(parent, className, viewBox, pathLst) {
+    createSVG: function(parent, className, viewBox, pathLst) {  // create svg elements
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
         svg.setAttributeNS(null, 'class', className)
         svg.setAttributeNS(null, 'viewBox', viewBox)
@@ -1064,14 +963,15 @@ let viewContent = {
             this.openRecord(record.id)
         }
     },
-    openFolder: function(folder_id) {
+    openFolder: function(folder_id) { // opening the folder
         this.currentFolderId = folder_id
         viewContent.removeObjects()
         viewContent.displayItems()
         path.getPathList()
         path.viewPath()
     },
-    openRecord: function(record_id) {
+    openRecord: function(record_id) { // opening the records
+        // здесь должен осуществляться переход на url заметки и напоминания (исправить-удалить)
         console.log('Переход на страницу записи ', session.section,' типа, id=', record_id)
         // console.log(window.location.pathname)
         // window.location.pathname = '/notes/' + record_id
@@ -1084,7 +984,7 @@ let viewContent = {
         ddArea.addEventListener('click', this.openObject.bind(this))
     }
 }
-viewContent.run()  // запустить после асинхронного получения контента с сервера
+viewContent.run()
 
 let path = {  // Directory of folders at the top 
     pathList: [], // list of objects like [{name, id},...]
@@ -1708,7 +1608,7 @@ let mobileSettings = {
     scrollId: null,  // setInterval ID
     scrollStep: 4,  // scroll offset (speed)
 
-    getDeviceType: function() {
+    getDeviceType: function() {  // getting type of a user device (mibile or desktop)
         // https://sky.pro/media/kak-opredelit-tip-ustrojstva-polzovatelya-s-pomoshhyu-javascript/
         let userAgent = navigator.userAgent.toLowerCase();
         let isMobile = /mobile|iphone|ipad|ipod|android|blackberry|mini|windows\sce|palm/i.test(userAgent);
@@ -1790,7 +1690,7 @@ const settingsGear = {
     offTimer: null,
     timerValue: 5000,  // time of disappearance, ms
 
-    displayGearMenu: function(event) {
+    displayGearMenu: function(event) {  // display element-gear menu 
         let gear = event.target.closest('.content-svg')
         if (!(gear)) return
         
@@ -1807,7 +1707,7 @@ const settingsGear = {
         clearTimeout(this.offTimer)
         this.offTimer = setTimeout(this.hideGearMenu.bind(this), this.timerValue)
     },
-    hideGearMenu: function(event) {
+    hideGearMenu: function(event) {  // hide element-gear menu
         if (event) {
             let menu = event.target.closest('.gear-context-menu')
             if (menu) return
@@ -1817,34 +1717,11 @@ const settingsGear = {
         this.elId = null
         this.elType = null
     },
-    renameEvent: function(event) {
-        // сделать общую модалку с изменением цвета. использовать модалку для создания объекта
-
-        // отобразить нужну модалку
-        // отправить запрос с указанием id в url
-        // получить успешный ответ
-        // изменить объект в content
-        // remove & display items
-        
-        console.log(`Переименовать объект ${this.elType} id=${this.elId}`)
-        this.hideGearMenu()
-    },
-    paintEvent: function(event) {
-        // отобразить нужну модалку
-        // отправить запрос с указанием id в url
-        // получить успешный ответ
-        // изменить объект в content
-        // remove & display items
-        
-        console.log(`Перекрасить объект ${this.elType} id=${this.elId}`)
-        this.hideGearMenu()
-    },
-    changeEvent: function(event) {
-        // Открываем модалку в режиме редактирования
+    changeEvent: function(event) {  // change event of the menu btn (open modal using edit mode)
         modals.openEditModal(this.elType, this.elId)
         this.hideGearMenu()
     },
-    delEvent: async function(event) {
+    delEvent: async function(event) {  // delete event of the menu btn (immediately using content.change.del***)
         const id = parseInt(this.elId)
         
         if (this.elType === 'record') {
@@ -1859,12 +1736,8 @@ const settingsGear = {
         this.ddArea.addEventListener('click', this.displayGearMenu.bind(this))
         this.ddArea.addEventListener('contextmenu', this.displayGearMenu.bind(this))
 
-        // const gearRename = document.getElementById('gearRename')
-        // const gearPaint = document.getElementById('gearPaint')
         const gearChange = document.getElementById('gearChange')
         const gearDel = document.getElementById('gearDel')
-        // gearRename.addEventListener('click', this.renameEvent.bind(this))
-        // gearPaint.addEventListener('click', this.paintEvent.bind(this))
         gearChange.addEventListener('click', this.changeEvent.bind(this))
         gearDel.addEventListener('click', this.delEvent.bind(this))
 
