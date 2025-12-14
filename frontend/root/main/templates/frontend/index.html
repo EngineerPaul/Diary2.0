@@ -78,7 +78,7 @@
             </div>
             <hr>
             <div class="modal-cart-content modal-create">
-                <form action="create_note_api" autocomplete="off">
+                <form autocomplete="off" id="crtRecordForm">
                     {% csrf_token %}
                     <label for="fNoteName">
                         Название:
@@ -86,30 +86,30 @@
                         <div class="error">Invalid value.</div>
                     </label>
                     <label for="fNoteContent">
-                        Содержание:
+                        Описание:
                         <textarea class="modal-input" name="fNoteContent" id="fNoteContent" required rows="3"></textarea>
                         <div class="error">Invalid value.</div>
                     </label>
                     Маркер:<br>
                     <div class="form-marker">
                         <label>
-                            <input type="radio" name="marker" checked>
-                            <div class="marker" data-color="none" ></div>
+                            <input type="radio" name="marker" value="white" checked>
+                            <div class="marker" data-color="white" ></div>
                         </label>
                         <label>
-                            <input type="radio" name="marker">
+                            <input type="radio" name="marker" value="green">
                             <div class="marker" data-color="green"></div>
                         </label>
                         <label>
-                            <input type="radio" name="marker">
+                            <input type="radio" name="marker" value="yellow">
                             <div class="marker" data-color="yellow"></div>
                         </label>
                         <label>
-                            <input type="radio" name="marker">
+                            <input type="radio" name="marker" value="red">
                             <div class="marker" data-color="red"></div>
                         </label>
                     </div>
-                    <button class="submitButton btn-default" type="button">Создать</button>
+                    <button class="submitButton btn-default" type="submit" id="crtRecordBtn">Создать</button>
                 </form>
             </div>
         </div>
@@ -129,7 +129,7 @@
             </div>
             <hr>
             <div class="modal-cart-content">
-                <form action="create_note_api" method="POST" autocomplete="off">
+                <form method="POST" autocomplete="off" id="crtRecordFolderForm">
                     {% csrf_token %}
                     <label for="fFolderName">
                         Название папки:
@@ -138,23 +138,23 @@
                     Маркер:<br>
                     <div class="form-marker">
                         <label>
-                            <input type="radio" name="marker" checked>
-                            <div class="marker" data-color="none" ></div>
+                            <input type="radio" name="marker" value="white" checked>
+                            <div class="marker" data-color="white" ></div>
                         </label>
                         <label>
-                            <input type="radio" name="marker">
+                            <input type="radio" name="marker" value="green">
                             <div class="marker" data-color="green"></div>
                         </label>
                         <label>
-                            <input type="radio" name="marker">
+                            <input type="radio" name="marker" value="yellow">
                             <div class="marker" data-color="yellow"></div>
                         </label>
                         <label>
-                            <input type="radio" name="marker">
+                            <input type="radio" name="marker" value="red">
                             <div class="marker" data-color="red"></div>
                         </label>
                     </div>
-                    <button class="submitButton btn-default" type="button">Создать</button>
+                    <button class="submitButton btn-default" type="submit">Создать</button>
                 </form>
             </div>
         </div>

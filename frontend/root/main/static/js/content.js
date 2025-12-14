@@ -91,6 +91,110 @@ let modals = {
 }
 modals.run()
 
+const forms = {
+    createRecord: async function(event) {
+        event.preventDefault()
+        const form = event.target
+        const data = {
+            folder_id: parseInt(viewContent.currentFolderId),
+            title: form.fNoteName.value,
+            // description: form.fNoteContent.value,
+            color: conf.colors[form.marker.value],
+        }
+        console.log(data)
+        const currentFolder = viewContent.currentFolderId
+
+        const url = conf.Domains['server'] + conf.Urls.FSRecords
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(data),
+        }
+        const response = await conf.AJAX.send(url, options)
+
+        if (response === undefined) {
+            console.log(`Error: неопознанная ошибка`)
+            return
+        }
+        
+        if (response.success) {
+            const resp_data = {
+                pk: parseInt(response.data['pk']),
+                title: response.data['title'],
+                folder_id: parseInt(response.data['folder_id']),
+                color: conf.reversColors[response.data['color']],
+                changed_at: response.data['changed_at']
+            }
+            content.change.addNote(resp_data)  // изменить данные в content и отобразить
+            // закрыть модалку
+            modalBlock.style['display'] = 'none'
+            modals.modal.style['display'] = 'none'
+        }
+        
+    },
+    createRecordFolder: async function(event) {
+        event.preventDefault()
+        const form = event.target
+        const data = {
+            parent_id: parseInt(viewContent.currentFolderId),
+            title: form.fFolderName.value,
+            color: conf.colors[form.marker.value],
+        }
+        console.log(data)
+
+        const url = conf.Domains['server'] + conf.Urls.FSFolders
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(data),
+        }
+        const response = await conf.AJAX.send(url, options)
+
+        if (response === undefined) {
+            console.log(`Error: неопознанная ошибка`)
+            return
+        }
+        
+        if (response.success) {
+            const resp_data = {
+                pk: parseInt(response.data['pk']),
+                parent_id: parseInt(response.data['parent_id']),
+                title: response.data['title'],
+                color: conf.reversColors[response.data['color']],
+                changed_at: response.data['changed_at'],
+                children: response.data['children'] || ''
+            }
+            content.change.addNoteFolder(resp_data)  // изменить данные в content и отобразить
+            // закрыть модалку
+            modalBlock.style['display'] = 'none'
+            modals.modal.style['display'] = 'none'
+        }
+        
+    },
+    createNotice: async function(event) {
+        event.preventDefault()
+
+    },
+    createNoticeFolder: async function(event) {
+        event.preventDefault()
+
+    },
+    run: function() {
+        const crtRecordForm = document.getElementById('crtRecordForm')
+        const crtRecordFolderForm = document.getElementById('crtRecordFolderForm')
+        
+        crtRecordForm.addEventListener('submit', this.createRecord.bind(this))
+        crtRecordFolderForm.addEventListener('submit', this.createRecordFolder.bind(this))
+    }
+}
+forms.run()
+
 let search = {
     getSearchList: function() {  // getting a search list
         searchListTest = [ // Заглушка для теста до получения настоящего контента
@@ -364,7 +468,7 @@ let content = {
     },
     getListOfObjects2: async function() {  // creating Objects by templates from above
         // закоментированные строки понадобятся для работы с уведомлениями (удалить комментарий)
-        const recordContentUrl = conf.Domains['server'] + conf.Urls['fileSystem']
+        const recordContentUrl = conf.Domains['server'] + conf.Urls['getFileSystem']
         // noticeContentUrl = conf.Domains['server'] + conf.Urls['???']
 
         const {folders: recordFolders, records: records} = await this.getContentAJAX2(recordContentUrl)
@@ -372,7 +476,7 @@ let content = {
 
         const listOfRecordObjects = []
         for (let i=0;i<records.length;i++) {
-            listOfRecordObjects.push(new this.myNote(records[i]))
+            listOfRecordObjects.push(new this.Note(records[i]))
         }
 
         const listOfRecordFolderObjects = []
@@ -382,12 +486,12 @@ let content = {
 
         // const listOfNoticeObjects = []
         // for (let i=0;i<notices.length;i++) {
-        //     listOfNoticeObjects.push(new this.myNote(notices[i]))
+        //     listOfNoticeObjects.push(new this.Notice(notices[i]))  // проверить конструктор Notice 
         // }
 
         // const listOfNoticeFolderObjects = []
         // for (let i=0;i<noticeFolders.length;i++) {
-        //     listOfNoticeFolderObjects.push(new this.myNote(noticeFolders[i]))
+        //     listOfNoticeFolderObjects.push(new this.Folder(noticeFolders[i]))  // проверить конструктор Folder
         // }
 
         // return [listOfRecordObjects, listOfRecordFolderObjects]
@@ -472,7 +576,125 @@ let content = {
 
         this.notesRoot = noteFoldersList[0].folder_id
         this.noticesRoot = noticeFoldersList[0].folder_id
+        console.log(this.notes)
     },
+
+    change: {
+        addNote: function({pk, title, folder_id, color, changed_at}) {
+            const newNote = new content.Note({pk, title, folder_id, color: conf.colors[color], changed_at})
+            console.log(color)
+            content.notes[newNote.record_id] = newNote
+            const folder = content.noteFolders[folder_id]
+            console.log('folder', folder)
+            folder.records.push('n'+pk)
+            folder.info['children'] = folder.folders.join(',') + ',' + folder.records.join(',')
+            console.log('folder', folder)
+
+            viewContent.removeObjects()
+            viewContent.displayItems()
+        },
+        delNote: async function(id) {
+            // отправить запрос на удаление записи
+            const url = conf.Domains['server'] + conf.Urls.FSRecord(id)
+            const options = {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            }
+            
+            const response = await conf.AJAX.send(url, options)
+            
+            if (response === undefined) {
+                console.log(`Error: неопознанная ошибка при удалении записи`)
+                return false
+            }
+            
+            console.log(response)
+            
+            if (response === 'Заметка успешно удалена') {
+                // получить parent_id записи и удалить из parent folder.records
+                const parentId = content.notes[id].parent_id
+                const parentFolder = content.noteFolders[parentId]
+                const recordIndex = parentFolder.records.indexOf('n' + id)
+                if (recordIndex > -1) {
+                    parentFolder.records.splice(recordIndex, 1)
+                }
+                // удалить из content.notes
+                delete content.notes[id]
+                // обновить children родительской папки
+                parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.records.join(',')
+                
+                viewContent.removeObjects()
+                viewContent.displayItems()
+                
+                console.log(`Запись id=${id} удалена`)
+                return true
+            }
+            return false
+        },
+        addNoteFolder: function({pk, parent_id, title, color, changed_at, children}) {
+            const newFolder = new content.NoteFolder({pk, title, parent_id, color: conf.colors[color], changed_at, children})
+            // добавить папку в content.noteFolders
+            content.noteFolders[newFolder.folder_id] = {
+                folders: [],
+                records: [],
+                info: newFolder
+            }
+            // добавить ссылку на папку в родительскую папку
+            const parentFolder = content.noteFolders[parent_id]
+            parentFolder.folders.push('f' + pk)
+            parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.records.join(',')
+
+            viewContent.removeObjects()
+            viewContent.displayItems()
+        },
+        delNoteFolder: async function(id) {
+            // отправить запрос на удаление папки
+            const url = conf.Domains['server'] + conf.Urls.FSFolder(id)
+            const options = {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            }
+            
+            const response = await conf.AJAX.send(url, options)
+            
+            if (response === undefined) {
+                console.log(`Error: неопознанная ошибка при удалении папки`)
+                return false
+            }
+            
+            console.log(response)
+            
+            // TODO: изменить условие после настройки ответа сервера
+            if (response === 'Папка успешно удалена' || response) {
+                // получить parent_id папки и удалить из parent folder.folders
+                const parentId = content.noteFolders[id].info.parent_id
+                const parentFolder = content.noteFolders[parentId]
+                const folderIndex = parentFolder.folders.indexOf('f' + id)
+                if (folderIndex > -1) {
+                    parentFolder.folders.splice(folderIndex, 1)
+                }
+                // удалить из content.noteFolders
+                delete content.noteFolders[id]
+                // обновить children родительской папки
+                parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.records.join(',')
+                
+                viewContent.removeObjects()
+                viewContent.displayItems()
+                
+                console.log(`Папка id=${id} удалена`)
+                return true
+            }
+            return false
+        },
+
+    },
+
     run: async function() {
         await this.getContent()
         console.log(this.noteFolders)
@@ -591,7 +813,7 @@ let viewContent = {
         coll2.className = 'coll2'
         coll3.className = 'coll3'
         marker.className = 'marker'
-        marker.dataset['color'] = color
+        marker.dataset['color'] = conf.reversColors[color]
         if (isNotices&&isRecord) {
             datetimeObj.className = 'datetime'
             datetimeP.textContent = datetime
@@ -1418,18 +1640,36 @@ const settingsGear = {
         this.elType = null
     },
     renameEvent: function(event) {
+        // сделать общую модалку с изменением цвета. использовать модалку для создания объекта
+
+        // отобразить нужну модалку
+        // отправить запрос с указанием id в url
+        // получить успешный ответ
+        // изменить объект в content
+        // remove & display items
         
         console.log(`Переименовать объект ${this.elType} id=${this.elId}`)
         this.hideGearMenu()
     },
     paintEvent: function(event) {
+        // отобразить нужну модалку
+        // отправить запрос с указанием id в url
+        // получить успешный ответ
+        // изменить объект в content
+        // remove & display items
         
         console.log(`Перекрасить объект ${this.elType} id=${this.elId}`)
         this.hideGearMenu()
     },
-    delEvent: function(event) {
+    delEvent: async function(event) {
+        const id = parseInt(this.elId)
         
-        console.log(`Удалить объект ${this.elType} id=${this.elId}`)
+        if (this.elType === 'record') {
+            await content.change.delNote(id)
+        } else {
+            await content.change.delNoteFolder(id)
+        }
+        
         this.hideGearMenu()
     },
     run: function() {

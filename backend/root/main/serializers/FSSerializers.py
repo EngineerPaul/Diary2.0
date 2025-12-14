@@ -50,7 +50,8 @@ class RecordCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = ['folder_id', 'title', 'color']
+        fields = ['pk', 'folder_id', 'title', 'color', 'changed_at']
+        read_only_fields = ['pk', 'changed_at']
 
 
 # ===== RecordsAPI =====
@@ -82,7 +83,8 @@ class FolderCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RecordFolder
-        fields = ['parent_id', 'title', 'color']
+        fields = ['pk', 'parent_id', 'title', 'color', 'changed_at']
+        read_only_fields = ['pk', 'changed_at']
 
 
 # ===== RecordFoldersAPI =====

@@ -208,13 +208,14 @@ class RecordsAPI(APIView):
 
         serializer = RecordCreateSerializer(data=request.data)
         if not serializer.is_valid():
+            print(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         validated_data = serializer.validated_data
 
         try:
             folder = RecordFolder.objects.get(
-                pk=validated_data['folder_id'], user_id=user_id
+                pk=validated_data['folder_id'].pk, user_id=user_id
             )
         except RecordFolder.DoesNotExist:
             msg = f'Error: папка {validated_data["folder_id"]} не найдена'
@@ -225,12 +226,16 @@ class RecordsAPI(APIView):
                 record = serializer.save(user_id=user_id)
                 folder.add_record(record.pk)
                 folder.save()
-        except transaction.TransactionManagementError:
-            msg = 'Error: Ошибка создания заметки'
+        except Exception as e:
+            msg = f'Error: Ошибка создания заметки - {str(e)}'
             return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
 
-        msg = f'Заметка {record.pk} успешно создана'
-        return Response(data=msg, status=status.HTTP_201_CREATED)
+        resp = {
+            'success': True,
+            'msg': f'Заметка {record.pk} успешно создана',
+            'data': serializer.data
+        }
+        return Response(resp, status=status.HTTP_201_CREATED)
 
     def patch(self, request, record_id):
         """ Update record fields """
@@ -313,7 +318,7 @@ class RecordFoldersAPI(APIView):
         validated_data = serializer.validated_data
         try:
             parent_folder = RecordFolder.objects.get(
-                pk=validated_data['parent_id'], user_id=user_id
+                pk=validated_data['parent_id'].pk, user_id=user_id
             )
         except RecordFolder.DoesNotExist:
             msg = f'Error: папка {validated_data["parent_id"]} не найдена'
@@ -324,12 +329,16 @@ class RecordFoldersAPI(APIView):
                 folder = serializer.save(user_id=user_id)
                 parent_folder.add_folder(folder.pk)
                 parent_folder.save()
-        except transaction.TransactionManagementError:
-            msg = 'Error: Ошибка создания папки'
+        except Exception as e:
+            msg = f'Error: Ошибка создания папки - {str(e)}'
             return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
 
-        msg = f'Папка {folder.pk} успешно создана'
-        return Response(data=msg, status=status.HTTP_201_CREATED)
+        resp = {
+            'success': True,
+            'msg': f'Заметка {folder.pk} успешно создана',
+            'data': serializer.data
+        }
+        return Response(resp, status=status.HTTP_201_CREATED)
 
     def patch(self, request, folder_id):
         """ Updating folder fields """
