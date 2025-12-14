@@ -1249,7 +1249,19 @@ let DragAndDrop = {
             elementBelow:
             document.elementFromPoint(event.clientX, event.clientY).closest(`.${classNames.backFolder}`)
 
-        if (!this.checkDraggingElem(elementBelow)) return  // Does event correct?
+        if (!this.checkDraggingElem(elementBelow)) {
+            // Курсор не над папкой/записью (например, в margin между элементами)
+            // Сбрасываем dragPutInside, чтобы при отпускании не переместить в папку
+            this.draggingVariables.dragPutInside = null
+            return  // Does event correct?
+        }
+        
+        // Проверяем, что курсор действительно находится внутри границ элемента (не в margin между элементами)
+        if (!this.isCursorInsideElement(event.clientX, event.clientY, elementBelow)) {
+            // Курсор находится в margin между элементами, сбрасываем dragPutInside
+            this.draggingVariables.dragPutInside = null
+            return
+        }
         // определяем, в какой зоне (верх, середина, низ) над проносимымы объектом находится курсор
         let relativePosition = this.getRelativePosition(event, elementBelow)
 
@@ -1280,6 +1292,16 @@ let DragAndDrop = {
             (belowIsFolder || belowIsRecord)) // событие сработало именно на элементе списка папок и записей
         { return true } else 
         { return false }
+    },
+    isCursorInsideElement: function(cursorX, cursorY, element) { // проверка, что курсор находится внутри границ элемента
+        if (!element) return false
+        const rect = element.getBoundingClientRect()
+        return (
+            cursorX >= rect.left &&
+            cursorX <= rect.right &&
+            cursorY >= rect.top &&
+            cursorY <= rect.bottom
+        )
     },
     getRelativePosition: function(event, elementBelow) {  // searching for relative cursor position
         let elementCoord = elementBelow.getBoundingClientRect();
@@ -1330,17 +1352,18 @@ let DragAndDrop = {
     
         // Проверяем, нужно ли менять элементы местами
         if (
-        beforeElement &&
-        this.DADObject.object === beforeElement.previousElementSibling ||
-        this.DADObject.object === beforeElement
+            beforeElement && (
+                this.DADObject.object === beforeElement.previousElementSibling ||
+                this.DADObject.object === beforeElement
+            )
         ) {
-        // Если нет, выходим из функции, чтобы избежать лишних изменений в DOM
-        this.resetOptions(this.draggingVariables)
-        return;
+            // Если нет, выходим из функции, чтобы избежать лишних изменений в DOM
+            this.draggingVariables.dragPutInside = null
+            return;
         }
     
         // Вставляем DADObject.object перед beforeElement
-        if (!this.DADObject === elementBelow) {
+        if (this.DADObject.object !== elementBelow) {
             this.disableSelected(elementBelow)  // снятие выделения при перемещении из 2/4 и 3/4
         }
     
@@ -1354,6 +1377,12 @@ let DragAndDrop = {
     
     },
     draggingPutInsideFolder: function(elementBelow, relativePosition) {  // inserting inside the folder
+
+        // Папка не может быть вложена сама в себя
+        if (this.DADObject.typeObject === DADSettings.folderClass &&
+            this.DADObject.object.id == elementBelow.id) {
+            return
+        }
 
         this.enableSelected(elementBelow)
     
@@ -1433,7 +1462,13 @@ let DragAndDrop = {
     
         if (!this.isClick) {
             if (this.draggingVariables.dragPutInside) {
-                this.putInsideFolder(elementBelow)
+                // Проверяем, что курсор действительно находится внутри границ папки при отпускании
+                if (this.isCursorInsideElement(event.clientX, event.clientY, this.draggingVariables.dragPutInside)) {
+                    this.putInsideFolder(this.draggingVariables.dragPutInside)
+                } else {
+                    // Курсор находится в margin между папками, не перемещаем в папку
+                    this.draggingVariables.dragPutInside = null
+                }
             } else if (this.draggingVariables.dragRelocate) {
                 this.changeOrder()
             } else {
@@ -1483,8 +1518,7 @@ let DragAndDrop = {
     //////////////////////////////////////////////////////////////////////
     // Симуляция функций для обработки данных
     //////////////////////////////////////////////////////////////////////
-    changeOrder: function() {  // put any object between another objects
-
+    changeOrder: async function() {  // put any object between another objects
         let objects = this.getProperticeByObjectsList()
 
         let folder
@@ -1497,7 +1531,52 @@ let DragAndDrop = {
         folder.folders = objects.newFolderList
         folder.info.children = objects.newChildren
 
-        // ajax children
+        console.log(this.DADObject)
+        
+        // Определяем тип объекта для API с учетом секции
+        let objectType = ''
+        let nestedList = []
+        if (this.DADObject.typeObject === DADSettings.recordClass) {
+            // Для записей: 'record' для notes, 'notice' для notices
+            objectType = session.section === 'notes' ? 'record' : 'notice'
+            // Формируем список ID записей (убираем префикс 'n' и преобразуем в числа)
+            nestedList = objects.newRecordList.map(id => parseInt(id.slice(1)))
+        } else if (this.DADObject.typeObject === DADSettings.folderClass) {
+            // Для папок: 'recordFolder' для notes, 'noticeFolder' для notices
+            objectType = session.section === 'notes' ? 'recordFolder' : 'noticeFolder'
+            // Формируем список ID папок (убираем префикс 'f' и преобразуем в числа)
+            nestedList = objects.newFolderList.map(id => parseInt(id.slice(1)))
+        }
+        
+        let data = {
+            type: objectType,
+            object_id: parseInt(this.DADObject.object.id),
+            folder_id: parseInt(viewContent.currentFolderId),
+            nested_list: nestedList,
+        }
+
+        // выполняем ajax
+        const url = conf.Domains['server'] + conf.Urls.moveBetween
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(data),
+        }
+        const response = await conf.AJAX.send(url, options)
+
+        if (response === undefined) {
+            console.log(`Error: неопознанная ошибка при изменении порядка`)
+            return
+        }
+        
+        if (response.success) {
+            console.log('Порядок объектов успешно изменен')
+        } else {
+            console.log(`Error: ${response.msg || 'Ошибка при изменении порядка'}`)
+        }
 
     },
     getProperticeByObjectsList: function() {  // get folders, records, children using html objectsList
@@ -1526,8 +1605,7 @@ let DragAndDrop = {
         }
         return outlet
     },
-    putInsideFolder: function(elementBelow) { // put object (record or folder) in folder
-
+    putInsideFolder: async function(elementBelow) { // put object (record or folder) in folder
         // verifications
         if (!elementBelow) return
         if (!elementBelow.classList.contains(DADSettings.folderClass)) return
@@ -1566,24 +1644,56 @@ let DragAndDrop = {
         if (newFolder.records.length===0) newChildren=newChildren.slice(0,-1)
         newFolder.info.children = newChildren
 
+        // необходимо для нормальной работы pathlist
         if (session.section === 'notes' && this.DADObject.typeObject === 'record') {
             content.notes[this.DADObject.object.id].parent_id = elementBelow.id
-            // ajax parent_id
         } else if (session.section === 'notes' && this.DADObject.typeObject === 'folder') {
             content.noteFolders[this.DADObject.object.id].info.parent_id = elementBelow.id
-            // ajax parent_id
         } else if (session.section === 'notices' && this.DADObject.typeObject === 'record') {
             content.notices[this.DADObject.object.id].parent_id = elementBelow.id
-            // ajax parent_id
         } else if (session.section === 'notices' && this.DADObject.typeObject === 'folder') {
             content.noticeFolders[this.DADObject.object.id].info.parent_id = elementBelow.id
-            // ajax parent_id
         } else {
             console.log("Error: parent_id hasn't changed")
         }
 
-        // ajax new children
-        // ajax old children
+        // выполняем ajax для перемещения объекта в папку
+        // Определяем тип объекта для API с учетом секции
+        let objectType = ''
+        if (this.DADObject.typeObject === DADSettings.recordClass) {
+            objectType = session.section === 'notes' ? 'record' : 'notice'
+        } else if (this.DADObject.typeObject === DADSettings.folderClass) {
+            objectType = session.section === 'notes' ? 'recordFolder' : 'noticeFolder'
+        }
+
+        let data = {
+            type: objectType,
+            object_id: parseInt(this.DADObject.object.id),
+            old_folder_id: parseInt(viewContent.currentFolderId),
+            new_folder_id: parseInt(elementBelow.id),
+        }
+
+        const url = conf.Domains['server'] + conf.Urls.moveInside
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(data),
+        }
+        const response = await conf.AJAX.send(url, options)
+
+        if (response === undefined) {
+            console.log(`Error: неопознанная ошибка при перемещении объекта в папку`)
+            return
+        }
+        
+        if (response.success) {
+            console.log('Объект успешно перемещен в папку')
+        } else {
+            console.log(`Error: ${response.msg || 'Ошибка при перемещении объекта в папку'}`)
+        }
         
     },
     run: function() {

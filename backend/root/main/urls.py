@@ -64,12 +64,12 @@ file_system_urls = [
 
     # move event
     path(  # put object in the new folder
-        route='move/inside',
+        route='move/inside/',
         view=MoveInsideAPI.as_view(),
         name='move_inside'
     ),
     path(  # change objects order
-        route='move/between',
+        route='move/between/',
         view=MoveBetweenAPI.as_view(),
         name='move_between'
     ),

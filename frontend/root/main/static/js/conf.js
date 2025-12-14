@@ -21,6 +21,10 @@ export const Urls = {  // backend urls
     FSFolders: 'api/file-system/folders/', // post folder
     FSFolder: (folder_id) => `api/file-system/folders/${folder_id}/`, // patch/delete folder
 
+    // Move API
+    moveBetween: 'api/file-system/move/between/',  // post - change objects order
+    moveInside: 'api/file-system/move/inside/',  // post - put object in the new folder
+
     // Record API
     getRecordContent: (record_id) => `api/records/${record_id}/`, // get all record content
     notes: (record_id) => `api/records/${record_id}/notes/`, // post note
