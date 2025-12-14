@@ -37,6 +37,9 @@ const classNames = {
 
 let modals = {
     modal: null,
+    mode: 'create',  // 'create' или 'edit'
+    editId: null,    // ID редактируемого объекта
+    editType: null,  // 'record' или 'folder'
 
     sort: {
         that: this,
@@ -62,11 +65,34 @@ let modals = {
         // console.log('modal', modal)
         console.log('this.modal', this.modal)
         this.modal.style['display'] = 'none'
+        this.resetMode()
     },
     hideModalCross: function(event) {
         if (event.target.closest('.modal-cross')) {
             modalBlock.style['display'] = 'none'
             this.modal.style['display'] = 'none'
+            this.resetMode()
+        }
+    },
+    resetMode: function() {
+        // Сброс режима и UI при закрытии модалки
+        this.mode = 'create'
+        this.editId = null
+        this.editType = null
+        
+        // Сброс заголовков и кнопок
+        const modalRecord = document.getElementById('modalRecord')
+        const modalFolder = document.getElementById('modalFolder')
+        
+        if (modalRecord) {
+            modalRecord.querySelector('.modal-title p').textContent = 'Создание заметки'
+            modalRecord.querySelector('button[type="submit"]').textContent = 'Создать'
+            document.getElementById('crtRecordForm').reset()
+        }
+        if (modalFolder) {
+            modalFolder.querySelector('.modal-title p').textContent = 'Создание папки'
+            modalFolder.querySelector('button[type="submit"]').textContent = 'Создать'
+            document.getElementById('crtRecordFolderForm').reset()
         }
     },
     getModal: function(event) {
@@ -76,6 +102,59 @@ let modals = {
         console.log('target = ',event.target)
         console.log('modal = ', event.target.dataset.modal)
         modalBlock.style['display'] = 'block'
+        
+        // Устанавливаем режим создания
+        this.mode = 'create'
+        this.editId = null
+        this.editType = null
+    },
+    openEditModal: function(type, id) {
+        // Открытие модалки в режиме редактирования
+        this.mode = 'edit'
+        this.editId = parseInt(id)
+        this.editType = type
+        
+        let modalId, form, titleText, data
+        
+        if (type === 'record') {
+            modalId = 'modalRecord'
+            form = document.getElementById('crtRecordForm')
+            titleText = 'Редактирование заметки'
+            data = content.notes[id]
+            
+            // Заполняем форму данными
+            form.fNoteName.value = data.title
+            // form.fNoteContent.value = data.description || ''
+            
+            // Устанавливаем цвет (marker) - преобразуем 'w' -> 'white' для радио-кнопок
+            const colorValue = conf.reversColors[data.color] || 'white'
+            const markerRadio = form.querySelector(`input[name="marker"][value="${colorValue}"]`)
+            if (markerRadio) markerRadio.checked = true
+            
+        } else if (type === 'folder') {
+            modalId = 'modalFolder'
+            form = document.getElementById('crtRecordFolderForm')
+            titleText = 'Редактирование папки'
+            data = content.noteFolders[id].info
+            
+            // Заполняем форму данными
+            form.fFolderName.value = data.title
+            
+            // Устанавливаем цвет (marker) - преобразуем 'w' -> 'white' для радио-кнопок
+            const colorValue = conf.reversColors[data.color] || 'white'
+            const markerRadio = form.querySelector(`input[name="marker"][value="${colorValue}"]`)
+            if (markerRadio) markerRadio.checked = true
+        }
+        
+        this.modal = document.getElementById(modalId)
+        
+        // Меняем заголовок и текст кнопки
+        this.modal.querySelector('.modal-title p').textContent = titleText
+        this.modal.querySelector('button[type="submit"]').textContent = 'Сохранить'
+        
+        // Показываем модалку
+        this.modal.style.display = 'block'
+        modalBlock.style.display = 'block'
     },
 
     run: function() {
@@ -92,8 +171,16 @@ let modals = {
 modals.run()
 
 const forms = {
-    createRecord: async function(event) {
+    handleRecordSubmit: async function(event) {
         event.preventDefault()
+        
+        if (modals.mode === 'edit') {
+            await this.updateRecord(event)
+        } else {
+            await this.createRecord(event)
+        }
+    },
+    createRecord: async function(event) {
         const form = event.target
         const data = {
             folder_id: parseInt(viewContent.currentFolderId),
@@ -135,8 +222,58 @@ const forms = {
         }
         
     },
-    createRecordFolder: async function(event) {
+    updateRecord: async function(event) {
+        const form = event.target
+        const id = modals.editId
+        const data = {
+            title: form.fNoteName.value,
+            // description: form.fNoteContent.value,
+            color: conf.colors[form.marker.value],
+        }
+        console.log('Обновление записи:', id, data)
+
+        const url = conf.Domains['server'] + conf.Urls.FSRecord(id)
+        const options = {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(data),
+        }
+        const response = await conf.AJAX.send(url, options)
+
+        if (response === undefined) {
+            console.log(`Error: неопознанная ошибка`)
+            return
+        }
+        
+        if (response.success) {
+            // Обновляем данные в content
+            content.notes[id].title = response.data['title']
+            content.notes[id].color = response.data['color']  // цвет уже в коротком формате ('w', 'g', 'y', 'r')
+            content.notes[id].changed_at = response.data['changed_at']
+            
+            // Перерисовываем контент
+            viewContent.removeObjects()
+            viewContent.displayItems()
+            
+            // закрыть модалку
+            modalBlock.style['display'] = 'none'
+            modals.modal.style['display'] = 'none'
+            modals.resetMode()
+        }
+    },
+    handleFolderSubmit: async function(event) {
         event.preventDefault()
+        
+        if (modals.mode === 'edit') {
+            await this.updateRecordFolder(event)
+        } else {
+            await this.createRecordFolder(event)
+        }
+    },
+    createRecordFolder: async function(event) {
         const form = event.target
         const data = {
             parent_id: parseInt(viewContent.currentFolderId),
@@ -177,6 +314,47 @@ const forms = {
         }
         
     },
+    updateRecordFolder: async function(event) {
+        const form = event.target
+        const id = modals.editId
+        const data = {
+            title: form.fFolderName.value,
+            color: conf.colors[form.marker.value],
+        }
+        console.log('Обновление папки:', id, data)
+
+        const url = conf.Domains['server'] + conf.Urls.FSFolder(id)
+        const options = {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(data),
+        }
+        const response = await conf.AJAX.send(url, options)
+
+        if (response === undefined) {
+            console.log(`Error: неопознанная ошибка`)
+            return
+        }
+        
+        if (response.success) {
+            // Обновляем данные в content
+            content.noteFolders[id].info.title = response.data['title']
+            content.noteFolders[id].info.color = response.data['color']  // цвет уже в коротком формате ('w', 'g', 'y', 'r')
+            content.noteFolders[id].info.changed_at = response.data['changed_at']
+            
+            // Перерисовываем контент
+            viewContent.removeObjects()
+            viewContent.displayItems()
+            
+            // закрыть модалку
+            modalBlock.style['display'] = 'none'
+            modals.modal.style['display'] = 'none'
+            modals.resetMode()
+        }
+    },
     createNotice: async function(event) {
         event.preventDefault()
 
@@ -189,8 +367,8 @@ const forms = {
         const crtRecordForm = document.getElementById('crtRecordForm')
         const crtRecordFolderForm = document.getElementById('crtRecordFolderForm')
         
-        crtRecordForm.addEventListener('submit', this.createRecord.bind(this))
-        crtRecordFolderForm.addEventListener('submit', this.createRecordFolder.bind(this))
+        crtRecordForm.addEventListener('submit', this.handleRecordSubmit.bind(this))
+        crtRecordFolderForm.addEventListener('submit', this.handleFolderSubmit.bind(this))
     }
 }
 forms.run()
@@ -1661,6 +1839,11 @@ const settingsGear = {
         console.log(`Перекрасить объект ${this.elType} id=${this.elId}`)
         this.hideGearMenu()
     },
+    changeEvent: function(event) {
+        // Открываем модалку в режиме редактирования
+        modals.openEditModal(this.elType, this.elId)
+        this.hideGearMenu()
+    },
     delEvent: async function(event) {
         const id = parseInt(this.elId)
         
@@ -1676,11 +1859,13 @@ const settingsGear = {
         this.ddArea.addEventListener('click', this.displayGearMenu.bind(this))
         this.ddArea.addEventListener('contextmenu', this.displayGearMenu.bind(this))
 
-        const gearRename = document.getElementById('gearRename')
-        const gearPaint = document.getElementById('gearPaint')
+        // const gearRename = document.getElementById('gearRename')
+        // const gearPaint = document.getElementById('gearPaint')
+        const gearChange = document.getElementById('gearChange')
         const gearDel = document.getElementById('gearDel')
-        gearRename.addEventListener('click', this.renameEvent.bind(this))
-        gearPaint.addEventListener('click', this.paintEvent.bind(this))
+        // gearRename.addEventListener('click', this.renameEvent.bind(this))
+        // gearPaint.addEventListener('click', this.paintEvent.bind(this))
+        gearChange.addEventListener('click', this.changeEvent.bind(this))
         gearDel.addEventListener('click', this.delEvent.bind(this))
 
         document.addEventListener('pointerdown', this.hideGearMenu.bind(this))

@@ -60,7 +60,8 @@ class RecordUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = ['title', 'color']
+        fields = ['pk', 'title', 'color', 'changed_at']
+        read_only_fields = ['pk', 'changed_at']
         extra_kwargs = {
             'title': {'required': False},
             'color': {'required': False},
@@ -93,7 +94,8 @@ class FolderUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RecordFolder
-        fields = ['title', 'color']
+        fields = ['pk', 'title', 'color', 'changed_at']
+        read_only_fields = ['pk', 'changed_at']
         extra_kwargs = {
             'title': {'required': False},
             'color': {'required': False},

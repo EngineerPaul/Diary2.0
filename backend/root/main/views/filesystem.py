@@ -255,8 +255,12 @@ class RecordsAPI(APIView):
 
         serializer.save()
 
-        msg = f'Заметка {record_id} успешно обновлена'
-        return Response(data=msg, status=status.HTTP_200_OK)
+        resp = {
+            'success': True,
+            'msg': f'Заметка {record_id} успешно обновлена',
+            'data': serializer.data
+        }
+        return Response(resp, status=status.HTTP_200_OK)
 
     def delete(self, request, record_id):
         """ Removing the record """
@@ -357,8 +361,12 @@ class RecordFoldersAPI(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
 
-        msg = f'Папка {folder_id} успешно обновлена'
-        return Response(data=msg, status=status.HTTP_200_OK)
+        resp = {
+            'success': True,
+            'msg': f'Папка {folder_id} успешно обновлена',
+            'data': serializer.data
+        }
+        return Response(resp, status=status.HTTP_200_OK)
 
     def delete(self, request, folder_id):
         """ Removing the folder """
