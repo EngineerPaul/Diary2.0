@@ -6,7 +6,8 @@ from .views.views import (
 )
 from .views.filesystem import (
     BlankFileSystemAPI, RecordsFSAPI,
-    RecordsAPI, RecordFoldersAPI
+    RecordsAPI, RecordFoldersAPI,
+    MoveBetweenAPI, MoveInsideAPI,
 )
 from .views.content import (
     RecordContentAPI, BlankDataAPI, NoteAPI, ImageAPI, ImagesAPI
@@ -59,6 +60,18 @@ file_system_urls = [
         route='folders/<int:folder_id>/',
         view=RecordFoldersAPI.as_view(),
         name='change_folder'
+    ),
+
+    # move event
+    path(  # put object in the new folder
+        route='move/inside',
+        view=MoveInsideAPI.as_view(),
+        name='move_inside'
+    ),
+    path(  # change objects order
+        route='move/between',
+        view=MoveBetweenAPI.as_view(),
+        name='move_between'
     ),
 ]
 urlpatterns += [path("file-system/", include(file_system_urls))]
