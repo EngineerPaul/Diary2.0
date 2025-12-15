@@ -400,6 +400,31 @@ body {
                 outline: 1px solid var(--content-record-border-color);
             }
         }
+        .menu {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 10px;
+            
+            .menu-item {
+                svg {
+                    width: 20px;
+                    height: 20px;
+                    fill: currentColor;
+                }
+                
+                &.cross {
+                    cursor: pointer;
+                    
+                    &:hover {
+                        svg {
+                            transform: scale(1.2);
+                            fill: #ff4545;
+                        }
+                    }
+                }
+            }
+        }
         .icon {
             width: 30px;
             height: 30px;
@@ -412,7 +437,7 @@ body {
             }
         }
     }
-    .settings {
+    /* .settings {
         max-height: 0;
         overflow: hidden;
         transition: max-height 0.2s ease-out;
@@ -461,6 +486,12 @@ body {
                 }
             }
         }
+    } */
+    .description {
+        background-color: var(--content-record-color);
+        border: 1px solid var(--content-record-border-color);
+        border-radius: 10px;
+        margin-bottom: 15px;
     }
     .content {
 
@@ -499,6 +530,7 @@ body {
         }
         .images {
             display: flex;
+            position: relative;
             max-width: 100%;
             max-height: 300px;
             align-items: center;
@@ -537,6 +569,7 @@ body {
                 overflow: hidden;
                 border: 1px solid var(--content-images-border-color);
                 border-radius: 10px;
+                transition: height 0.3s ease;
 
                 .image-area {
                     position: absolute;
@@ -549,6 +582,7 @@ body {
 
                     .image {
                         display: inline-block;
+                        position: relative;
                         max-width: 200px;
                         max-height: 300px;
                         transition: 
@@ -560,19 +594,48 @@ body {
                             max-width: 200px;
                             max-height: 300px;
                         }
+
+                        .image-cross {
+                            position: absolute;
+                            right: 5px;
+                            top: 5px;
+                            width: 8px;
+                            cursor: pointer;
+                            z-index: 10;
+                            
+                            &:hover {
+                                transform: scale(1.2);
+                                fill: #ff4545;
+                                filter: drop-shadow(0 0 0.5px #ff4545);
+                            }
+                        }
                     }
                 }
-                .cross {
-                    position: absolute;
-                    right: 5px;
-                    top: 5px;
-                    width: 8px;
-                    cursor: pointer;
-                    
-                    &:hover {
-                        transform: scale(1.2);
-                        fill: #ff4545;
-                    }
+            }
+            .editor {
+                position: absolute;
+                right: calc(50% - 20% - 5px - 10px);
+                top: 5px;
+                width: 8px;
+                cursor: pointer;
+                z-index: 20;
+                
+                &:hover {
+                    transform: scale(1.2);
+                    fill: #ff4545;
+                }
+            }
+            .cross {
+                position: absolute;
+                right: calc(50% - 20% - 5px - 10px - 15px);
+                top: 5px;
+                width: 8px;
+                cursor: pointer;
+                z-index: 20;
+                
+                &:hover {
+                    transform: scale(1.2);
+                    fill: #ff4545;
                 }
             }
         }
@@ -609,6 +672,87 @@ body {
             }
             &.delete-cart {
                 height: 170px;
+            }
+            &.modal-createN {
+                height: var(--cart-note-height);
+            }
+
+            .modal-cart-content {
+                form {
+                    label {
+                        display: block;
+                        position: relative;
+                        margin-bottom: 10px;
+                    }
+                    input {
+                        display: block;
+                    }
+                    textarea {
+                        resize: none;
+                    }
+                    .form-marker {
+                        label {
+                            display: inline;
+                        }
+                        input {
+                            display: none;
+                        }
+                        input + .marker {
+                            opacity: 60%;
+                        }
+                        input:checked + .marker {
+                            border-width: 1px;
+                            opacity: 100%;
+                            box-shadow: 0px 0px 5px 5px rgba(0, 0, 0, 0.1);
+                        }
+                    }
+                    .modal-input {
+                        display: block;
+                        width: 100%;
+                        border: var(--border-color) 1px solid;
+                        border-radius: 4px;
+                        outline: none;
+                    }
+                    .error {
+                        font-size: 14px;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        position: absolute;
+                        z-index: 10;
+                        top: calc(100% + 5px);
+                        left: 0;
+                        background-color: #d63031;
+                        color: #ffffff;
+                        border-radius: 3px;
+                        padding: 4px 8px;
+                        transition: all ease-in-out 260ms;
+                        display: none;
+                        &:after,
+                        &:before {
+                            bottom: 100%;
+                            left: 16px;
+                            border: solid transparent;
+                            content: "";
+                            height: 0;
+                            width: 0;
+                            position: absolute;
+                            pointer-events: none;
+                        }
+                        &:before {
+                            border-bottom-color: #d63031;
+                            border-width: 5px;
+                            margin-left: -5px;
+                        }
+                    }
+                    button.submitButton {
+                        display: block;
+                        margin-top: 20px;
+                        margin-left: auto;
+                        margin-right: auto;
+                        padding: 12px 35px;
+                    }
+                }
             }
 
             .buttons-row {
