@@ -437,56 +437,6 @@ body {
             }
         }
     }
-    /* .settings {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.2s ease-out;
-        margin-bottom: 15px;
-
-        .site {
-            display: flex;
-            align-items: center;
-            flex-wrap: nowrap;
-            margin-top: 10px;
-            margin-bottom: 10px;
-
-            p.settings-property {
-                display: inline;
-            }
-
-            &.site-setpassword {
-                .password-input {
-                    transition: background-color .4s ease;
-                }
-                .password-btn {
-                    padding: 6px 12px;
-                }
-            }
-            &.site-markers {
-                .form-marker {
-                    label {
-                        display: inline;
-                    }
-                    input {
-                        display: none;
-                    }
-                    input + .marker {
-                        opacity: 60%;
-                    }
-                    input:checked + .marker {
-                        border-width: 1px;
-                        opacity: 100%;
-                        box-shadow: 0px 0px 5px 5px rgba(0, 0, 0, 0.1);
-                    }
-                }
-            }
-            &.site-delete {
-                button {
-                    margin: 0px;
-                }
-            }
-        }
-    } */
     .description {
         background-color: var(--content-record-color);
         border: 1px solid var(--content-record-border-color);
@@ -676,6 +626,9 @@ body {
             &.modal-createN {
                 height: var(--cart-note-height);
             }
+            &#modalAddImages {
+                height: 230px;
+            }
 
             .modal-cart-content {
                 form {
@@ -748,8 +701,6 @@ body {
                     button.submitButton {
                         display: block;
                         margin-top: 20px;
-                        margin-left: auto;
-                        margin-right: auto;
                         padding: 12px 35px;
                     }
                 }
@@ -761,6 +712,49 @@ body {
             width: 100%;
             justify-content: space-evenly;
             flex-wrap: nowrap;
+            }
+            
+            .file-input-label {
+                display: block;
+                
+                span {
+                    display: block;
+                }
+                
+                .file-input-wrapper {
+                    position: relative;
+                    display: inline-block;
+                    
+                    .file-input-button {
+                        border: 1px solid var(--border-color);
+                        border-radius: 4px;
+                        padding: 6px 12px;
+                        background-color: var(--header-sector-color);
+                        cursor: pointer;
+                        font-family: inherit;
+                        font-size: inherit;
+                        color: black;
+                        font-weight: 600;
+                        position: relative;
+                        z-index: 1;
+                        
+                        &:hover {
+                            background-color: var(--header-sector-hover-color);
+                        }
+                    }
+                    
+                    .file-input {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        opacity: 0;
+                        width: 0;
+                        height: 0;
+                        border: none;
+                        outline: none;
+                        pointer-events: none;
+                    }
+                }
             }
         }
     }

@@ -605,6 +605,31 @@ let settings = {
             
             this.modals.viewModal.bind(this)('modalRecord')
         },
+        openAddNoteModal: function() { // open modal for adding note
+            this.modals.viewModal.bind(this)('modalAddNote')
+        },
+        openAddImagesModal: function() { // open modal for adding images
+            this.modals.viewModal.bind(this)('modalAddImages')
+        },
+        setupFileInputButton: function() { // setup custom file input button
+            const fileInput = document.getElementById('fImages')
+            const fileInputButton = document.querySelector('.file-input-button')
+            if (fileInput && fileInputButton) {
+                fileInputButton.addEventListener('click', function(e) {
+                    e.preventDefault()
+                    fileInput.click()
+                })
+                
+                fileInput.addEventListener('change', function() {
+                    if (this.files.length > 0) {
+                        const fileCount = this.files.length
+                        fileInputButton.textContent = fileCount === 1 ? 'Выбран 1 файл' : `Выбрано ${fileCount} файлов`
+                    } else {
+                        fileInputButton.textContent = 'Выберите файл'
+                    }
+                })
+            }
+        },
         run: function() {
             this.modalBlock = document.getElementById('modalBlock')
             this.globalShadow = document.getElementById('globalShadow')
@@ -620,6 +645,14 @@ let settings = {
             if (editorBtn) {
                 editorBtn.addEventListener('click', this.modals.openCreateNoteModal.bind(this))
             }
+
+            const AddNoteBtn = document.getElementById('AddNoteBtn')
+            const AddImagesBtn = document.getElementById('AddImagesBtn')
+            AddNoteBtn.addEventListener('click', this.modals.openAddNoteModal.bind(this))
+            AddImagesBtn.addEventListener('click', this.modals.openAddImagesModal.bind(this))
+
+            this.modals.setupFileInputButton.bind(this)()
+
         }
     },
     otherSite: {
