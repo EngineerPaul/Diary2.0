@@ -404,17 +404,26 @@ class ImagesAPI(APIView):
             msg = 'Error: заметка не найдена'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = ImagesCreateSerializer(
-            data=request.data, many=True,
-            context={'user_id': user_id, 'record': record}
-        )
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Получаем список файлов из FormData
+        files = request.FILES.getlist('file')
+        if not files:
+            return Response('Error: файлы не найдены', status=status.HTTP_400_BAD_REQUEST)
+
+        # Преобразуем список файлов в список словарей для сериализатора с many=True
+        data_list = []
+        for file in files:
+            data_list.append({'file': file})
 
         try:
             with transaction.atomic():
                 message = Message.objects.create(record_id=record)
-                serializer.save(msg_id=message)
+                serializer = ImagesCreateSerializer(
+                    data=data_list, many=True,
+                    context={'user_id': user_id, 'message': message}
+                )
+                if not serializer.is_valid():
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                serializer.save()
         except (transaction.TransactionManagementError, ValueError) as e:
             msg = f'Error: Ошибка сохранения картинок - {e}'
             return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)

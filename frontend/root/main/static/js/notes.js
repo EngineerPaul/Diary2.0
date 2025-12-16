@@ -55,58 +55,19 @@ let slider = {
 }
 slider.run()
 
-let ajax = {
-    authId: null, // id for authenticate
+let queries = {
     recordId: null, // id of whole record
 
-    getAuthId: function() {
-        return '1234'
-    },
-    getRecordId: function() {
-        return 19
-    },
-    getRecordInfo: function() { // getting theme, creationDate, settings
-        let blankContent = {
-            theme: 'Theme',
-            creationDate: '25.04.2025 5:40',
-            settings: {},
+    getRecordId: function() { // getting record id from the url
+        // Извлекаем ID из URL (например, /notes/19/ -> 19)
+        const pathname = window.location.pathname
+        const match = pathname.match(/\/notes\/(\d+)\//)
+        if (match && match[1]) {
+            return parseInt(match[1], 10)
         }
-    },
-    getNotes: function() { // getting notes list by record id by date
-        let blankContent = [ // like [[id, creationDate, content], ...]
-            [2, 'Комарницкий Павел', '2025-05-01T06:30:00.243Z', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin in semper nisi. Morbi eu purus sed nibh blandit maximus vel ac orci. Integer auctor est et lorem dapibus dapibus. Praesent sollicitudin mauris in metus facilisis, eu facilisis mauris congue. Curabitur molestie sem ligula, id interdum leo euismod nec. Suspendisse ullamcorper diam eros, non aliquam libero porta non. Fusce gravida auctor quam, quis volutpat libero aliquet id. Praesent lobortis risus vitae velit sodales maximus. Vivamus mollis sed tortor sit amet pretium. Duis aliquam enim eleifend purus mollis pharetra. Praesent nibh massa, viverra iaculis imperdiet id, aliquet vitae augue. In dapibus, felis vitae volutpat aliquet, ex lacus efficitur odio, a venenatis nulla arcu et est. Suspendisse placerat nisl quis nisi iaculis, sit amet accumsan erat venenatis. Quisque lorem lorem, porttitor eget scelerisque in, vulputate in orci. Vivamus maximus volutpat velit, nec tincidunt tellus posuere faucibus.'],
-            [4, 'Комарницкий Павел', '2025-05-01T06:35:00.243Z', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin in semper nisi. Morbi eu purus sed nibh blandit maximus vel ac orci. Integer auctor est et lorem dapibus dapibus. Praesent sollicitudin mauris in metus facilisis, eu facilisis mauris congue. Curabitur molestie sem ligula, id interdum leo euismod nec. Suspendisse ullamcorper diam eros, non aliquam libero porta non. Fusce gravida auctor quam, quis volutpat libero aliquet id. Praesent lobortis risus vitae velit sodales maximus. Vivamus mollis sed tortor sit amet pretium. Duis aliquam enim eleifend purus mollis pharetra. Praesent nibh massa, viverra iaculis imperdiet id, aliquet vitae augue. In dapibus, felis vitae volutpat aliquet, ex lacus efficitur odio, a venenatis nulla arcu et est. Suspendisse placerat nisl quis nisi iaculis, sit amet accumsan erat venenatis. Quisque lorem lorem, porttitor eget scelerisque in, vulputate in orci. Vivamus maximus volutpat velit, nec tincidunt tellus posuere faucibus.'],
-            [6, 'Комарницкий Павел', '2025-05-01T06:40:00.243Z', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin in semper nisi. Morbi eu purus sed nibh blandit maximus vel ac orci. Integer auctor est et lorem dapibus dapibus. Praesent sollicitudin mauris in metus facilisis, eu facilisis mauris congue. Curabitur molestie sem ligula, id interdum leo euismod nec. Suspendisse ullamcorper diam eros, non aliquam libero porta non. Fusce gravida auctor quam, quis volutpat libero aliquet id. Praesent lobortis risus vitae velit sodales maximus. Vivamus mollis sed tortor sit amet pretium. Duis aliquam enim eleifend purus mollis pharetra. Praesent nibh massa, viverra iaculis imperdiet id, aliquet vitae augue. In dapibus, felis vitae volutpat aliquet, ex lacus efficitur odio, a venenatis nulla arcu et est. Suspendisse placerat nisl quis nisi iaculis, sit amet accumsan erat venenatis. Quisque lorem lorem, porttitor eget scelerisque in, vulputate in orci. Vivamus maximus volutpat velit, nec tincidunt tellus posuere faucibus.'],
-            [8, 'Комарницкий Павел', '2025-05-01T06:45:00.243Z', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin in semper nisi. Morbi eu purus sed nibh blandit maximus vel ac orci. Integer auctor est et lorem dapibus dapibus. Praesent sollicitudin mauris in metus facilisis, eu facilisis mauris congue. Curabitur molestie sem ligula, id interdum leo euismod nec. Suspendisse ullamcorper diam eros, non aliquam libero porta non. Fusce gravida auctor quam, quis volutpat libero aliquet id. Praesent lobortis risus vitae velit sodales maximus. Vivamus mollis sed tortor sit amet pretium. Duis aliquam enim eleifend purus mollis pharetra. Praesent nibh massa, viverra iaculis imperdiet id, aliquet vitae augue. In dapibus, felis vitae volutpat aliquet, ex lacus efficitur odio, a venenatis nulla arcu et est. Suspendisse placerat nisl quis nisi iaculis, sit amet accumsan erat venenatis. Quisque lorem lorem, porttitor eget scelerisque in, vulputate in orci. Vivamus maximus volutpat velit, nec tincidunt tellus posuere faucibus.'],
-            [11, 'Комарницкий Павел', '2025-05-01T06:50:00.243Z', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin in semper nisi. Morbi eu purus sed nibh blandit maximus vel ac orci. Integer auctor est et lorem dapibus dapibus. Praesent sollicitudin mauris in metus facilisis, eu facilisis mauris congue. Curabitur molestie sem ligula, id interdum leo euismod nec. Suspendisse ullamcorper diam eros, non aliquam libero porta non. Fusce gravida auctor quam, quis volutpat libero aliquet id. Praesent lobortis risus vitae velit sodales maximus. Vivamus mollis sed tortor sit amet pretium. Duis aliquam enim eleifend purus mollis pharetra. Praesent nibh massa, viverra iaculis imperdiet id, aliquet vitae augue. In dapibus, felis vitae volutpat aliquet, ex lacus efficitur odio, a venenatis nulla arcu et est. Suspendisse placerat nisl quis nisi iaculis, sit amet accumsan erat venenatis. Quisque lorem lorem, porttitor eget scelerisque in, vulputate in orci. Vivamus maximus volutpat velit, nec tincidunt tellus posuere faucibus.'],
-        ]
-        return blankContent
-    },
-    getImages: function() { // getting images list by record id by date
-        // everything needs to be rewritten
-        let blankImages = [ // like [[groupId, creationDate, [[imgId, src], ...]], ...]
-            [
-                7, 'Комарницкий Павел', '2025-05-01T06:33:00.243Z', [
-                    [1, "/static/img/forTest/1.jpg"], 
-                    [2, "/static/img/forTest/2.jpg"], 
-                    [3, "/static/img/forTest/3.jpg"], 
-                    [4, "/static/img/forTest/4.jpg"], 
-                    [5, "/static/img/forTest/5.jpg"], 
-                    [6, "/static/img/forTest/6.jpg"], 
-                ],
-            ],
-            [
-                9, 'Комарницкий Павел', '2025-05-01T06:48:00.243Z', [
-                    [7, "/static/img/forTest/1.jpg"], 
-                    [8, "/static/img/forTest/2.jpg"], 
-                    [9, "/static/img/forTest/3.jpg"], 
-                    [10, "/static/img/forTest/4.jpg"], 
-                    [11, "/static/img/forTest/5.jpg"], 
-                    [12, "/static/img/forTest/6.jpg"], 
-                ],
-            ]
-        ]
-        return blankImages
+        // Если ID не найден, возвращаем null или выбрасываем ошибку
+        console.error('Error: record ID not found in URL')
+        return null
     },
     getContent: async function() { // getting record content from server
         const url = conf.Domains['server'] + conf.Urls.getRecordContent(this.recordId)
@@ -130,10 +91,44 @@ let ajax = {
         }
         console.log(response)
 
+        const recordDetail = response.record
+        const messages = response.messages
+
+
         return response
     },
-
-    // blanks
+    createNote: async function(text) { // send creation note form to server
+        const url = conf.Domains['server'] + conf.Urls.notes(this.recordId)
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                text: text
+            })
+        }
+        const response = await conf.AJAX.send(url, options)
+        return response
+    },
+    createImages: async function(files) { // send creation image group form to server
+        const url = conf.Domains['server'] + conf.Urls.imagesGroups(this.recordId)
+        const formData = new FormData()
+        
+        // Добавляем каждый файл в FormData с одинаковым ключом 'file' для Django
+        for (let i = 0; i < files.length; i++) {
+            formData.append('file', files[i])
+        }
+        
+        const options = {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+        }
+        const response = await conf.AJAX.send(url, options)
+        return response
+    },
     updateNote: function(noteId) { // change any comment
 
     },
@@ -149,85 +144,85 @@ let ajax = {
     delRecord: function() { // delete whole record with all notes and images
 
     },
+    handleAddNoteSubmit: async function(event) {
+        event.preventDefault()
+        const textarea = document.getElementById('fNoteText')
+        const text = textarea.value.trim()
+        
+        if (!text) {
+            console.log('Error: текст заметки не может быть пустым')
+            return
+        }
+        
+        const response = await this.createNote(text)
+        if (response) {
+
+            if (settings && settings.modalBlock) {
+                settings.modalBlock.style.display = 'none'
+            }
+
+            textarea.value = ''
+            
+            await content.getContent()
+        }
+    },
+    handleAddImagesSubmit: async function(event) {
+        event.preventDefault()
+        const fileInput = document.getElementById('fImages')
+        const files = fileInput.files
+        
+        if (!files || files.length === 0) {
+            console.log('Error: необходимо выбрать хотя бы один файл')
+            return
+        }
+        
+        const response = await this.createImages(files)
+        if (response) {
+            if (settings && settings.modalBlock) {
+                settings.modalBlock.style.display = 'none'
+            }
+            
+            fileInput.value = ''
+            const fileInputButton = document.querySelector('.file-input-button')
+            if (fileInputButton) {
+                fileInputButton.textContent = 'Выберите файл'
+            }
+            
+            await content.getContent()
+        }
+    },
     run: function() {
-        this.authId = this.getAuthId()
         this.recordId = this.getRecordId()
+        
+        const addNoteForm = document.getElementById('addNoteForm')
+        const addImagesForm = document.getElementById('addImagesForm')
+        addNoteForm.addEventListener('submit', this.handleAddNoteSubmit.bind(this))
+        addImagesForm.addEventListener('submit', this.handleAddImagesSubmit.bind(this))
     }
 }
-ajax.run()
-ajax.getContent()
+queries.run()
 
 let content = {
     theme: null, // title of whole record
-    content: [], // all content ids like [{type, id}, ...] by date. Type is note or imagesGroup
-    notes: {}, // notes objs like {id: this.Note, ...}
-    images: {}, // images objs like {id: this.Image, ...}
-    imagesGroups: {}, // images groups like {groupId: this.ImagesGroup, ...}
+    description: null, // record rescription
+    messages: {},
 
-    Note: function(noteId, author, date, content) { // create note object using
-        this.id = noteId //num
-        this.author = author
-        this.date = new Date(date) //str
-        this.content = content //str
+    getContent: async function() { // parsing data (details and messages) from server
+        const {messages: messages, record: recordDetail} = await queries.getContent()
+        // recordDetail - {record_id: 19, user_id: 1, title: 'record 1'} позже добавится description
+        this.theme = recordDetail.title
+        this.messages = messages
     },
-    Image: function(imageId, path) { // create image object using
-        this.id = imageId
-        this.path = path
-    },
-    ImagesGroup: function(imagesGroupId, author, date, images) { // create images group like Note
-        this.id = imagesGroupId //num
-        this.author = author
-        this.date = new Date(date) //str
-        this.content = images //list of numeric ids
-    },
-    getContent: function() { // getting notes, images, images groups and content using ajax
-        let rawNotes = ajax.getNotes()
-        for (let i=0; i<rawNotes.length; i++) {
-            this.notes[rawNotes[i][0]] = new this.Note(...rawNotes[i])
-        }
-
-        let rawImages = ajax.getImages()
-        for (let igi=0; igi<rawImages.length; igi++) {
-            let idList = []
-            for (let i=0; i<rawImages[igi][3].length; i++) {
-                this.images[rawImages[igi][3][i][0]] = new this.Image(...rawImages[igi][3][i])
-                idList.push(rawImages[igi][3][i][0])
-            }
-            this.imagesGroups[rawImages[igi][0]] = new this.ImagesGroup(
-                rawImages[igi][0], rawImages[igi][1], rawImages[igi][2], idList)
-        }
-        
-        let noteKeys = Object.keys(this.notes)
-        let imagesGroupsKeys = Object.keys(this.imagesGroups)
-        let ni = 0 
-        let igi = 0
-        for (let i=0; i<Object.keys(this.notes).length+Object.keys(this.imagesGroups).length; i++) {
-
-            let noteKey = noteKeys[ni]?
-                noteKeys[ni]:
-                null
-            let groupKey = imagesGroupsKeys[igi]?
-                imagesGroupsKeys[igi]:
-                null
-
-            if (this.notes[noteKey] && this.imagesGroups[groupKey]) {
-                if (this.notes[noteKey].date.getTime() < this.imagesGroups[groupKey].date.getTime()) {
-                    this.content.push({'type': 'note', 'id': this.notes[noteKey].id})
-                    ni += 1
-                } else {
-                    this.content.push({'type': 'imagesGroup', 'id': this.imagesGroups[groupKey].id})
-                    igi += 1
-                }
+    viewContent: function() { // display messages by msg type
+        let content = document.getElementById('content')
+        content.innerHTML = ''
+        for (let i=0; i<this.messages.length; i++) {
+            if (this.messages[i].type === 'note') {
+                this.viewNote(this.messages[i])
+            } else if (this.messages[i].type === 'images') {
+                this.viewImages(this.messages[i])
             } else {
-                if (this.notes[noteKey]) {
-                    this.content.push({'type': 'note', 'id': this.notes[noteKey].id})
-                    ni += 1
-                } else if (this.imagesGroups[groupKey]) {
-                    this.content.push({'type': 'imagesGroup', 'id': this.imagesGroups[groupKey].id})
-                    igi += 1
-                } else {
-                    console.log('Error: the both doesnt exist')
-                }
+                console.log('Error: message type is incorrect')
             }
         }
     },
@@ -359,26 +354,13 @@ let content = {
         // ajax delete imagesGroups
         this.viewContent()
     },
-    viewContent: function() { // display all content using all properties
-        let content = document.getElementById('content')
-        content.innerHTML = ''
-        for (let i=0; i<this.content.length; i++) {
-            if (this.content[i].type === 'note') {
-                this.viewNote(this.content[i].id)
-            } else if (this.content[i].type === 'imagesGroup') {
-                this.viewImages(this.content[i].id)
-            } else {
-                console.log('Error: content type is incorrect')
-            }
-        }
-    },
-    viewNote: function(noteId) { // display a note block
+    viewNote: function(noteData) { // display a note block from messages data
         let content = document.getElementById('content')
         let record = this.createElement({
             tag: 'div',
             classList: ['record'],
             parent: content,
-            params: {id: noteId},
+            params: {id: noteData.note_id},
         })
         let recordHeader = this.createElement({
             tag: 'div',
@@ -386,11 +368,20 @@ let content = {
             parent: record,
             params: {},
         })
+        // Заглушка для даты (в будущем будет приходить из noteData.date)
+        let currentDate = new Date()
+        let dateString = currentDate.toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
         let date = this.createElement({
             tag: 'div',
             classList: ['date'],
             parent: recordHeader,
-            params: {textContent: this.notes[noteId].date},
+            params: {textContent: dateString},
         })
         let cross = this.createSVG({
             parent: recordHeader,
@@ -408,16 +399,16 @@ let content = {
             tag: 'div',
             classList: ['record-text'],
             parent: record,
-            params: {textContent: this.notes[noteId].content},
+            params: {textContent: noteData.text},
         })
     },
-    viewImages: function(groupId) { // display an images block
+    viewImages: function(imagesData) { // display an images block from messages data
         let content = document.getElementById('content')
         let images = this.createElement({
             tag: 'div',
             classList: ['images'],
             parent: content,
-            params: {id: groupId},
+            params: {id: imagesData.msg_id},
         })
 
         let sliderDirecrionLeft = this.createElement({
@@ -446,15 +437,29 @@ let content = {
             parent: images,
             params: {},
         })
+        // Скрываем блок до загрузки всех изображений
+        slider.style.opacity = '0'
         let imageArea = this.createElement({
             tag: 'div',
             classList: ['image-area'],
             parent: slider,
             params: {},
         })
-        let imagesList = this.imagesGroups[groupId].content
+        let imagesList = imagesData.images
         let loadedImagesCount = 0
         let totalImagesCount = imagesList.length
+        let allImagesLoaded = false
+        
+        // Функция для установки высоты и показа блока
+        const showSlider = () => {
+            if (!allImagesLoaded) {
+                allImagesLoaded = true
+                this.updateSliderHeight(slider)
+                // Показываем блок с плавным переходом
+                slider.style.transition = 'opacity 0.2s ease-in'
+                slider.style.opacity = '1'
+            }
+        }
         
         for (let i=0; i<imagesList.length; i++) {
             let image = this.createElement({
@@ -467,7 +472,7 @@ let content = {
                 tag: 'img',
                 classList: [],
                 parent: image,
-                params: {src: this.images[imagesList[i]].path, id: imagesList[i]},
+                params: {src: imagesList[i].url, id: imagesList[i].image_id},
             })
             let imageCross = this.createSVG({
                 parent: image,
@@ -480,8 +485,8 @@ let content = {
             img.addEventListener('load', () => {
                 loadedImagesCount++
                 if (loadedImagesCount === totalImagesCount) {
-                    // Все изображения загружены, пересчитываем высоту блока
-                    this.updateSliderHeight(slider)
+                    // Все изображения загружены
+                    showSlider()
                 }
             })
             
@@ -489,7 +494,7 @@ let content = {
             if (img.complete) {
                 loadedImagesCount++
                 if (loadedImagesCount === totalImagesCount) {
-                    this.updateSliderHeight(slider)
+                    showSlider()
                 }
             }
         }
@@ -555,16 +560,16 @@ let content = {
         return svg
         // https://ru.stackoverflow.com/questions/1123250/%D0%9A%D0%B0%D0%BA-%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%B8%D1%82%D1%8C-svg-%D0%BA%D0%BE%D0%B4-%D0%BD%D0%B0-%D1%81%D0%B0%D0%B9%D1%82-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-js    
     },
-    run: function() {
-        this.getContent()
+    run: async function() {
+        await this.getContent()
         this.viewContent()
         let content = document.getElementById('content')
         content.addEventListener('click', this.delContent.bind(this))
+
+        
     }
 }
 content.run()
-
-
 
 let settings = {
     modalBlock: null,

@@ -80,7 +80,7 @@ class ImagesGetSerializer(serializers.ModelSerializer):
 
 
 class ImagesCreateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания картинки в блоке (post)"""
+    """Сериализатор для создания нового блока картинок (post)"""
 
     class Meta:
         model = Image
@@ -88,9 +88,9 @@ class ImagesCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user_id = self.context['user_id']
-        msg_id = validated_data['msg_id']
+        message = self.context['message']
         file = validated_data['file']
 
-        img = Image(msg_id=msg_id, name=file.name, user_id=user_id)
+        img = Image(msg_id=message, name=file.name, user_id=user_id)
         img.file.save(file.name, file, save=True)
         return img
