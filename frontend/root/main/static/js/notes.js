@@ -135,11 +135,41 @@ let queries = {
     updateRecord: function() { // change record (settings and theme)
 
     },
-    delNote: function(noteId) { // delete any note
-
+    delNote: async function(noteId) { // delete any note
+        const url = conf.Domains['server'] + conf.Urls.note(this.recordId, noteId)
+        const options = {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        }
+        const response = await conf.AJAX.send(url, options)
+        return response
     },
-    delImages: function(imagesId) { // delete any images group
-
+    delImage: async function(imageId) { // delete any single image
+        const url = conf.Domains['server'] + conf.Urls.image(this.recordId, imageId)
+        const options = {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        }
+        const response = await conf.AJAX.send(url, options)
+        return response
+    },
+    delImages: async function(msgId) { // delete any images group
+        const url = conf.Domains['server'] + conf.Urls.imagesGroup(this.recordId, msgId)
+        const options = {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        }
+        const response = await conf.AJAX.send(url, options)
+        return response
     },
     delRecord: function() { // delete whole record with all notes and images
 
@@ -234,8 +264,11 @@ let content = {
             if (image) {
                 let img = image.querySelector('img')
                 if (img && img.id) {
-                    this.delImage(Number(img.id))
-                    return
+                    let imagesBlock = imageCross.closest('.images')
+                    if (imagesBlock && imagesBlock.id) {
+                        this.delImage(Number(img.id), Number(imagesBlock.id))
+                        return
+                    }
                 }
             }
         }
@@ -248,63 +281,49 @@ let content = {
         if (record) this.delNote(record.id)
         if (images) this.delImages(images.id)
     },
-    delNote: function(recordId) { // event of deletion any note
-        delete this.notes[Number(recordId)]
-        for (let i=0; i < this.content.length; i++) {
-            if (!this.content[i].type === 'note') continue
-            if (this.content[i].id === Number(recordId)) {
-                this.content.splice(i, 1)
+    delNote: async function(recordId) { // event of deletion any note
+        const noteIdNum = Number(recordId)
+        this.messages = this.messages.filter(msg => {
+            if (msg.type === 'note' && msg.note_id === noteIdNum) {
+                return false
             }
-        }
-        // ajax delete note
+            return true
+        })
+        await queries.delNote(noteIdNum)
         this.viewContent()
     },
-    delImage: function(imageId) { // event of deletion any single image
-        // Удаляем объект Image
-        delete this.images[Number(imageId)]
+    delImage: async function(imageId, msgId) { // event of deletion any single image
+        const imageIdNum = Number(imageId)
+        const msgIdNum = Number(msgId)
         
-        // Находим группу изображений, содержащую эту картинку
-        let groupId = null
-        for (let groupKey in this.imagesGroups) {
-            let contentArray = this.imagesGroups[groupKey].content
-            let imageIndex = contentArray.indexOf(Number(imageId))
-            if (imageIndex !== -1) {
-                groupId = Number(groupKey)
-                // Удаляем ID картинки из массива content группы
-                contentArray.splice(imageIndex, 1)
-                
-                // Если группа стала пустой, удаляем всю группу
-                if (contentArray.length === 0) {
-                    delete this.imagesGroups[groupId]
-                    // Удаляем группу из content массива
-                    for (let i=0; i < this.content.length; i++) {
-                        if (this.content[i].type === 'imagesGroup' && this.content[i].id === groupId) {
-                            this.content.splice(i, 1)
-                            break
-                        }
-                    }
-                }
+        let imagesGroup = null
+        let groupIndex = -1
+        for (let i = 0; i < this.messages.length; i++) {
+            if (this.messages[i].type === 'images' && this.messages[i].msg_id === msgIdNum) {
+                imagesGroup = this.messages[i]
+                groupIndex = i
                 break
             }
         }
         
-        // ajax delete image
-        this.viewContent()
-        // Пересчитываем высоту только того блока, из которого была удалена картинка
-        // Используем небольшую задержку, чтобы дать время изображениям загрузиться
-        if (groupId !== null) {
-            setTimeout(() => {
-                let imagesBlock = document.getElementById(String(groupId))
-                if (imagesBlock) {
-                    let slider = imagesBlock.querySelector('.slider')
-                    if (slider) {
-                        this.updateSliderHeight(slider)
-                    }
-                }
-            }, 100)
+        if (!imagesGroup || !imagesGroup.images) {
+            console.log('Error: группа изображений не найдена')
+            return
         }
+        
+        const imageIndex = imagesGroup.images.findIndex(img => img.image_id === imageIdNum)
+        if (imageIndex !== -1) {
+            imagesGroup.images.splice(imageIndex, 1)
+        }
+
+        if (imagesGroup.images.length === 0 && groupIndex !== -1) {
+            this.messages.splice(groupIndex, 1)
+        }
+        
+        await queries.delImage(imageIdNum)
+        this.viewContent()
     },
-    updateSliderHeight: function(slider) { // пересчет высоты конкретного блока slider на основе самой высокой картинки
+    updateSliderHeight: function(slider) { // change slider height using the heighter image
         if (!slider) return
         
         let imageArea = slider.querySelector('.image-area')
@@ -325,8 +344,7 @@ let content = {
             }
         }
         
-        // Устанавливаем высоту блока на основе самой высокой картинки
-        // Ограничиваем максимальной высотой 300px из CSS
+        // Устанавливаем высоту блока на основе самой высокой картинки (не выше 300 css)
         if (maxHeight > 0) {
             slider.style.height = Math.min(maxHeight, 300) + 'px'
         }
@@ -338,20 +356,15 @@ let content = {
             this.updateSliderHeight(slider)
         }
     },
-    delImages: function(imagesId) { // event of deletion any image group (with images)
-        for (let i=0; i<this.imagesGroups[Number(imagesId)].content.length; i++) {
-            let num = this.imagesGroups[Number(imagesId)].content[i]
-            delete this.images[num]
-        }
-        // ajax delete images
-        delete this.imagesGroups[Number(imagesId)]
-        for (let i=0; i < this.content.length; i++) {
-            if (!this.content[i].type === 'imagesGroup') continue
-            if (this.content[i].id === Number(imagesId)) {
-                this.content.splice(i, 1)
+    delImages: async function(msgId) { // event of deletion any image group (with images)
+        const msgIdNum = Number(msgId)
+        this.messages = this.messages.filter(msg => {
+            if (msg.type === 'images' && msg.msg_id === msgIdNum) {
+                return false
             }
-        }
-        // ajax delete imagesGroups
+            return true
+        })
+        await queries.delImages(msgIdNum)
         this.viewContent()
     },
     viewNote: function(noteData) { // display a note block from messages data

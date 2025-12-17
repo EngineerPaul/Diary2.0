@@ -28,7 +28,7 @@ export const Urls = {  // backend urls
     // Record API
     getRecordContent: (record_id) => `api/records/${record_id}/`, // get all record content
     notes: (record_id) => `api/records/${record_id}/notes/`, // post note
-    note: (record_id, note_id) => `api/records/${record_id}/notes/${note_id}`, // get/patch/delete note
+    note: (record_id, note_id) => `api/records/${record_id}/notes/${note_id}/`, // get/patch/delete note
     images: (record_id) => `api/records/${record_id}/images/`, // post image
     image: (record_id, image_id) => `api/records/${record_id}/images/${image_id}/`, // get/delete image
     imagesGroups: (record_id) => `api/records/${record_id}/images-group/`, // post images group
