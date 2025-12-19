@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework import routers
 
 from .views.views import (
-    PublicAPI, SecretAPI, UploadTestViewSet
+    PublicAPI, SecretAPI
 )
 from .views.filesystem import (
     BlankFileSystemAPI, RecordsFSAPI,
@@ -123,6 +123,5 @@ urlpatterns += [path("records/", include(records_urls))]
 
 # === Router URLs ===
 test_router = routers.DefaultRouter()  # test file upload
-test_router.register(r'test-upload', UploadTestViewSet)
 
 urlpatterns += [path("", include(test_router.urls))]

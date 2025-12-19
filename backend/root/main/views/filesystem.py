@@ -41,12 +41,12 @@ class BlankFileSystemAPI(APIView):
         """ Создание новых данных """
         f_r = RecordFolder.objects.create(
             user_id=1, parent_id=None, title='root',
-            nested_folders='', nested_records=''
+            nested_folders='', nested_objects=''
         )
 
         f1 = RecordFolder.objects.create(
             user_id=1, parent_id=f_r, title='Папка 1',
-            nested_folders='', nested_records=''
+            nested_folders='', nested_objects=''
         )
         r1 = Record.objects.create(
             user_id=1, folder_id=f1, title='Запись 1'
@@ -57,8 +57,8 @@ class BlankFileSystemAPI(APIView):
 
         # pk = 11
         f_r.add_folder(f1.pk)
-        f_r.add_record(r1.pk)
-        f_r.add_record(r2.pk)
+        f_r.add_object(r1.pk)
+        f_r.add_object(r2.pk)
         # f_r.insert_record(pk, 1)
         f_r.save()
 
@@ -133,21 +133,21 @@ class BlankFileSystemAPI(APIView):
         record_3_1 = Record.objects.create(user_id=user_id, folder_id=folder_3,
                                            title='record 1', color='white')
 
-        root.add_record(record_1.pk)
-        root.add_record(record_2.pk)
-        root.add_record(record_3.pk)
-        root.add_record(record_4.pk)
+        root.add_object(record_1.pk)
+        root.add_object(record_2.pk)
+        root.add_object(record_3.pk)
+        root.add_object(record_4.pk)
 
-        folder_1.add_record(record_1_1.pk)
-        folder_1.add_record(record_1_2.pk)
-        folder_2.add_record(record_2_1.pk)
-        folder_2.add_record(record_2_2.pk)
-        folder_3.add_record(record_3_1.pk)
+        folder_1.add_object(record_1_1.pk)
+        folder_1.add_object(record_1_2.pk)
+        folder_2.add_object(record_2_1.pk)
+        folder_2.add_object(record_2_2.pk)
+        folder_3.add_object(record_3_1.pk)
 
         RecordFolder.objects.bulk_update(
             objs=[root, folder_1, folder_3, folder_4, folder_1_1, folder_3_1,
                   folder_3_1_1],
-            fields=['nested_folders', 'nested_records']
+            fields=['nested_folders', 'nested_objects']
         )
         print('Record: ', Record.objects.all())
 
@@ -226,7 +226,7 @@ class RecordsAPI(APIView):
         try:
             with transaction.atomic():
                 record = serializer.save(user_id=user_id)
-                folder.add_record(record.pk)
+                folder.add_object(record.pk)
                 folder.save()
         except Exception as e:
             msg = f'Error: Ошибка создания заметки - {str(e)}'
@@ -279,7 +279,7 @@ class RecordsAPI(APIView):
 
         try:
             with transaction.atomic():
-                record.folder_id.del_record(record.pk)
+                record.folder_id.del_object(record.pk)
                 record.folder_id.save()
                 record.delete()
         except transaction.TransactionManagementError:
@@ -436,7 +436,7 @@ class MoveBetweenAPI(APIView):
         except (Record.DoesNotExist, RecordFolder.DoesNotExist):
             return {'success': False, 'msg': 'Данные не найдены'}
 
-        folder.nested_records = ','.join(map(str, data['nested_list']))
+        folder.nested_objects = ','.join(map(str, data['nested_list']))
         folder.save()
 
         return {'success': True, 'msg': 'Данные сохранены'}
@@ -524,8 +524,8 @@ class MoveInsideAPI(APIView):
         try:
             with transaction.atomic():
                 record.folder_id = new_folder
-                old_folder.del_record(record.pk)
-                new_folder.add_record(record.pk)
+                old_folder.del_object(record.pk)
+                new_folder.add_object(record.pk)
 
                 record.save()
                 old_folder.save()

@@ -10,14 +10,12 @@ colors = [
 ]
 
 
-class RecordFolder(models.Model):
+class BaseFolder (models.Model):
     user_id = models.IntegerField()
-    parent_id = models.ForeignKey('self', on_delete=models.SET_NULL,
-                                  null=True, related_name='employees')
     title = models.CharField(max_length=20)
     color = models.CharField(max_length=1, choices=colors, default='w')
     nested_folders = models.TextField(null=False, blank=True, default='')
-    nested_records = models.TextField(null=False, blank=True, default='')
+    nested_objects = models.TextField(null=False, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     changed_at = models.DateTimeField(auto_now=True)
 
@@ -26,12 +24,6 @@ class RecordFolder(models.Model):
             self.nested_folders = str(folder_id)
         else:
             self.nested_folders += f',{folder_id}'
-        return True
-
-    def insert_folder(self, folder_id, old_num, new_num):
-        nested_list = self.nested_folders.split(',')
-        nested_list.insert(new_num, str(folder_id))
-        self.nested_folders = ','.join(nested_list)
         return True
 
     def del_folder(self, folder_id):
@@ -43,27 +35,34 @@ class RecordFolder(models.Model):
         except ValueError:
             return False
 
-    def add_record(self, record_id):
-        if self.nested_records == '':
-            self.nested_records = str(record_id)
+    def add_object(self, record_id):
+        if self.nested_objects == '':
+            self.nested_objects = str(record_id)
         else:
-            self.nested_records += f',{record_id}'
+            self.nested_objects += f',{record_id}'
         return True
 
-    def insert_record(self, record_id, new_num):
-        nested_list = self.nested_records.split(',')
-        nested_list.insert(new_num, str(record_id))
-        self.nested_records = ','.join(nested_list)
-        return True
-
-    def del_record(self, record_id):
+    def del_object(self, record_id):
         try:
-            nested_list = self.nested_records.split(',')
+            nested_list = self.nested_objects.split(',')
             nested_list.remove(str(record_id))
-            self.nested_records = ','.join(nested_list)
+            self.nested_objects = ','.join(nested_list)
             return True
         except ValueError:
             return False
+
+    class Meta:
+        abstract = True
+
+
+class RecordFolder(BaseFolder):
+    parent_id = models.ForeignKey('self', on_delete=models.CASCADE,
+                                  null=True, related_name='folders')
+
+
+class NoticeFolder(BaseFolder):
+    parent_id = models.ForeignKey('self', on_delete=models.CASCADE,
+                                  null=True, related_name='folders')
 
 
 class Record(models.Model):
@@ -71,7 +70,7 @@ class Record(models.Model):
     folder_id = models.ForeignKey(
         RecordFolder, on_delete=models.CASCADE, related_name='records')
     description = models.TextField(null=True, blank=True)
-    title = models.CharField(max_length=20)
+    title = models.CharField(max_length=50)
     color = models.CharField(max_length=1, choices=colors, default='w')
     created_at = models.DateTimeField(auto_now_add=True)
     changed_at = models.DateTimeField(auto_now=True)
@@ -114,10 +113,29 @@ class Image(models.Model):
     file = models.ImageField(upload_to=get_unique_path)
     user_id = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class Notice(models.Model):
+    user_id = models.IntegerField()
+    folder_id = models.ForeignKey(
+        NoticeFolder, on_delete=models.CASCADE, related_name='notices')
+    description = models.TextField(null=True, blank=True)
+    title = models.CharField(max_length=50)
+    color = models.CharField(max_length=1, choices=colors, default='w')
+    created_at = models.DateTimeField(auto_now_add=True)
     changed_at = models.DateTimeField(auto_now=True)
+    next_date = models.DateField()
+    time = models.TimeField()
+    period = models.CharField(max_length=9, null=True, blank=True)
+    # period is field like "0,0,0,0". Here the day, week, month, year are given
+    # reading should be from right to left
+    # the rightmost one set periodicity. Others indicate the certain date
 
 
-class UploadedTest(models.Model):
-    title = models.CharField()
+class NoticeImage(models.Model):
+    notice = models.ForeignKey(Notice, on_delete=models.CASCADE,
+                               related_name='images')
+    name = models.CharField()
     file = models.ImageField(upload_to=get_unique_path)
     user_id = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
