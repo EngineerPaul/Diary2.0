@@ -974,10 +974,8 @@ let viewContent = {
         path.viewPath()
     },
     openRecord: function(record_id) { // opening the records
-        // здесь должен осуществляться переход на url заметки и напоминания (исправить-удалить)
-        console.log('Переход на страницу записи ', session.section,' типа, id=', record_id)
-        // console.log(window.location.pathname)
-        // window.location.pathname = '/notes/' + record_id
+        // console.log('Переход на страницу записи ', session.section,' типа, id=', record_id)
+        window.location.href = `/notes/${record_id}/`
     },
     run: function() {
         this.currentFolderId = content.notesRoot
