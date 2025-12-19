@@ -161,7 +161,7 @@ let queries = {
         const response = await conf.AJAX.send(url, options)
         return response
     },
-    updateRecord: async function(title, color) { // change record (settings and theme)
+    updateRecord: async function(title, description, color) { // change record (settings and theme)
         const url = conf.Domains['server'] + conf.Urls.FSRecord(this.recordId)
         const options = {
             method: 'PATCH',
@@ -171,6 +171,7 @@ let queries = {
             credentials: 'include',
             body: JSON.stringify({
                 title: title,
+                description: description || '',
                 color: conf.colors.forward[color] || 'w'
             })
         }
@@ -180,6 +181,7 @@ let queries = {
     handleUpdateRecordSubmit: async function(event) {  // record update submit event
         event.preventDefault()
         const nameInput = document.getElementById('fNoteName')
+        const contentTextarea = document.getElementById('fNoteContent')
         const markerInput = document.querySelector('#modalRecord input[name="marker"]:checked')
         
         if (!nameInput) {
@@ -193,9 +195,10 @@ let queries = {
             return
         }
         
+        const description = contentTextarea ? contentTextarea.value.trim() : ''
         const color = markerInput ? markerInput.value : 'white'
         
-        const response = await this.updateRecord(title, color)
+        const response = await this.updateRecord(title, description, color)
         if (response) {
             if (settings && settings.modalBlock) {
                 settings.modalBlock.style.display = 'none'
@@ -264,6 +267,7 @@ let queries = {
             textarea.value = ''
             
             await content.getContent()
+            content.viewContent()
         }
     },
     handleAddImagesSubmit: async function(event) {
@@ -326,6 +330,7 @@ let content = {
         const {messages: messages, record: recordDetail} = await queries.getContent()
         // recordDetail - {record_id: 19, user_id: 1, title: 'record 1'} позже добавится description
         this.theme = recordDetail.title
+        this.description = recordDetail.description
         this.color = recordDetail.color ? conf.colors.revers[recordDetail.color] : 'white'
         this.messages = messages
     },
@@ -505,6 +510,15 @@ let content = {
     },
 
     viewContent: function() { // display messages by msg type
+        const themeElement = document.querySelector('.theme')
+        if (themeElement && this.theme) {
+            themeElement.textContent = this.theme
+        }
+        const descriptionElement = document.getElementById('description')
+        if (descriptionElement) {
+            descriptionElement.textContent = this.description || ''
+        }
+        
         let content = document.getElementById('content')
         content.innerHTML = ''
         for (let i=0; i<this.messages.length; i++) {
@@ -531,9 +545,8 @@ let content = {
             parent: record,
             params: {},
         })
-        // Заглушка для даты (в будущем будет приходить из noteData.date)
-        let currentDate = new Date()
-        let dateString = currentDate.toLocaleDateString('ru-RU', {
+        const noteDate = noteData.changed_at ? new Date(noteData.changed_at) : "error"
+        let dateString = noteDate.toLocaleDateString('ru-RU', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',

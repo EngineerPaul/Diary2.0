@@ -30,7 +30,7 @@ class BlankFileSystemAPI(APIView):
 
         # self.get_blank()
 
-        return Response()
+        return Response(status=status.HTTP_201_CREATED)
 
     def test_truncate(self):
         """ Удаление старых данных """

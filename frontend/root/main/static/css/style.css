@@ -453,6 +453,8 @@ body {
         border: 1px solid var(--content-record-border-color);
         border-radius: 10px;
         margin-bottom: 15px;
+        padding: 0px 5px 5px 5px;
+        text-align: justify;
     }
     .content {
 

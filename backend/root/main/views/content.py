@@ -116,6 +116,7 @@ class RecordContentAPI(APIView):
                 'record_id': record.pk,
                 'user_id': record.user_id,
                 'title': record.title,
+                'description': record.description,
                 'color': record.color,
             }
             # print(record_dict)
@@ -130,7 +131,7 @@ class RecordContentAPI(APIView):
         messages = messages.filter(record_id=record_id)
         messages = list(messages.values(
             'id',
-            'notes__pk', 'notes__msg_id', 'notes__text',
+            'notes__pk', 'notes__msg_id', 'notes__text', 'notes__created_at', 'notes__changed_at',
             'images__pk', 'images__msg_id', 'images__name', 'images__file'
         ))
 
@@ -159,7 +160,9 @@ class RecordContentAPI(APIView):
             'msg_id': message['notes__msg_id'],
             'type': add_type,
             'note_id': message['notes__pk'],
-            'text': message['notes__text']
+            'text': message['notes__text'],
+            'created_at': message['notes__created_at'],
+            'changed_at': message['notes__changed_at']
         }
         response.append(note)
 

@@ -109,7 +109,7 @@ let modals = {
             data = content.notes[id]
 
             form.fNoteName.value = data.title
-            // form.fNoteContent.value = data.description || ''
+            form.fNoteContent.value = data.description || ''
             const colorValue = conf.colors.revers[data.color] || 'white'
             const markerRadio = form.querySelector(`input[name="marker"][value="${colorValue}"]`)
             if (markerRadio) markerRadio.checked = true
@@ -162,7 +162,7 @@ const forms = {
         const data = {
             folder_id: parseInt(viewContent.currentFolderId),
             title: form.fNoteName.value,
-            // description: form.fNoteContent.value,
+            description: form.fNoteContent.value.trim() || '',
             color: conf.colors.forward[form.marker.value],
         }
 
@@ -188,7 +188,8 @@ const forms = {
                 title: response.data['title'],
                 folder_id: parseInt(response.data['folder_id']),
                 color: conf.colors.revers[response.data['color']],
-                changed_at: response.data['changed_at']
+                changed_at: response.data['changed_at'],
+                description: response.data['description'] || ''
             }
             content.change.addNote(resp_data)
 
@@ -202,7 +203,7 @@ const forms = {
         const id = modals.editId
         const data = {
             title: form.fNoteName.value,
-            // description: form.fNoteContent.value,
+            description: form.fNoteContent.value.trim() || '',
             color: conf.colors.forward[form.marker.value],
         }
         console.log('Обновление записи:', id, data)
@@ -225,6 +226,7 @@ const forms = {
         
         if (response.success) {
             content.notes[id].title = response.data['title']
+            content.notes[id].description = response.data['description'] || ''
             content.notes[id].color = response.data['color']  // цвет уже в коротком формате ('w', 'g', 'y', 'r')
             content.notes[id].changed_at = response.data['changed_at']
             
@@ -452,12 +454,13 @@ let content = {
     //     this.color = color
     //     this.parent_id = parent_id  // folder id
     // },
-    Note: function({pk, title, folder_id, color, changed_at}) {  // create note object using new notation
+    Note: function({pk, title, folder_id, color, changed_at, description}) {  // create note object using new notation
         this.record_id = parseInt(pk)  // name like notice
         this.title = title
         this.parent_id = parseInt(folder_id)  // folder id
         this.color = color
         this.changed_at = changed_at
+        this.description = description || ''
     },
     Notice: function(record_id, notice_name, order_id, color, parent_id, date, time) {  // create notice object using new notation
         this.record_id = record_id  // name like note
@@ -675,8 +678,8 @@ let content = {
     },
 
     change: {  // changes existing objects (using and without AJAX)
-        addNote: function({pk, title, folder_id, color, changed_at}) {  // creation a new record (ajax in form.createRecord)
-            const newNote = new content.Note({pk, title, folder_id, color: conf.colors.forward[color], changed_at})
+        addNote: function({pk, title, folder_id, color, changed_at, description}) {  // creation a new record (ajax in form.createRecord)
+            const newNote = new content.Note({pk, title, folder_id, color: conf.colors.forward[color], changed_at, description})
             content.notes[newNote.record_id] = newNote
             const folder = content.noteFolders[folder_id]
             folder.records.push('n'+pk)

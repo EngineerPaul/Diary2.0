@@ -32,7 +32,7 @@ class RecordFSSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = ['pk', 'folder_id', 'title', 'color', 'changed_at']
+        fields = ['pk', 'folder_id', 'title', 'description', 'color', 'changed_at']
 
 
 # ===== RecordsAPI =====
@@ -41,7 +41,7 @@ class RecordGetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = ['pk', 'folder_id', 'title', 'color', 'changed_at']
+        fields = ['pk', 'folder_id', 'title', 'description', 'color', 'changed_at']
 
 
 # ===== RecordsAPI =====
@@ -50,7 +50,7 @@ class RecordCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = ['pk', 'folder_id', 'title', 'color', 'changed_at']
+        fields = ['pk', 'folder_id', 'title', 'description', 'color', 'changed_at']
         read_only_fields = ['pk', 'changed_at']
 
 
@@ -60,7 +60,7 @@ class RecordUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = ['pk', 'title', 'color', 'changed_at']
+        fields = ['pk', 'title', 'description', 'color', 'changed_at']
         read_only_fields = ['pk', 'changed_at']
         extra_kwargs = {
             'title': {'required': False},

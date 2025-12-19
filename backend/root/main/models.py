@@ -68,7 +68,9 @@ class RecordFolder(models.Model):
 
 class Record(models.Model):
     user_id = models.IntegerField()
-    folder_id = models.ForeignKey(RecordFolder, on_delete=models.CASCADE, related_name='records')
+    folder_id = models.ForeignKey(
+        RecordFolder, on_delete=models.CASCADE, related_name='records')
+    description = models.TextField(null=True, blank=True)
     title = models.CharField(max_length=20)
     color = models.CharField(max_length=1, choices=colors, default='w')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -84,8 +86,8 @@ class Note(models.Model):
     msg_id = models.ForeignKey(
         Message, on_delete=models.CASCADE, related_name='notes')
     text = models.TextField(max_length=10_000)
-    # created_at = models.DateTimeField(auto_now_add=True)
-    # changed_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    changed_at = models.DateTimeField(auto_now=True)
 
 
 def get_unique_path(instance, filename):

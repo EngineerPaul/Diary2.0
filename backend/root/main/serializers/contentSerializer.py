@@ -10,7 +10,8 @@ class NoteGetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Note
-        fields = ['pk', 'user_id', 'text',]
+        fields = ['pk', 'user_id', 'text', 'created_at', 'changed_at']
+        read_only_fields = ['pk', 'created_at', 'changed_at']
 
     def get_user_id(self, obj):
         return obj.msg_id.record_id.user_id
