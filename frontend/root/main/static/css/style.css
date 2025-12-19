@@ -468,6 +468,18 @@ body {
                 color: #808080;
                 display: flex;
 
+                .checkmark {
+                    margin-left: auto;
+                    margin-right: 5px;
+                    cursor: pointer;
+                    width: 8px;
+                    display: none;
+
+                    &:hover {
+                        transform: scale(1.2);
+                        fill: #ff4545;
+                    }
+                }
                 .edit {
                     margin-left: auto;
                     margin-right: 5px;
@@ -497,6 +509,22 @@ body {
             .record-text {
                 padding: 0px 5px 5px 5px;
                 text-align: justify;
+                
+                .record-text-edit {
+                    width: 100%;
+                    border: none;
+                    background: transparent;
+                    resize: none;
+                    outline: none;
+                    font-family: inherit;
+                    font-size: inherit;
+                    color: inherit;
+                    line-height: inherit;
+                    padding: 0px 5px 5px 5px;
+                    text-align: justify;
+                    margin: 0;
+                    box-sizing: border-box;
+                }
             }
         }
         .images {

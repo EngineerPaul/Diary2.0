@@ -116,6 +116,7 @@ class RecordContentAPI(APIView):
                 'record_id': record.pk,
                 'user_id': record.user_id,
                 'title': record.title,
+                'color': record.color,
             }
             # print(record_dict)
             return record_dict

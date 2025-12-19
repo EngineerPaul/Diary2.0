@@ -129,11 +129,81 @@ let queries = {
         const response = await conf.AJAX.send(url, options)
         return response
     },
-    updateNote: function(noteId) { // change any comment
-
+    editImagesGroup: async function(msgId, files) { // add images to existing images group
+        const url = conf.Domains['server'] + conf.Urls.images(this.recordId)
+        const formData = new FormData()
+        
+        formData.append('msg_id', msgId)
+        for (let i = 0; i < files.length; i++) {
+            formData.append('file', files[i])
+        }
+        
+        const options = {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+        }
+        const response = await conf.AJAX.send(url, options)
+        return response
     },
-    updateRecord: function() { // change record (settings and theme)
-
+    updateNote: async function(noteId, text) { // change any comment
+        const url = conf.Domains['server'] + conf.Urls.note(this.recordId, noteId)
+        const options = {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                text: text
+            })
+        }
+        const response = await conf.AJAX.send(url, options)
+        return response
+    },
+    updateRecord: async function(title, color) { // change record (settings and theme)
+        const url = conf.Domains['server'] + conf.Urls.FSRecord(this.recordId)
+        const options = {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                title: title,
+                color: conf.colors.forward[color] || 'w'
+            })
+        }
+        const response = await conf.AJAX.send(url, options)
+        return response
+    },
+    handleUpdateRecordSubmit: async function(event) {  // record update submit event
+        event.preventDefault()
+        const nameInput = document.getElementById('fNoteName')
+        const markerInput = document.querySelector('#modalRecord input[name="marker"]:checked')
+        
+        if (!nameInput) {
+            console.log('Error: поле названия не найдено')
+            return
+        }
+        
+        const title = nameInput.value.trim()
+        if (!title) {
+            console.log('Error: название не может быть пустым')
+            return
+        }
+        
+        const color = markerInput ? markerInput.value : 'white'
+        
+        const response = await this.updateRecord(title, color)
+        if (response) {
+            if (settings && settings.modalBlock) {
+                settings.modalBlock.style.display = 'none'
+            }
+            
+            await content.getContent()
+            content.viewContent()
+        }
     },
     delNote: async function(noteId) { // delete any note
         const url = conf.Domains['server'] + conf.Urls.note(this.recordId, noteId)
@@ -206,7 +276,18 @@ let queries = {
             return
         }
         
-        const response = await this.createImages(files)
+        let response
+        // Проверяем data-атрибут формы для редактирования существующей группы изображений
+        const form = event.target
+        const editMsgId = form.dataset.editMsgId
+        if (editMsgId) {
+            response = await this.editImagesGroup(Number(editMsgId), files)
+            delete form.dataset.editMsgId // Удаляем data-атрибут после использования
+        } else {
+            // Создаем новую группу изображений
+            response = await this.createImages(files)
+        }
+        
         if (response) {
             if (settings && settings.modalBlock) {
                 settings.modalBlock.style.display = 'none'
@@ -219,6 +300,7 @@ let queries = {
             }
             
             await content.getContent()
+            content.viewContent()
         }
     },
     run: function() {
@@ -226,8 +308,10 @@ let queries = {
         
         const addNoteForm = document.getElementById('addNoteForm')
         const addImagesForm = document.getElementById('addImagesForm')
+        const updateRecordForm = document.getElementById('crtRecordForm')
         addNoteForm.addEventListener('submit', this.handleAddNoteSubmit.bind(this))
         addImagesForm.addEventListener('submit', this.handleAddImagesSubmit.bind(this))
+        updateRecordForm.addEventListener('submit', this.handleUpdateRecordSubmit.bind(this))
     }
 }
 queries.run()
@@ -235,27 +319,79 @@ queries.run()
 let content = {
     theme: null, // title of whole record
     description: null, // record rescription
-    messages: {},
+    color: null,  // record color
+    messages: {},  // content
 
     getContent: async function() { // parsing data (details and messages) from server
         const {messages: messages, record: recordDetail} = await queries.getContent()
         // recordDetail - {record_id: 19, user_id: 1, title: 'record 1'} позже добавится description
         this.theme = recordDetail.title
+        this.color = recordDetail.color ? conf.colors.revers[recordDetail.color] : 'white'
         this.messages = messages
     },
-    viewContent: function() { // display messages by msg type
-        let content = document.getElementById('content')
-        content.innerHTML = ''
-        for (let i=0; i<this.messages.length; i++) {
-            if (this.messages[i].type === 'note') {
-                this.viewNote(this.messages[i])
-            } else if (this.messages[i].type === 'images') {
-                this.viewImages(this.messages[i])
-            } else {
-                console.log('Error: message type is incorrect')
+
+    editNote: async function(noteId) {  // event of update note by pencil
+
+        const record = document.querySelector(`.record[id="${noteId}"]`)
+        if (!record) {
+            console.log('Error: заметка не найдена')
+            return
+        }
+        
+        const recordText = record.querySelector('.record-text')
+        const textarea = recordText ? recordText.querySelector('.record-text-edit') : null
+        if (!textarea) {
+            console.log('Error: форма редактирования не найдена')
+            return
+        }
+        const text = textarea.value.trim()
+        if (!text) {
+            console.log('Error: текст не может быть пустым')
+            return
+        }
+
+        // Проверяем, изменился ли текст
+        const noteIndex = this.messages.findIndex(msg => 
+            msg.type === 'note' && msg.note_id === noteId
+        )
+        const originalText = noteIndex !== -1 ? this.messages[noteIndex].text : ''
+        
+        // Если текст не изменился, просто обновляем UI без запроса на сервер
+        if (originalText === text) {
+            this._updateNoteUI(record, recordText, text)
+            return
+        }
+
+        const response = await queries.updateNote(noteId, text)
+        
+        if (response) {
+            this._updateNoteUI(record, recordText, text)
+            
+            // Обновляем данные в content.messages
+            if (noteIndex !== -1) {
+                this.messages[noteIndex].text = text
             }
         }
     },
+    _updateNoteUI: function(record, recordText, text) {  // disable note edit mode
+        // Обновляем текст в DOM
+        recordText.innerHTML = ''
+        recordText.textContent = text
+        
+        // Скрываем галочку после сохранения
+        const recordHeader = record.querySelector('.record-header')
+        if (recordHeader) {
+            const checkmark = recordHeader.querySelector('.checkmark')
+            const editElement = recordHeader.querySelector('.edit')
+            if (checkmark) {
+                checkmark.style.display = 'none'
+            }
+            if (editElement) {
+                editElement.style.marginLeft = 'auto'
+            }
+        }
+    },
+
     delContent: function(event) { // event of deletion any type content by cross
         // image cross
         let imageCross = event.target.closest('.image-cross')
@@ -366,6 +502,20 @@ let content = {
         })
         await queries.delImages(msgIdNum)
         this.viewContent()
+    },
+
+    viewContent: function() { // display messages by msg type
+        let content = document.getElementById('content')
+        content.innerHTML = ''
+        for (let i=0; i<this.messages.length; i++) {
+            if (this.messages[i].type === 'note') {
+                this.viewNote(this.messages[i])
+            } else if (this.messages[i].type === 'images') {
+                this.viewImages(this.messages[i])
+            } else {
+                console.log('Error: message type is incorrect')
+            }
+        }
     },
     viewNote: function(noteData) { // display a note block from messages data
         let content = document.getElementById('content')
@@ -590,8 +740,6 @@ let content = {
         this.viewContent()
         let content = document.getElementById('content')
         content.addEventListener('click', this.delContent.bind(this))
-
-        
     }
 }
 content.run()
@@ -604,10 +752,11 @@ let settings = {
 
     modals: {
         viewModal: function(modalId) { // display the required modal
-            this.modal = document.getElementById(modalId)
-            if (!this.modal || !this.modalBlock) return
-            this.modal.style['display'] = 'block'
-            this.modalBlock.style['display'] = 'block'
+            const modal = document.getElementById(modalId)
+            if (!modal || !settings.modalBlock) return
+            settings.modal = modal
+            modal.style['display'] = 'block'
+            settings.modalBlock.style['display'] = 'block'
         },
         hideModal: function(event) { // hide any modal
             if (
@@ -641,6 +790,46 @@ let settings = {
         openAddImagesModal: function() { // open modal for adding images
             this.modals.viewModal.bind(this)('modalAddImages')
         },
+        openEditRecordModal: async function(event) { // open modal for editing record detail
+            const modalRecord = document.getElementById('modalRecord')
+            if (!modalRecord) return
+            
+            // Заполняем форму существующими данными из content
+            const nameInput = document.getElementById('fNoteName')
+            const contentTextarea = document.getElementById('fNoteContent')
+            if (nameInput) nameInput.value = content.theme || ''
+            if (contentTextarea) contentTextarea.value = content.description || ''
+            const colorValue = content.color || 'white'
+            const marker = modalRecord.querySelector(`input[name="marker"][value="${colorValue}"]`)
+            if (marker) {
+                marker.checked = true
+            } else {
+                const whiteMarker = modalRecord.querySelector('input[name="marker"][value="white"]')
+                if (whiteMarker) {
+                    whiteMarker.checked = true
+                }
+            }
+            
+            this.viewModal('modalRecord')
+        },
+        openEditImagesModal: async function(event) {  // open modal for editing images group
+            // Редактирование группы изображений - открываем модалку для добавления картинок
+            const editorPencil = event.target.closest('.images .editor')
+            if (editorPencil) {
+                event.preventDefault()
+                event.stopPropagation()
+                const imagesBlock = editorPencil.closest('.images')
+                if (imagesBlock && imagesBlock.id) {
+                    // Сохраняем msgId в data-атрибуте формы для использования при отправке
+                    const form = document.getElementById('addImagesForm')
+                    if (form) {
+                        form.dataset.editMsgId = imagesBlock.id
+                    }
+                    // Открываем модалку для добавления картинок (та же, что при создании)
+                    this.viewModal('modalAddImages')
+                }
+            }
+        },
         setupFileInputButton: function() { // setup custom file input button
             const fileInput = document.getElementById('fImages')
             const fileInputButton = document.querySelector('.file-input-button')
@@ -670,38 +859,94 @@ let settings = {
             document.addEventListener('keyup', this.modals.hideModal.bind(this))
             document.addEventListener('click', this.modals.hideModalCross.bind(this))
 
-            // Add click handler for editor button
-            const editorBtn = document.querySelector('.menu-item.editor')
-            if (editorBtn) {
-                editorBtn.addEventListener('click', this.modals.openCreateNoteModal.bind(this))
-            }
-
             const AddNoteBtn = document.getElementById('AddNoteBtn')
             const AddImagesBtn = document.getElementById('AddImagesBtn')
             AddNoteBtn.addEventListener('click', this.modals.openAddNoteModal.bind(this))
             AddImagesBtn.addEventListener('click', this.modals.openAddImagesModal.bind(this))
 
+            const editorBtn = document.querySelector('.menu-item.editor')  // record update pencil
+            if (editorBtn) {
+                editorBtn.addEventListener('click', this.modals.openEditRecordModal.bind(this.modals))
+            }
+
+            const contentElement = document.getElementById('content')  // images update pencil
+            contentElement.addEventListener('click', this.modals.openEditImagesModal.bind(this.modals))
+
             this.modals.setupFileInputButton.bind(this)()
 
         }
     },
-    otherSite: {
-        delRecord: function(event) { // btn of whole record deletion
-            // ajax del whole record
-            window.location.pathname = '/notes'
-        },
-        hideModalBtn: function() { // hide any modal by inner btn click
-            if (!this.modal || !this.modalBlock) return
-            this.modalBlock.style['display'] = 'none'
-            this.modal.style['display'] = 'none'
-        },
-        run: function() {
+    
+    changeNote: function(event) { // note pencil click
+        const editPencil = event.target.closest('.record .edit')
+        if (editPencil) {
+            const record = editPencil.closest('.record')
+            if (record) {
+                const recordText = record.querySelector('.record-text')
+                if (recordText && !recordText.querySelector('textarea')) {
 
+                    const text = recordText.textContent
+                    recordText.innerHTML = ''
+                    const textarea = document.createElement('textarea')
+                    textarea.value = text
+                    textarea.classList.add('record-text-edit')
+                    recordText.appendChild(textarea)
+                    
+                    textarea.style.height = 'auto'
+                    textarea.style.height = textarea.scrollHeight + 'px'
+                    
+                    textarea.focus()
+                    // Сохраняем ID заметки в data-атрибуте
+                    textarea.dataset.noteId = record.id
+                    
+                    // Показываем галочку для сохранения
+                    const recordHeader = record.querySelector('.record-header')
+                    if (recordHeader) {
+                        let checkmark = recordHeader.querySelector('.checkmark')
+                        const editElement = recordHeader.querySelector('.edit')
+                        if (!checkmark) {
+                            checkmark = content.createSVG({
+                                parent: recordHeader,
+                                className: 'checkmark',
+                                viewBox: '0 0 507.506 507.506',
+                                pathLst: [
+                                    'M163.865,436.934c-14.406,0.006-28.222-5.72-38.4-15.915L9.369,304.966c-12.492-12.496-12.492-32.752,0-45.248l0,0   c12.496-12.492,32.752-12.492,45.248,0l109.248,109.248L452.889,79.942c12.496-12.492,32.752-12.492,45.248,0l0,0   c12.492,12.496,12.492,32.752,0,45.248L202.265,421.019C192.087,431.214,178.271,436.94,163.865,436.934z'
+                                ],
+                            })
+                            if (editElement) {
+                                recordHeader.insertBefore(checkmark, editElement)
+                            }
+                        }
+                        checkmark.style.display = 'block'
+                        if (editElement) {
+                            editElement.style.marginLeft = '0'
+                        }
+                    }
+                }
+            }
         }
     },
+
     run: function() {
         this.modals.run.bind(this)()
-        this.otherSite.run.bind(this)()
+        
+        const contentElement = document.getElementById('content')
+        if (contentElement) {
+            // Обработчик для карандаша в заметке (note pencil)
+            contentElement.addEventListener('click', (event) => {
+                this.changeNote(event)
+            })
+            // Обработчик для галочки в заметке (note checkmark)
+            contentElement.addEventListener('click', (event) => {
+                const checkmark = event.target.closest('.record .checkmark')
+                if (checkmark) {
+                    const record = checkmark.closest('.record')
+                    if (record && record.id) {
+                        content.editNote(Number(record.id))
+                    }
+                }
+            })
+        }
     }
 }
 settings.run()
