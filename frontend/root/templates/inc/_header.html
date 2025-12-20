@@ -3,12 +3,12 @@
 <div class="header">
     <div class="header-row">
         <div class="header-fields" id="sections">
-            <div class="header-field" id="notes">
+            <div class="header-field" id="noteSection">
                 <div class="header-field-title">
                     Заметки
                 </div>
             </div>
-            <div class="header-field" id="notices">
+            <div class="header-field" id="noticeSection">
                 <div class="header-field-title">
                     Напоминания
                 </div>
@@ -23,24 +23,5 @@
     <hr>
 </div>
 
-
-<script>
-const headerSection = {
-    sections: document.getElementById('sections'),
-
-    changeSection: function(event) {  // choice section from among notes or notices
-        let sec = event.target.closest('.header-field')
-        if (!sec) return
-        let sectionName = event.target.closest('.header-field').id
-        sessionStorage.setItem('section', sectionName)
-        event.preventDefault()
-    },
-    run: function() {
-        this.sections.addEventListener('click', this.changeSection.bind(this))
-    }
-}
-headerSection.run()
-</script>
-
-
 <script type="module" src="{% static 'js/header.js' %}"></script>
+<script type="module" src="{% static 'js/header-auth.js' %}"></script>

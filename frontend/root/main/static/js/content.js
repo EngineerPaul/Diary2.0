@@ -400,17 +400,10 @@ let search = {
 search.run()
 
 let Header = {
-    sections: document.getElementById('sections'),
-
-    headerClick: function(event) {
-        let sec = event.target.closest('.header-field')
-        if (!sec) return
-
-        section = event.target.closest('.header-field').id
-        sessionStorage.setItem('section', section)
+    handleSectionChange: function(event) {  // custom header event of change section
+        const section = event.detail.section
         session.section = section
 
-        this.toggleHeaderField()
         if (session.section === 'notes') {
             viewContent.currentFolderId = content.notesRoot
         } else if (session.section === 'notices') {
@@ -421,19 +414,9 @@ let Header = {
         viewContent.displayItems()
         path.getPathList()
         path.viewPath()
-
-    },
-    toggleHeaderField: function() {
-        let section = document.getElementById(session.section)
-        let sectionSecond = session.section==='notes'?
-                            document.getElementById('notices'):
-                            document.getElementById('notes')
-        section.classList.add('selected')
-        sectionSecond.classList.remove('selected')
     },
     run: function() {
-        this.toggleHeaderField()
-        this.sections.addEventListener('click', this.headerClick.bind(this))
+        document.addEventListener('sectionChanged', this.handleSectionChange.bind(this))  // custom header event
     }
 }
 Header.run()
