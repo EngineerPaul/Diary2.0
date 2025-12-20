@@ -14,12 +14,19 @@ export const Urls = {  // backend urls
     'publickUrl': 'api/publick/',
     'secretUrl': 'api/secret/',
 
-    // File System API
-    getFileSystem: 'api/file-system/', // get folders & records
-    FSRecords: 'api/file-system/records/', // post record
-    FSRecord: (record_id) => `api/file-system/records/${record_id}/`, // patch/delete record
-    FSFolders: 'api/file-system/folders/', // post folder
-    FSFolder: (folder_id) => `api/file-system/folders/${folder_id}/`, // patch/delete folder
+    // File System API (record)
+    getFileSystem: 'api/file-system/record-content/', // get folders & records
+    FSRecords: 'api/file-system/record-content/records/', // post record
+    FSRecord: (record_id) => `api/file-system/record-content/records/${record_id}/`, // patch/delete record
+    FSFolders: 'api/file-system/record-content/folders/', // post folder
+    FSFolder: (folder_id) => `api/file-system/record-content/folders/${folder_id}/`, // patch/delete folder
+
+    // File System API (notice)
+    getFileSystemNotice: 'api/file-system/notice-content/', // get folders & notices
+    FSNotices: 'api/file-system/notice-content/notices/', // post notice
+    FSNotice: (notice_id) => `api/file-system/notice-content/notices/${notice_id}/`, // patch/delete notice
+    FSFoldersNotice: 'api/file-system/notice-content/folders/', // post folder
+    FSFolderNotice: (folder_id) => `api/file-system/notice-content/folders/${folder_id}/`, // patch/delete folder
 
     // Move API
     moveBetween: 'api/file-system/move/between/',  // post - change objects order

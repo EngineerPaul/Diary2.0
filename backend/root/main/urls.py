@@ -4,9 +4,15 @@ from rest_framework import routers
 from .views.views import (
     PublicAPI, SecretAPI
 )
-from .views.filesystem import (
+from .views.FSRecordViews import (
     BlankFileSystemAPI, RecordsFSAPI,
     RecordsAPI, RecordFoldersAPI,
+)
+from .views.FSNoticeViews import (
+    BlankFileSystemAPI2, NoticesFSAPI,
+    NoticesAPI, NoticeFoldersAPI,
+)
+from .views.FSMoveViews import (
     MoveBetweenAPI, MoveInsideAPI,
 )
 from .views.content import (
@@ -30,7 +36,7 @@ test_urls = [
 ]
 urlpatterns += test_urls
 
-file_system_urls = [
+file_system_record_urls = [
     path(  # create test filesystem content
         route='set-test/',
         view=BlankFileSystemAPI.as_view(),
@@ -61,20 +67,56 @@ file_system_urls = [
         view=RecordFoldersAPI.as_view(),
         name='change_folder'
     ),
+]
+urlpatterns += [path("file-system/record-content/", include(file_system_record_urls))]
 
-    # move event
+file_system_notice_urls = [
+    path(  # create test filesystem content
+        route='set-test/',
+        view=BlankFileSystemAPI2.as_view(),
+        name='create_test_fs_notice_content'
+    ),
+    path(  # get all notices and folders
+        route='',
+        view=NoticesFSAPI.as_view(),
+        name='get_fs_notice_content'
+    ),
+    path(  # post notice
+        route='notices/',
+        view=NoticesAPI.as_view(),
+        name='create_notice'
+    ),
+    path(  # patch/delete notice
+        route='notices/<int:notice_id>/',
+        view=NoticesAPI.as_view(),
+        name='change_notice'
+    ),
+    path(  # post folders
+        route='folders/',
+        view=NoticeFoldersAPI.as_view(),
+        name='create_notice_folder'
+    ),
+    path(  # patch/delete folders
+        route='folders/<int:folder_id>/',
+        view=NoticeFoldersAPI.as_view(),
+        name='change_notice_folder'
+    ),
+]
+urlpatterns += [path("file-system/notice-content/", include(file_system_notice_urls))]
+
+file_system_move_urls = [
     path(  # put object in the new folder
-        route='move/inside/',
+        route='inside/',
         view=MoveInsideAPI.as_view(),
         name='move_inside'
     ),
     path(  # change objects order
-        route='move/between/',
+        route='between/',
         view=MoveBetweenAPI.as_view(),
         name='move_between'
     ),
 ]
-urlpatterns += [path("file-system/", include(file_system_urls))]
+urlpatterns += [path("file-system/move/", include(file_system_move_urls))]
 
 records_urls = [
     path(  # create test messages

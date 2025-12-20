@@ -1,19 +1,7 @@
 from rest_framework import serializers
 
 from main.models import RecordFolder, Record
-
-
-class ChildrenMixin:
-    """Миксин для формирования children из nested_folders и nested_objects"""
-
-    def get_children(self, obj):
-        nested_folders = []
-        nested_objects = []
-        if obj.nested_folders:
-            nested_folders = [f'f{f_id}' for f_id in obj.nested_folders.split(',')]
-        if obj.nested_objects:
-            nested_objects = [f'n{r_id}' for r_id in obj.nested_objects.split(',')]
-        return ','.join(nested_folders + nested_objects)
+from .utils import ChildrenMixin
 
 
 # ===== RecordsFSAPI =====
@@ -100,38 +88,3 @@ class FolderUpdateSerializer(serializers.ModelSerializer):
             'title': {'required': False},
             'color': {'required': False},
         }
-
-
-# ===== MoveAPI =====
-class MoveBetweenSerializer(serializers.Serializer):
-    """Сериализатор для изменения порядка объекта внутри папки"""
-
-    type = serializers.CharField()
-    object_id = serializers.IntegerField(min_value=1)
-    folder_id = serializers.IntegerField(min_value=1)
-    nested_list = serializers.ListField(
-        child=serializers.IntegerField(min_value=1))
-
-    def validate_type(self, value):
-        allowed_values = ['record', 'recordFolder', 'notice', 'noticeFolder']
-        if value not in allowed_values:
-            msg = f'Допустимые значения {", ".join(allowed_values)}'
-            raise serializers.ValidationError(msg)
-        return value
-
-
-# ===== MoveAPI =====
-class MoveInsideSerializer(serializers.Serializer):
-    """Сериализатор для перемещения объекта внутрь папки"""
-
-    type = serializers.CharField()
-    object_id = serializers.IntegerField(min_value=1)
-    old_folder_id = serializers.IntegerField(min_value=1)
-    new_folder_id = serializers.IntegerField(min_value=1)
-
-    def validate_type(self, value):
-        allowed_values = ['record', 'recordFolder', 'notice', 'noticeFolder']
-        if value not in allowed_values:
-            msg = f'Допустимые значения {", ".join(allowed_values)}'
-            raise serializers.ValidationError(msg)
-        return value
