@@ -445,24 +445,17 @@ let content = {
         this.changed_at = changed_at
         this.description = description || ''
     },
-    Notice: function(record_id, notice_name, order_id, color, parent_id, date, time) {  // create notice object using new notation
-        this.record_id = record_id  // name like note
-        this.title = notice_name
-        this.order_id = order_id
+    Notice: function({pk, title, folder_id, color, changed_at, description, next_date, time}) {  // create notice object using new notation
+        this.record_id = parseInt(pk)  // name like note
+        this.title = title
+        this.parent_id = parseInt(folder_id)  // folder id
         this.color = color
-        this.parent_id = parent_id  // folder id
-        this.date = date
+        this.changed_at = changed_at
+        this.description = description || ''
+        this.date = next_date
         this.time = time
     },
-    Folder: function(folder_id, folder_name, order_id, color, parent_id, children) {  // create folder object using new notation
-        this.folder_id = folder_id
-        this.title = folder_name
-        this.order_id = order_id
-        this.color = color
-        this.parent_id = parent_id
-        this.children = children  // str of object ids like 'f9,f10,n7,n9,n5,n4,n12'
-    },
-    NoteFolder: function({pk, parent_id, title, color, changed_at, children}) {  // create folder object using new notation
+    Folder: function({pk, parent_id, title, color, changed_at, children}) {  // create folder object using new notation
         this.folder_id = parseInt(pk)
         this.parent_id = parent_id === null ? null : parseInt(parent_id)
         this.title = title
@@ -471,66 +464,7 @@ let content = {
         this.children = children  // str of object ids like 'f9,f10,n7,n9,n5,n4,n12'
     },
 
-    getContentAJAX: async function(url, token) { // заглушка
-        // getting list like content from the server by url
-
-        // сейчас работает заглушка для notice. В зависимости от url вовращается разный контент
-        let notices = [
-            [7, 'notice 1', 1, null, 7, '15.05.2025', '12:00'],
-            [11, 'notice 1.1', 1, 'red', 9, '15.05.2025', '12:00'],
-            [24, 'notice 1.1.1', 1, 'yellow', 8, '15.05.2025', '12:00'],
-            [34, 'notice 1.2.1', 1, 'green', 21, '15.05.2025', '12:00'],
-            [29, 'notice 1.3.1', 1, null, 22, '15.05.2025', '12:00'],
-            [17, 'notice 2.1', 1, null, 10, '15.05.2025', '12:00'],
-            [32, 'notice 3.1', 1, 'red', 16, '15.05.2025', '12:00'],
-            [55, 'notice 3.1.1', 1, 'green', 17, '15.05.2025', '12:00'],
-            [56, 'notice 4.1.1', 1, 'yellow', 27, '15.05.2025', '12:00'],
-
-            [9, 'notice 2', 2, null, 7, '15.05.2025', '12:00'],
-            [13, 'notice 1.2', 2, 'yellow', 9, '15.05.2025', '12:00'],
-            [27, 'notice 1.1.2', 2, 'red', 8, '15.05.2025', '12:00'],
-            [41, 'notice 1.2.2', 2, null, 21, '15.05.2025', '12:00'],
-            [18, 'notice 2.2', 2, null, 10, '15.05.2025', '12:00'],
-            [53, 'notice 3.1.2', 2, 'green', 17, '15.05.2025', '12:00'],
-            [61, 'notice 4.1.2', 2, 'red', 27, '15.05.2025', '12:00'],
-
-            [5, 'notice 3', 3, null, 7, '15.05.2025', '12:00'],
-            [4, 'notice 4', 4, 'yellow', 7, '15.05.2025', '12:00'],
-            [12, 'notice 5', 5, 'red', 7, '15.05.2025', '12:00'],
-            [14, 'notice 6', 6, null, 7, '15.05.2025', '12:00'],
-            [26, 'notice 7', 7, null, 7, '15.05.2025', '12:00'],
-            [32, 'notice 8', 8, 'green', 7, '15.05.2025', '12:00'],
-            [19, 'notice 9', 9, 'green', 7, '15.05.2025', '12:00'],
-            [47, 'notice 10', 10, null, 7, '15.05.2025', '12:00'],
-        ]
-        let noticeFolders = [
-            [7, 'root', 1, null, 0, 'f9,f10,f16,f14,n7,n9,n5,n4,n12,n14,n26,n32,n19,n47'],
-            [8, 'папка 1.1', 1, null, 9, 'f23,n24,n27'],
-            [9, 'папка 1 notice', 1, null, 7, 'f8,f21,f22,n11,n13'],
-            [17, 'папка 3.1', 1, null, 16, 'f34,n55,n53'],
-            [23, 'папка 1.1.1', 1, null, 8, ''],
-            [27, 'папка 4.1', 1, null, 14, 'n56,n61'],
-            [34, 'папка 3.1.1', 1, null, 17, 'f36'],
-            [36, 'папка 3.1.1.1', 1, null, 34, ''],
-            [10, 'папка 2', 2, 'red', 7, 'n17,n18'],
-            [21, 'папка 1.2', 2, 'yellow', 9, 'n34,n41'],
-            [16, 'папка 3', 3, 'green', 7, 'f17,n32'],
-            [22, 'папка 1.3', 3, null, 9, 'n29'],
-            [14, 'папка 4', 4, 'yellow', 7, 'f27'],
-        ]
-        
-        let lst = null
-        if (url=='get-notice-url-test') {
-            lst = notices
-        } else if (url=='get-notice-folder-url-test') {
-            lst = noticeFolders
-        } else {
-            console.log('Content Error: Url doesnt exists!')
-            return
-        }
-        return lst
-    },
-    getContentAJAX2: async function(url) {  // getting FS content from server
+    getContentAJAX: async function(url) {  // getting FS content from server
         // получение уведомлений также будет через эту функцию (отдельным запросом)
         const options = {
             method: 'GET',
@@ -549,13 +483,12 @@ let content = {
     
         return response
     },
-    getListOfObjects2: async function() {  // creating Objects by templates from above
-        // закоментированные строки понадобятся для работы с уведомлениями (удалить комментарий)
+    getListOfObjects: async function() {  // creating Objects by templates from above
         const recordContentUrl = conf.Domains['server'] + conf.Urls['getFileSystem']
-        // noticeContentUrl = conf.Domains['server'] + conf.Urls['???']
+        const noticeContentUrl = conf.Domains['server'] + conf.Urls['getFileSystemNotice']
 
-        const {folders: recordFolders, records: records} = await this.getContentAJAX2(recordContentUrl)
-        // const {noticeFolders: noticeFolders, notices: notices} = await this.getContentAJAX2(noticeContentUrl)
+        const {folders: recordFolders, records: records} = await this.getContentAJAX(recordContentUrl)
+        const {folders: noticeFolders, notices: notices} = await this.getContentAJAX(noticeContentUrl)
 
         const listOfRecordObjects = []
         for (let i=0;i<records.length;i++) {
@@ -564,35 +497,26 @@ let content = {
 
         const listOfRecordFolderObjects = []
         for (let i=0;i<recordFolders.length;i++) {
-            listOfRecordFolderObjects.push(new this.NoteFolder(recordFolders[i]))
+            listOfRecordFolderObjects.push(new this.Folder(recordFolders[i]))
         }
 
-        // const listOfNoticeObjects = []
-        // for (let i=0;i<notices.length;i++) {
-        //     listOfNoticeObjects.push(new this.Notice(notices[i]))  // проверить конструктор Notice 
-        // }
+        const listOfNoticeObjects = []
+        for (let i=0;i<notices.length;i++) {
+            listOfNoticeObjects.push(new this.Notice(notices[i]))  // проверить конструктор Notice
+        }
 
-        // const listOfNoticeFolderObjects = []
-        // for (let i=0;i<noticeFolders.length;i++) {
-        //     listOfNoticeFolderObjects.push(new this.Folder(noticeFolders[i]))  // проверить конструктор Folder
-        // }
+        const listOfNoticeFolderObjects = []
+        for (let i=0;i<noticeFolders.length;i++) {
+            listOfNoticeFolderObjects.push(new this.Folder(noticeFolders[i]))  // проверить конструктор Folder
+        }
 
-        // return [listOfRecordObjects, listOfRecordFolderObjects]
         return {
             notesList: listOfRecordObjects,
             noteFoldersList: listOfRecordFolderObjects,
-            // noticesList: listOfNoticeObjects,
-            // noticeFoldersList: listOfNoticeFolderObjects,
+            noticesList: listOfNoticeObjects,
+            noticeFoldersList: listOfNoticeFolderObjects,
         }
 
-    },
-    getListOfObjects: async function(url, objClass) {  // создание объектов по шаблонам (удалить после получения уведомлений от сервера)
-        let listOfLists = await this.getContentAJAX(url, 'token')
-        let listOfObjects = []
-        for (let i=0;i<listOfLists.length;i++) {
-            listOfObjects.push(new objClass(...listOfLists[i]))
-        }
-        return listOfObjects
     },
     getDictOfRecords: function(listOfRecords) {  // getting dictionary of records by record_id
         let record_dict = {}
@@ -637,16 +561,11 @@ let content = {
 
         const {
             notesList: notesList, noteFoldersList: noteFoldersList,  // notes
-            // noticesList: noticesList, noticeFoldersList: noticeFoldersList,  // notices
-        } = await this.getListOfObjects2()
+            noticesList: noticesList, noticeFoldersList: noticeFoldersList,  // notices
+        } = await this.getListOfObjects()
 
-        // удалить заглушки getListOfObjects
         let notesDict = this.getDictOfRecords(notesList)
         let noteFoldersDict = this.getDictOfFolders(noteFoldersList)
-
-        // удалить заглушки getListOfObjects
-        let noticesList = await this.getListOfObjects('get-notice-url-test', this.Notice)
-        let noticeFoldersList = await this.getListOfObjects('get-notice-folder-url-test', this.Folder)
         let noticesDict = this.getDictOfRecords(noticesList)
         let noticeFoldersDict = this.getDictOfFolders(noticeFoldersList)
         
@@ -657,7 +576,6 @@ let content = {
 
         this.notesRoot = noteFoldersList[0].folder_id
         this.noticesRoot = noticeFoldersList[0].folder_id
-        console.log(this.notes)
     },
 
     change: {  // changes existing objects (using and without AJAX)
