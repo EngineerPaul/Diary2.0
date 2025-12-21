@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework import routers
 
 from .views.views import (
-    PublicAPI, SecretAPI
+    PublicAPI, SecretAPI, TestDateAPI
 )
 from .views.FSRecordViews import (
     BlankFileSystemAPI, RecordsFSAPI,
@@ -32,6 +32,11 @@ test_urls = [
         route='secret/',
         view=SecretAPI.as_view(),
         name='get_test_secret_content'
+    ),
+    path(  # post test periodic date
+        route='periodic-date/',
+        view=TestDateAPI.as_view(),
+        name='get_test_periodic_date'
     ),
 ]
 urlpatterns += test_urls

@@ -1,7 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 
 from main.permissions import CustomPermission
+from main.serializers.utils import PeriodicDate
 
 
 class PublicAPI(APIView):
@@ -34,3 +36,33 @@ class SecretAPI(APIView):
                 'is_auth': request.user_info['is_auth'],
             }
         )
+
+
+class TestDateAPI(APIView):
+
+    def post(self, request):
+        from datetime import date
+        data = request.data
+        initial_date = data['initial_date']
+        period = data['period']
+        # проверка на дату
+        # проверка на 4 целых числа
+
+        pd = PeriodicDate(
+            period=period,
+            initial_data=date.fromisoformat(initial_date)
+        )
+        next_date = pd.get_next_date()
+
+        if next_date is None:
+            resp = {
+                'success': False,
+                'msg': 'Ошибка: Дата не найдена',
+            }
+            return Response(resp, status=status.HTTP_400_BAD_REQUEST)
+
+        resp = {
+            'success': True,
+            'next_date': next_date,
+        }
+        return Response(resp, status=status.HTTP_200_OK)

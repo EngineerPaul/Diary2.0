@@ -167,25 +167,6 @@ let modals = {
             const markerRadio = form.querySelector(`input[name="marker"][value="${colorValue}"]`)
             if (markerRadio) markerRadio.checked = true
             
-
-            
-            const mode = form.elements['noticeMode']
-            const fNoticeName = form.elements['fNoticeName']
-            const marker = form.elements['marker']
-            
-            const fNoticeDate = form.elements['fNoticeDate']
-            const fNoticeTime = form.elements['fNoticeTime']
-            const fNoticeDescription = form.elements['fNoticeDescription']
-
-            const fNoticeDay = form.elements['fNoticeDay']
-            const fNoticeWeek = form.elements['fNoticeWeek']
-            const fNoticeMonth = form.elements['fNoticeMonth']
-            const fNoticeYear = form.elements['fNoticeYear']
-            const fNoticeInitialDate = form.elements['fNoticeInitialDate']
-            const fNoticePeriodTime = form.elements['fNoticePeriodTime']
-            const fNoticePeriodDescription = form.elements['fNoticePeriodDescription']
-            
-            console.log(data)
             if (data.period) { //periodic
                 form.noticeMode.checked = true
                 forms.switchNoticeMode({ target: noticeModePeriod })
@@ -203,9 +184,6 @@ let modals = {
                 form.fNoticeTime.value = data.time
                 form.fNoticeDescription.value = data.description
             }
-            
-            
-            
         } else if (type === 'folder') {
             modalId = 'modalFolder'
             form = document.getElementById('crtFolderForm')
