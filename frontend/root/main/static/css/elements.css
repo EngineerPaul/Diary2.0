@@ -82,6 +82,33 @@
                 height: auto;
                 
                 #crtNoticeForm {
+                    > label {
+                        display: flex;
+                        align-items: center;
+                        margin-bottom: 10px;
+                        
+                        > span {
+                            width: 100px;
+                            flex-shrink: 0;
+                        }
+                        
+                        > div {
+                            flex: 1;
+                            position: relative;
+
+                            > input {
+                                max-width: 120px;
+                            }
+                        }
+                        
+                        &[for="fNoticeName"] {
+                            > div > input {
+                                max-width: none;
+                                width: 100%;
+                            }
+                        }
+                    }
+                    
                     .notice-mode-switch {
                         display: flex;
                         align-items: center;
@@ -104,7 +131,7 @@
                             margin-bottom: 10px;
                             
                             > span {
-                                width: 80px;
+                                width: 100px;
                                 flex-shrink: 0;
                             }
                             

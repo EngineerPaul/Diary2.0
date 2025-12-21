@@ -241,6 +241,7 @@ const forms = {
             modals.resetMode()
         }
     },
+
     handleFolderSubmit: async function(event) {  // select form action by mode (create / update) for folders
         event.preventDefault()
         if (modals.mode === 'edit') {
@@ -336,6 +337,7 @@ const forms = {
             modals.resetMode()
         }
     },
+
     handleNoticeSubmit: async function(event) {  // select form action by mode (create / update) for folders
         event.preventDefault()
 
@@ -350,26 +352,67 @@ const forms = {
         console.log('createNotice')
 
         const form = event.target
-        // const data = {
-        //     folder_id: parseInt(viewContent.currentFolderId),
-        //     title: form.fNoteName.value,
-        //     description: form.fNoteContent.value.trim() || '',
-        //     color: conf.colors.forward[form.marker.value],
-        //     time: '',
-        //     period: '',
-        //     initial_date: '',
-        // }
+        const formFields = {
+            mode: form.elements['noticeMode'],
+            fNoticeName: form.elements['fNoticeName'],
+            marker: form.elements['marker'],
+            
+            fNoticeDate: form.elements['fNoticeDate'],
+            fNoticeTime: form.elements['fNoticeTime'],
+            fNoticeDescription: form.elements['fNoticeDescription'],
 
-        const url = conf.Domains['server'] + conf.Urls.FSNotice
+            fNoticeDay: form.elements['fNoticeDay'],
+            fNoticeWeek: form.elements['fNoticeWeek'],
+            fNoticeMonth: form.elements['fNoticeMonth'],
+            fNoticeYear: form.elements['fNoticeYear'],
+            fNoticeInitialDate: form.elements['fNoticeInitialDate'],
+            fNoticePeriodTime: form.elements['fNoticePeriodTime'],
+            fNoticePeriodDescription: form.elements['fNoticePeriodDescription'],
+        }
+
+        const day = formFields.fNoticeDay.value || ''
+        const week = formFields.fNoticeWeek.value || ''
+        const month = formFields.fNoticeMonth.value || ''
+        const year = formFields.fNoticeYear.value || ''
+        const period = `${day},${week},${month},${year}`
+
+        if (formFields.mode.checked && !PeriodDate.validate_period(period)) {
+            console.log('Ошибка периода')
+        }
+
+        let data
+        if (formFields.mode.checked) {  // periodic
+            data = {
+                folder_id: parseInt(viewContent.currentFolderId),
+                title: formFields.fNoticeName.value,
+                description: formFields.fNoticePeriodDescription.value.trim() || '',
+                color: conf.colors.forward[formFields.marker.value],
+                time: formFields.fNoticePeriodTime.value,
+                period: period,
+                initial_date: formFields.fNoticeInitialDate.value,
+            }
+        } else {  // once
+            data = {
+                folder_id: parseInt(viewContent.currentFolderId),
+                title: formFields.fNoticeName.value,
+                description: formFields.fNoticeDescription.value.trim() || '',
+                color: conf.colors.forward[formFields.marker.value],
+                time: formFields.fNoticeTime.value,
+                period: '',
+                initial_date: formFields.fNoticeDate.value,
+            }
+        }
+
+        const url = conf.Domains['server'] + conf.Urls.FSNotices
         const options = {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             credentials: 'include',
-            // body: JSON.stringify(data),
+            body: JSON.stringify(data),
         }
-        return
+        
         const response = await conf.AJAX.send(url, options)
 
         if (response === undefined) {
@@ -385,12 +428,11 @@ const forms = {
                 color: conf.colors.revers[response.data['color']],
                 changed_at: response.data['changed_at'],
                 description: response.data['description'] || '',
-                next_date: '',
-                time: '',
-                period: '',
-                initial_date: '',
+                next_date: response.data['next_date'] || '',
+                time: response.data['time'] || '',
+                period: response.data['period'] || '',
             }
-            content.change.addNote(resp_data)
+            content.change.addNotice(resp_data)
 
             modalBlock.style['display'] = 'none'
             modals.modal.style['display'] = 'none'
@@ -401,6 +443,7 @@ const forms = {
         console.log('updateNotice')
 
     },
+
     createNoticeFolder: async function(event) {  // blank for creation a new notice folder
         event.preventDefault()
         console.log('createNoticeFolder')
@@ -493,6 +536,7 @@ const forms = {
             initialDateInput.value = `${year}-${month}-${day}`
         }
     },
+    
     switchNoticeMode: function(event) {  // switching between date and period modes for notice form
         const periodModeCheckbox = document.getElementById('noticeModePeriod')
         const dateFields = document.getElementById('noticeModeDateFields')
@@ -2069,3 +2113,9 @@ const settingsGear = {
     }
 }
 settingsGear.run()
+
+const PeriodDate = {
+    validate_period: function(period) {
+        return true
+    }
+}

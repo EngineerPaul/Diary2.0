@@ -176,6 +176,13 @@
             <div class="modal-cart-content modal-create">
                 <form autocomplete="off" id="crtNoticeForm">
                     {% csrf_token %}
+                    <label for="fNoticeName">
+                        <span>Название:</span>
+                        <div>
+                            <input class="modal-input" type="text" id="fNoticeName" name="fNoticeName" required>
+                            <div class="error">Invalid value.</div>
+                        </div>
+                    </label>
                     <div class="notice-mode-switch">
                         <span>Периодичность:</span>
                         <label class="switch">
@@ -214,28 +221,28 @@
                             <label for="fNoticeDay">
                                 <span>День:</span>
                                 <div>
-                                    <input class="modal-input" type="number" id="fNoticeDay" name="fNoticeDay" min="1" max="31" required>
+                                    <input class="modal-input" type="number" id="fNoticeDay" name="fNoticeDay" min="1" max="365" required>
                                     <div class="error">Invalid value.</div>
                                 </div>
                             </label>
                             <label for="fNoticeWeek">
                                 <span>Неделя:</span>
                                 <div>
-                                    <input class="modal-input" type="number" id="fNoticeWeek" name="fNoticeWeek" min="1" max="52" required>
+                                    <input class="modal-input" type="number" id="fNoticeWeek" name="fNoticeWeek" min="0" max="54" required>
                                     <div class="error">Invalid value.</div>
                                 </div>
                             </label>
                             <label for="fNoticeMonth">
                                 <span>Месяц:</span>
                                 <div>
-                                    <input class="modal-input" type="number" id="fNoticeMonth" name="fNoticeMonth" min="1" max="12" required>
+                                    <input class="modal-input" type="number" id="fNoticeMonth" name="fNoticeMonth" min="0" max="12" required>
                                     <div class="error">Invalid value.</div>
                                 </div>
                             </label>
                             <label for="fNoticeYear">
                                 <span>Год:</span>
                                 <div>
-                                    <input class="modal-input" type="number" id="fNoticeYear" name="fNoticeYear" min="2024" required>
+                                    <input class="modal-input" type="number" id="fNoticeYear" name="fNoticeYear" min="0" max="1" required>
                                     <div class="error">Invalid value.</div>
                                 </div>
                             </label>
@@ -265,6 +272,29 @@
                         </label>
                     </div>
 
+                    <label>
+                        <span>Маркер:</span>
+                        <div>
+                            <div class="form-marker">
+                                <label>
+                                    <input type="radio" name="marker" value="white" checked>
+                                    <div class="marker" data-color="white" ></div>
+                                </label>
+                                <label>
+                                    <input type="radio" name="marker" value="green">
+                                    <div class="marker" data-color="green"></div>
+                                </label>
+                                <label>
+                                    <input type="radio" name="marker" value="yellow">
+                                    <div class="marker" data-color="yellow"></div>
+                                </label>
+                                <label>
+                                    <input type="radio" name="marker" value="red">
+                                    <div class="marker" data-color="red"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </label>
                     <button class="submitButton btn-default" type="submit" id="crtNoticeBtn">Создать</button>
                 </form>
             </div>

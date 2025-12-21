@@ -1,3 +1,4 @@
+from datetime import date
 from rest_framework import serializers
 
 from main.models import NoticeFolder, Notice
@@ -56,6 +57,7 @@ class NoticeCreateSerializer(serializers.ModelSerializer):
 
     def save(self, **kwargs):
         self.validated_data.pop('initial_date', None)
+        self.validated_data['next_date'] = date.today()
         return super().save(**kwargs)
 
 
