@@ -138,6 +138,47 @@ let modals = {
         this.modal.style.display = 'block'
         modalBlock.style.display = 'block'
     },
+    openEditNoticeModal: function(type, id) {  // opening modal using edit mode for notices
+        this.mode = 'edit'
+        this.editId = parseInt(id)
+        this.editType = type
+        
+        let modalId, form, titleText, data  // defining current form data
+        
+        if (type === 'record') {
+            modalId = 'modalNotice'
+            form = document.getElementById('crtNoticeForm')
+            titleText = 'Редактирование напоминания'
+            data = content.notices[id]
+
+            form.fNoticeName.value = data.title
+            const colorValue = conf.colors.revers[data.color] || 'white'
+            const markerRadio = form.querySelector(`input[name="marker"][value="${colorValue}"]`)
+            if (markerRadio) markerRadio.checked = true
+            
+            console.log(data)
+            // TODO: заполнить поля даты/времени в зависимости от режима (одиночное/периодическое)
+            // Пока заполняем только основные поля
+            
+        } else if (type === 'folder') {
+            modalId = 'modalFolder'
+            form = document.getElementById('crtFolderForm')
+            titleText = 'Редактирование папки'
+            data = content.noticeFolders[id].info
+
+            form.fFolderName.value = data.title
+            const colorValue = conf.colors.revers[data.color] || 'white'
+            const markerRadio = form.querySelector(`input[name="marker"][value="${colorValue}"]`)
+            if (markerRadio) markerRadio.checked = true
+        }
+        
+        this.modal = document.getElementById(modalId)
+        this.modal.querySelector('.modal-title p').textContent = titleText
+        this.modal.querySelector('button[type="submit"]').textContent = 'Сохранить'
+
+        this.modal.style.display = 'block'
+        modalBlock.style.display = 'block'
+    },
     run: function() {
         modalBlock.addEventListener('click', this.hideModal.bind(this))
         document.addEventListener('click', this.hideModalCross.bind(this))
@@ -340,7 +381,6 @@ const forms = {
 
     handleNoticeSubmit: async function(event) {  // select form action by mode (create / update) for folders
         event.preventDefault()
-
         if (modals.mode === 'edit') {
             await this.updateNotice(event)
         } else {
@@ -2085,7 +2125,9 @@ const settingsGear = {
         this.elType = null
     },
     changeEvent: function(event) {  // change event of the menu btn (open modal using edit mode)
-        modals.openEditModal(this.elType, this.elId)
+        if (session.section == 'notes') modals.openEditModal(this.elType, this.elId)
+        if (session.section == 'notices') modals.openEditNoticeModal(this.elType, this.elId)
+        
         this.hideGearMenu()
     },
     delEvent: async function(event) {  // delete event of the menu btn (immediately using content.change.del***)
