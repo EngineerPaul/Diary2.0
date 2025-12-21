@@ -324,16 +324,13 @@ const forms = {
         }
         
         if (response.success) {
-            // Обновляем данные в content
             content.noteFolders[id].info.title = response.data['title']
-            content.noteFolders[id].info.color = response.data['color']  // цвет уже в коротком формате ('w', 'g', 'y', 'r')
+            content.noteFolders[id].info.color = response.data['color']
             content.noteFolders[id].info.changed_at = response.data['changed_at']
             
-            // Перерисовываем контент
             viewContent.removeObjects()
             viewContent.displayItems()
             
-            // закрыть модалку
             modalBlock.style['display'] = 'none'
             modals.modal.style['display'] = 'none'
             modals.resetMode()
@@ -448,10 +445,43 @@ const forms = {
         }
 
     },
-    updateNoticeFolder: async function(event) {  // blank for creation a new notice folder
-        event.preventDefault()
-        console.log('updateNoticeFolder')
+    updateNoticeFolder: async function(event) {  // updating the notice folder (ajax and ui)
+        const form = event.target
+        const id = modals.editId
+        const data = {
+            title: form.fFolderName.value,
+            color: conf.colors.forward[form.marker.value],
+        }
+        console.log('Обновление папки напоминаний:', id, data)
 
+        const url = conf.Domains['server'] + conf.Urls.FSFolderNotice(id)
+        const options = {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(data),
+        }
+        const response = await conf.AJAX.send(url, options)
+
+        if (response === undefined) {
+            console.log(`Error: неопознанная ошибка`)
+            return
+        }
+        
+        if (response.success) {
+            content.noticeFolders[id].info.title = response.data['title']
+            content.noticeFolders[id].info.color = response.data['color']
+            content.noticeFolders[id].info.changed_at = response.data['changed_at']
+            
+            viewContent.removeObjects()
+            viewContent.displayItems()
+            
+            modalBlock.style['display'] = 'none'
+            modals.modal.style['display'] = 'none'
+            modals.resetMode()
+        }
     },
     setInitialDate: function() {  // set today in the date field
         const initialDateInput = document.getElementById('fNoticeInitialDate')
