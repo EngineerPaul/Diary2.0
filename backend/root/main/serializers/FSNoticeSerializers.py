@@ -25,7 +25,7 @@ class NoticeFSSerializer(serializers.ModelSerializer):
         model = Notice
         fields = [
             'pk', 'folder_id', 'title', 'description', 'color',
-            'changed_at', 'next_date', 'time'
+            'changed_at', 'next_date', 'time', 'period'
         ]
 
 

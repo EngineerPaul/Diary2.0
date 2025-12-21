@@ -72,6 +72,7 @@ let modals = {
         // Сброс заголовков и кнопок
         const modalRecord = document.getElementById('modalRecord')
         const modalFolder = document.getElementById('modalFolder')
+        const modalNotice = document.getElementById('modalNotice')
         
         if (modalRecord) {
             modalRecord.querySelector('.modal-title p').textContent = 'Создание заметки'
@@ -82,6 +83,16 @@ let modals = {
             modalFolder.querySelector('.modal-title p').textContent = 'Создание папки'
             modalFolder.querySelector('button[type="submit"]').textContent = 'Создать'
             document.getElementById('crtFolderForm').reset()
+        }
+        if (modalNotice) {
+            modalNotice.querySelector('.modal-title p').textContent = 'Создание напоминания'
+            modalNotice.querySelector('button[type="submit"]').textContent = 'Создать'
+            document.getElementById('crtNoticeForm').reset()
+            
+            // Сброс режима формы в состояние "одиночное" (unchecked)
+            const noticeModePeriod = document.getElementById('noticeModePeriod')
+            noticeModePeriod.checked = false
+            forms.switchNoticeMode({ target: noticeModePeriod })
         }
     },
     getModal: function(event) {  // select modal for 3 btn of creation and sort
@@ -156,9 +167,44 @@ let modals = {
             const markerRadio = form.querySelector(`input[name="marker"][value="${colorValue}"]`)
             if (markerRadio) markerRadio.checked = true
             
+
+            
+            const mode = form.elements['noticeMode']
+            const fNoticeName = form.elements['fNoticeName']
+            const marker = form.elements['marker']
+            
+            const fNoticeDate = form.elements['fNoticeDate']
+            const fNoticeTime = form.elements['fNoticeTime']
+            const fNoticeDescription = form.elements['fNoticeDescription']
+
+            const fNoticeDay = form.elements['fNoticeDay']
+            const fNoticeWeek = form.elements['fNoticeWeek']
+            const fNoticeMonth = form.elements['fNoticeMonth']
+            const fNoticeYear = form.elements['fNoticeYear']
+            const fNoticeInitialDate = form.elements['fNoticeInitialDate']
+            const fNoticePeriodTime = form.elements['fNoticePeriodTime']
+            const fNoticePeriodDescription = form.elements['fNoticePeriodDescription']
+            
             console.log(data)
-            // TODO: заполнить поля даты/времени в зависимости от режима (одиночное/периодическое)
-            // Пока заполняем только основные поля
+            if (data.period) { //periodic
+                form.noticeMode.checked = true
+                forms.switchNoticeMode({ target: noticeModePeriod })
+
+                from.fNoticeDay.value = data.period.split(',')[0]
+                from.fNoticeWeek.value = data.period.split(',')[1]
+                from.fNoticeMonth.value = data.period.split(',')[2]
+                from.fNoticeYear.value = data.period.split(',')[3]
+                from.fNoticeInitialDate.value = data.date
+                from.fNoticePeriodTime.value = data.time
+                from.fNoticePeriodDescription.value = data.description
+                
+            } else { // once
+                form.fNoticeDate.value = data.date
+                form.fNoticeTime.value = data.time
+                form.fNoticeDescription.value = data.description
+            }
+            
+            
             
         } else if (type === 'folder') {
             modalId = 'modalFolder'
@@ -747,7 +793,7 @@ let content = {
         this.changed_at = changed_at
         this.description = description || ''
     },
-    Notice: function({pk, title, folder_id, color, changed_at, description, next_date, time}) {  // create notice object using new notation
+    Notice: function({pk, title, folder_id, color, changed_at, description, next_date, time, period}) {  // create notice object using new notation
         this.id = parseInt(pk)
         this.title = title
         this.parent_id = parseInt(folder_id)  // folder id
@@ -756,6 +802,7 @@ let content = {
         this.description = description || ''
         this.date = next_date
         this.time = time
+        this.period = period
     },
     Folder: function({pk, parent_id, title, color, changed_at, children}) {  // create folder object using new notation
         this.folder_id = parseInt(pk)
