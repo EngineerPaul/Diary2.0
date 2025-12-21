@@ -441,7 +441,7 @@ const forms = {
                 changed_at: response.data['changed_at'],
                 children: response.data['children'] || ''
             }
-            content.change.addNoteFolder(resp_data)
+            content.change.addNoticeFolder(resp_data)
 
             modalBlock.style['display'] = 'none'
             modals.modal.style['display'] = 'none'
@@ -626,7 +626,7 @@ let content = {
     noticesRoot: null,  // root folder id
 
     Note: function({pk, title, folder_id, color, changed_at, description}) {  // create note object using new notation
-        this.record_id = parseInt(pk)  // name like notice
+        this.id = parseInt(pk)
         this.title = title
         this.parent_id = parseInt(folder_id)  // folder id
         this.color = color
@@ -634,7 +634,7 @@ let content = {
         this.description = description || ''
     },
     Notice: function({pk, title, folder_id, color, changed_at, description, next_date, time}) {  // create notice object using new notation
-        this.record_id = parseInt(pk)  // name like note
+        this.id = parseInt(pk)
         this.title = title
         this.parent_id = parseInt(folder_id)  // folder id
         this.color = color
@@ -706,10 +706,10 @@ let content = {
         }
 
     },
-    getDictOfRecords: function(listOfRecords) {  // getting dictionary of records by record_id
+    getDictOfRecords: function(listOfRecords) {  // getting dictionary of records by id
         let record_dict = {}
         for (let record_i=0; record_i < listOfRecords.length; record_i++) {
-            record_dict[listOfRecords[record_i].record_id] = listOfRecords[record_i]
+            record_dict[listOfRecords[record_i].id] = listOfRecords[record_i]
         }
         return record_dict
     },
@@ -717,7 +717,7 @@ let content = {
         // folder_dict = {
         //     folder_id:{
         //         folders:[...], - IDs of folders inside the folder with folder_id
-        //         records:[...], - IDs of records inside the folder with folder_id
+        //         objects:[...], - IDs of objects (notes/notices) inside the folder with folder_id
         //         info - information about the folder with folder_id
         //     }, 
         //     ...
@@ -726,7 +726,7 @@ let content = {
         for (let folder_i=0; folder_i < listOfFolders.length; folder_i++) {
             folderDict[listOfFolders[folder_i].folder_id] = {
                 folders: [],
-                records: [],
+                objects: [],
                 info: listOfFolders[folder_i]
             }
 
@@ -737,7 +737,7 @@ let content = {
                     if (childrenList[i][0]==='f') {
                         folderDict[listOfFolders[folder_i].folder_id].folders.push(childrenList[i])
                     } else if (childrenList[i][0]==='n') {
-                        folderDict[listOfFolders[folder_i].folder_id].records.push(childrenList[i])
+                        folderDict[listOfFolders[folder_i].folder_id].objects.push(childrenList[i])
                     }
                 }
             } 
@@ -768,10 +768,10 @@ let content = {
     change: {  // changes existing objects (using and without AJAX)
         addNote: function({pk, title, folder_id, color, changed_at, description}) {  // creation a new record (ajax in form.createRecord)
             const newNote = new content.Note({pk, title, folder_id, color: conf.colors.forward[color], changed_at, description})
-            content.notes[newNote.record_id] = newNote
+            content.notes[newNote.id] = newNote
             const folder = content.noteFolders[folder_id]
-            folder.records.push('n'+pk)
-            folder.info['children'] = folder.folders.join(',') + ',' + folder.records.join(',')
+            folder.objects.push('n'+pk)
+            folder.info['children'] = folder.folders.join(',') + ',' + folder.objects.join(',')
 
             viewContent.removeObjects()
             viewContent.displayItems()
@@ -796,12 +796,12 @@ let content = {
             if (response === 'Заметка успешно удалена') {
                 const parentId = content.notes[id].parent_id
                 const parentFolder = content.noteFolders[parentId]
-                const recordIndex = parentFolder.records.indexOf('n' + id)
+                const recordIndex = parentFolder.objects.indexOf('n' + id)
                 if (recordIndex > -1) {
-                    parentFolder.records.splice(recordIndex, 1)
+                    parentFolder.objects.splice(recordIndex, 1)
                 }
                 delete content.notes[id]
-                parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.records.join(',')
+                parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.objects.join(',')
                 
                 viewContent.removeObjects()
                 viewContent.displayItems()
@@ -816,13 +816,13 @@ let content = {
                 {pk, title, parent_id, color: conf.colors.forward[color], changed_at, children})
             content.noteFolders[newFolder.folder_id] = {
                 folders: [],
-                records: [],
+                objects: [],
                 info: newFolder
             }
 
             const parentFolder = content.noteFolders[parent_id]
             parentFolder.folders.push('f' + pk)
-            parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.records.join(',')
+            parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.objects.join(',')
 
             viewContent.removeObjects()
             viewContent.displayItems()
@@ -851,12 +851,106 @@ let content = {
                     parentFolder.folders.splice(folderIndex, 1)
                 }
                 delete content.noteFolders[id]
-                parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.records.join(',')
+                parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.objects.join(',')
                 
                 viewContent.removeObjects()
                 viewContent.displayItems()
                 
                 console.log(`Папка id=${id} удалена`)
+                return true
+            }
+            return false
+        },
+        addNotice: function({pk, title, folder_id, color, changed_at, description, next_date, time}) {  // creation a new notice (ajax in form.createNotice)
+            const newNotice = new content.Notice({pk, title, folder_id, color: conf.colors.forward[color], changed_at, description, next_date, time})
+            content.notices[newNotice.id] = newNotice
+            const folder = content.noticeFolders[folder_id]
+            folder.objects.push('n'+pk)
+            folder.info['children'] = folder.folders.join(',') + ',' + folder.objects.join(',')
+
+            viewContent.removeObjects()
+            viewContent.displayItems()
+        },
+        delNotice: async function(id) {  // deletion the notice (including ajax)
+            const url = conf.Domains['server'] + conf.Urls.FSNotice(id)
+            const options = {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            }
+            const response = await conf.AJAX.send(url, options)
+            
+            if (response === undefined) {
+                console.log(`Error: неопознанная ошибка при удалении напоминания`)
+                return false
+            }
+            
+            if (response === 'Напоминание успешно удалено' || response) {
+                const parentId = content.notices[id].parent_id
+                const parentFolder = content.noticeFolders[parentId]
+                const recordIndex = parentFolder.objects.indexOf('n' + id)
+                if (recordIndex > -1) {
+                    parentFolder.objects.splice(recordIndex, 1)
+                }
+                delete content.notices[id]
+                parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.objects.join(',')
+                
+                viewContent.removeObjects()
+                viewContent.displayItems()
+                
+                console.log(`Напоминание id=${id} удалено`)
+                return true
+            }
+            return false
+        },
+        addNoticeFolder: function({pk, parent_id, title, color, changed_at, children}) {  // creation a new notice folder (ajax in form.createNoticeFolder)
+            const newFolder = new content.Folder(
+                {pk, title, parent_id, color: conf.colors.forward[color], changed_at, children})
+            content.noticeFolders[newFolder.folder_id] = {
+                folders: [],
+                objects: [],
+                info: newFolder
+            }
+
+            const parentFolder = content.noticeFolders[parent_id]
+            parentFolder.folders.push('f' + pk)
+            parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.objects.join(',')
+
+            viewContent.removeObjects()
+            viewContent.displayItems()
+        },
+        delNoticeFolder: async function(id) {  // deletion the notice folder (including ajax)
+            const url = conf.Domains['server'] + conf.Urls.FSFolderNotice(id)
+            const options = {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            }
+            const response = await conf.AJAX.send(url, options)
+            
+            if (response === undefined) {
+                console.log(`Error: неопознанная ошибка при удалении папки напоминания`)
+                return false
+            }
+            
+            if (response === 'Папка успешно удалена' || response) {
+                const parentId = content.noticeFolders[id].info.parent_id
+                const parentFolder = content.noticeFolders[parentId]
+                const folderIndex = parentFolder.folders.indexOf('f' + id)
+                if (folderIndex > -1) {
+                    parentFolder.folders.splice(folderIndex, 1)
+                }
+                delete content.noticeFolders[id]
+                parentFolder.info['children'] = parentFolder.folders.join(',') + ',' + parentFolder.objects.join(',')
+                
+                viewContent.removeObjects()
+                viewContent.displayItems()
+                
+                console.log(`Папка напоминания id=${id} удалена`)
                 return true
             }
             return false
@@ -884,7 +978,7 @@ let viewContent = {
             for (let i=0; i<foldersIdList.length;i++) {
                 foldersIdList[i] = foldersIdList[i].slice(1,)
             }
-            recordsIdList = Array.from(content.noteFolders[this.currentFolderId].records)
+            recordsIdList = Array.from(content.noteFolders[this.currentFolderId].objects)
             for (let i=0; i<recordsIdList.length;i++) {
                 recordsIdList[i] = recordsIdList[i].slice(1,)
             }
@@ -895,7 +989,7 @@ let viewContent = {
             for (let i=0; i<foldersIdList.length;i++) {
                 foldersIdList[i] = foldersIdList[i].slice(1,)
             }
-            recordsIdList = Array.from(content.noticeFolders[this.currentFolderId].records)
+            recordsIdList = Array.from(content.noticeFolders[this.currentFolderId].objects)
             for (let i=0; i<recordsIdList.length;i++) {
                 recordsIdList[i] = recordsIdList[i].slice(1,)
             }
@@ -923,7 +1017,7 @@ let viewContent = {
         }
         for (let i=0; i<recordsIdList.length; i++) {
             this.createObject(
-                recordsDict[recordsIdList[i]].record_id,  // id
+                recordsDict[recordsIdList[i]].id,  // id
                 recordsDict[recordsIdList[i]].title,  // title
                 null,  // labels
                 recordsDict[recordsIdList[i]].color,  // color
@@ -1616,7 +1710,7 @@ let DragAndDrop = {
         } else if (session.section === 'notices') {
             folder = content.noticeFolders[viewContent.currentFolderId]
         }
-        folder.records = objects.newRecordList
+        folder.objects = objects.newRecordList
         folder.folders = objects.newFolderList
         folder.info.children = objects.newChildren
 
@@ -1719,18 +1813,18 @@ let DragAndDrop = {
 
         // change old folder
         let objects = this.getProperticeByObjectsList()
-        oldFolder.records = objects.newRecordList
+        oldFolder.objects = objects.newRecordList
         oldFolder.folders = objects.newFolderList
         oldFolder.info.children = objects.newChildren
 
         // change new folder
         if (this.DADObject.typeObject==='record') {
-            newFolder.records.push('n'+this.DADObject.object.id)
+            newFolder.objects.push('n'+this.DADObject.object.id)
         } else if (this.DADObject.typeObject==='folder') {
             newFolder.folders.push('f'+this.DADObject.object.id)
         }
-        let newChildren = newFolder.folders.join(',') + ',' + newFolder.records.join(',')
-        if (newFolder.records.length===0) newChildren=newChildren.slice(0,-1)
+        let newChildren = newFolder.folders.join(',') + ',' + newFolder.objects.join(',')
+        if (newFolder.objects.length===0) newChildren=newChildren.slice(0,-1)
         newFolder.info.children = newChildren
 
         // необходимо для нормальной работы pathlist
