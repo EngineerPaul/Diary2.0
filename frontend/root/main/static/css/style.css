@@ -272,16 +272,6 @@ body {
     }
     .modal-content {
         .modal-cart{
-            &.modal-createN {
-                height: var(--cart-note-height);
-            }
-            &.modal-createF {
-                height: var(--cart-folder-height);
-            }
-            &.modal-sort {
-                height: var(--cart-sort-height);
-            }
-
             .modal-cart-content {
 
                 form {

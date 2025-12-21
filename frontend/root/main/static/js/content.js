@@ -81,7 +81,7 @@ let modals = {
         if (modalFolder) {
             modalFolder.querySelector('.modal-title p').textContent = 'Создание папки'
             modalFolder.querySelector('button[type="submit"]').textContent = 'Создать'
-            document.getElementById('crtRecordFolderForm').reset()
+            document.getElementById('crtFolderForm').reset()
         }
     },
     getModal: function(event) {  // select modal for 3 btn of creation and sort
@@ -94,6 +94,10 @@ let modals = {
         this.mode = 'create'
         this.editId = null
         this.editType = null
+        
+        if (this.modal.id === 'modalNotice') {  // creation notice form
+            forms.setInitialDate()
+        }
     },
     openEditModal: function(type, id) {  // openning modal using edit mode 
         this.mode = 'edit'
@@ -116,7 +120,7 @@ let modals = {
             
         } else if (type === 'folder') {
             modalId = 'modalFolder'
-            form = document.getElementById('crtRecordFolderForm')
+            form = document.getElementById('crtFolderForm')
             titleText = 'Редактирование папки'
             data = content.noteFolders[id].info
 
@@ -196,7 +200,6 @@ const forms = {
             modalBlock.style['display'] = 'none'
             modals.modal.style['display'] = 'none'
         }
-        
     },
     updateRecord: async function(event) {  // updating the record (ajax and ui)
         const form = event.target
@@ -240,11 +243,18 @@ const forms = {
     },
     handleFolderSubmit: async function(event) {  // select form action by mode (create / update) for folders
         event.preventDefault()
-        
         if (modals.mode === 'edit') {
-            await this.updateRecordFolder(event)
+            if (session.section == 'notes') {
+                await this.updateRecordFolder(event)
+            } else {
+                await this.updateNoticeFolder(event)
+            }
         } else {
-            await this.createRecordFolder(event)
+            if (session.section == 'notes') {
+                await this.createRecordFolder(event)
+            } else {
+                await this.createNoticeFolder(event)
+            }
         }
     },
     createRecordFolder: async function(event) {  // creation a new record folder (ajax and ui)
@@ -329,20 +339,195 @@ const forms = {
             modals.resetMode()
         }
     },
+    handleNoticeSubmit: async function(event) {  // select form action by mode (create / update) for folders
+        event.preventDefault()
+
+        if (modals.mode === 'edit') {
+            await this.updateNotice(event)
+        } else {
+            await this.createNotice(event)
+        }
+    },
     createNotice: async function(event) {  // blank for creation a notice
         event.preventDefault()
+        console.log('createNotice')
+
+        const form = event.target
+        // const data = {
+        //     folder_id: parseInt(viewContent.currentFolderId),
+        //     title: form.fNoteName.value,
+        //     description: form.fNoteContent.value.trim() || '',
+        //     color: conf.colors.forward[form.marker.value],
+        //     time: '',
+        //     period: '',
+        //     initial_date: '',
+        // }
+
+        const url = conf.Domains['server'] + conf.Urls.FSNotice
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            // body: JSON.stringify(data),
+        }
+        return
+        const response = await conf.AJAX.send(url, options)
+
+        if (response === undefined) {
+            console.log(`Error: неопознанная ошибка`)
+            return
+        }
+        
+        if (response.success) {
+            const resp_data = {
+                pk: parseInt(response.data['pk']),
+                title: response.data['title'],
+                folder_id: parseInt(response.data['folder_id']),
+                color: conf.colors.revers[response.data['color']],
+                changed_at: response.data['changed_at'],
+                description: response.data['description'] || '',
+                next_date: '',
+                time: '',
+                period: '',
+                initial_date: '',
+            }
+            content.change.addNote(resp_data)
+
+            modalBlock.style['display'] = 'none'
+            modals.modal.style['display'] = 'none'
+        }
+    },
+    updateNotice: async function(event) {  // blank for creation a notice
+        event.preventDefault()
+        console.log('updateNotice')
 
     },
     createNoticeFolder: async function(event) {  // blank for creation a new notice folder
         event.preventDefault()
+        console.log('createNoticeFolder')
 
+        const form = event.target
+        const data = {
+            parent_id: parseInt(viewContent.currentFolderId),
+            title: form.fFolderName.value,
+            color: conf.colors.forward[form.marker.value],
+        }
+        console.log(data)
+
+        const url = conf.Domains['server'] + conf.Urls.FSFoldersNotice
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(data),
+        }
+        const response = await conf.AJAX.send(url, options)
+
+        if (response === undefined) {
+            console.log(`Error: неопознанная ошибка`)
+            return
+        }
+        
+        if (response.success) {
+            const resp_data = {
+                pk: parseInt(response.data['pk']),
+                parent_id: parseInt(response.data['parent_id']),
+                title: response.data['title'],
+                color: conf.colors.revers[response.data['color']],
+                changed_at: response.data['changed_at'],
+                children: response.data['children'] || ''
+            }
+            content.change.addNoteFolder(resp_data)
+
+            modalBlock.style['display'] = 'none'
+            modals.modal.style['display'] = 'none'
+        }
+
+    },
+    updateNoticeFolder: async function(event) {  // blank for creation a new notice folder
+        event.preventDefault()
+        console.log('updateNoticeFolder')
+
+    },
+    setInitialDate: function() {  // set today in the date field
+        const initialDateInput = document.getElementById('fNoticeInitialDate')
+        if (initialDateInput) {
+            const today = new Date()
+            const year = today.getFullYear()
+            const month = String(today.getMonth() + 1).padStart(2, '0')
+            const day = String(today.getDate()).padStart(2, '0')
+            initialDateInput.value = `${year}-${month}-${day}`
+        }
+    },
+    switchNoticeMode: function(event) {  // switching between date and period modes for notice form
+        const periodModeCheckbox = document.getElementById('noticeModePeriod')
+        const dateFields = document.getElementById('noticeModeDateFields')
+        const periodFields = document.getElementById('noticeModePeriodFields')
+        const modeComment = document.getElementById('noticeModeComment')
+        
+        // once mode fields
+        const fNoticeDate = document.getElementById('fNoticeDate')
+        const fNoticeTime = document.getElementById('fNoticeTime')
+        
+        // periodic mode fields
+        const fNoticeDay = document.getElementById('fNoticeDay')
+        const fNoticeWeek = document.getElementById('fNoticeWeek')
+        const fNoticeMonth = document.getElementById('fNoticeMonth')
+        const fNoticeYear = document.getElementById('fNoticeYear')
+        const fNoticeInitialDate = document.getElementById('fNoticeInitialDate')
+        const fNoticePeriodTime = document.getElementById('fNoticePeriodTime')
+        
+        if (periodModeCheckbox.checked) {  // period mode
+            dateFields.style.display = 'none'
+            periodFields.style.display = 'block'
+            if (modeComment) {
+                modeComment.textContent = '(постоянное)'
+            }
+
+            if (fNoticeDay) fNoticeDay.required = true
+            if (fNoticeWeek) fNoticeWeek.required = true
+            if (fNoticeMonth) fNoticeMonth.required = true
+            if (fNoticeYear) fNoticeYear.required = true
+            if (fNoticeInitialDate) fNoticeInitialDate.required = true
+            if (fNoticePeriodTime) fNoticePeriodTime.required = true
+            if (fNoticeDate) fNoticeDate.required = false
+            if (fNoticeTime) fNoticeTime.required = false
+        } else {  // once mode
+            dateFields.style.display = 'block'
+            periodFields.style.display = 'none'
+            if (modeComment) {
+                modeComment.textContent = '(одиночное)'
+            }
+            
+            if (fNoticeDate) fNoticeDate.required = true
+            if (fNoticeTime) fNoticeTime.required = true
+            if (fNoticeDay) fNoticeDay.required = false
+            if (fNoticeWeek) fNoticeWeek.required = false
+            if (fNoticeMonth) fNoticeMonth.required = false
+            if (fNoticeYear) fNoticeYear.required = false
+            if (fNoticeInitialDate) fNoticeInitialDate.required = false
+            if (fNoticePeriodTime) fNoticePeriodTime.required = false
+        }
     },
     run: function() {
         const crtRecordForm = document.getElementById('crtRecordForm')
-        const crtRecordFolderForm = document.getElementById('crtRecordFolderForm')
+        const crtNoticeForm = document.getElementById('crtNoticeForm')
+        const crtFolderForm = document.getElementById('crtFolderForm')
         
         crtRecordForm.addEventListener('submit', this.handleRecordSubmit.bind(this))
-        crtRecordFolderForm.addEventListener('submit', this.handleFolderSubmit.bind(this))
+        crtNoticeForm.addEventListener('submit', this.handleNoticeSubmit.bind(this))
+        crtFolderForm.addEventListener('submit', this.handleFolderSubmit.bind(this))
+        
+        // notice form mode switcher
+        const noticeModePeriod = document.getElementById('noticeModePeriod')
+        if (noticeModePeriod) {
+            noticeModePeriod.addEventListener('change', this.switchNoticeMode.bind(this))
+            this.switchNoticeMode({ target: noticeModePeriod })
+        }
     }
 }
 forms.run()
@@ -400,6 +585,14 @@ let search = {
 search.run()
 
 let Header = {
+    updateCreateButtonsDataset: function() {  // обновление dataset кнопок создания в зависимости от секции
+        const modalCreateBtn = document.getElementById('modalCreateBtn')
+        const modalCreateFBtn = document.getElementById('modalCreateFBtn')
+        
+        const mode = session.section === 'notes' ? 'modalRecord' : 'modalNotice'
+        modalCreateBtn.dataset.modal = mode
+        modalCreateFBtn.dataset.modal = 'modalFolder'
+    },
     handleSectionChange: function(event) {  // custom header event of change section
         const section = event.detail.section
         session.section = section
@@ -410,6 +603,8 @@ let Header = {
             viewContent.currentFolderId = content.noticesRoot
         }
         
+        this.updateCreateButtonsDataset()
+        
         viewContent.removeObjects()
         viewContent.displayItems()
         path.getPathList()
@@ -417,6 +612,7 @@ let Header = {
     },
     run: function() {
         document.addEventListener('sectionChanged', this.handleSectionChange.bind(this))  // custom header event
+        this.updateCreateButtonsDataset()
     }
 }
 Header.run()
@@ -429,14 +625,6 @@ let content = {
     notesRoot: null,  // root folder id
     noticesRoot: null,  // root folder id
 
-    // Note: function(record_id, note_name, order_id, color, parent_id) {
-    //     // create note object using new notation
-    //     this.record_id = record_id  // name like notice
-    //     this.title = note_name
-    //     this.order_id = order_id
-    //     this.color = color
-    //     this.parent_id = parent_id  // folder id
-    // },
     Note: function({pk, title, folder_id, color, changed_at, description}) {  // create note object using new notation
         this.record_id = parseInt(pk)  // name like notice
         this.title = title
@@ -558,7 +746,6 @@ let content = {
         return folderDict
     },
     getContent: async function() {  // getting all content (records, notices and folders) from the server
-
         const {
             notesList: notesList, noteFoldersList: noteFoldersList,  // notes
             noticesList: noticesList, noticeFoldersList: noticeFoldersList,  // notices
@@ -625,7 +812,7 @@ let content = {
             return false
         },
         addNoteFolder: function({pk, parent_id, title, color, changed_at, children}) {  // creation a new record folder (ajax in form.createFolder)
-            const newFolder = new content.NoteFolder(
+            const newFolder = new content.Folder(
                 {pk, title, parent_id, color: conf.colors.forward[color], changed_at, children})
             content.noteFolders[newFolder.folder_id] = {
                 folders: [],

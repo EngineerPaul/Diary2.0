@@ -246,22 +246,24 @@ class NoticesAPI(APIView):
             msg = f'Error: папка {validated_data["folder_id"]} не найдена'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        try:
-            with transaction.atomic():
-                notice = serializer.save(user_id=user_id)
-                folder.add_object(notice.pk)
-                # initial_date автоматически удаляется в сериализаторе
-                folder.save()
-        except Exception as e:
-            msg = f'Error: Ошибка создания напоминания - {str(e)}'
-            return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
+        print('works')
+        # try:
+        #     with transaction.atomic():
+        #         notice = serializer.save(user_id=user_id)
+        #         folder.add_object(notice.pk)
+        #         # initial_date автоматически удаляется в сериализаторе
+        #         folder.save()
+        # except Exception as e:
+        #     msg = f'Error: Ошибка создания напоминания - {str(e)}'
+        #     return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
 
-        resp = {
-            'success': True,
-            'msg': f'Напоминание {notice.pk} успешно создано',
-            'data': serializer.data
-        }
-        return Response(resp, status=status.HTTP_201_CREATED)
+        # resp = {
+        #     'success': True,
+        #     'msg': f'Напоминание {notice.pk} успешно создано',
+        #     'data': serializer.data
+        # }
+        # return Response(resp, status=status.HTTP_201_CREATED)
+        return Response()
 
     def patch(self, request, notice_id):
         """ Update notice fields """

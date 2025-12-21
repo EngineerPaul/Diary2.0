@@ -28,15 +28,14 @@
             z-index: 1001;
             /* display: block; */
             width: var(--cart-width);
-            height: var(--cart-height);
-            /* height:initial; */
+            height: auto;
+            max-height: 90vh;
+            overflow-y: auto;
             background-color: var(--bg-color);
             position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
-            margin: auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             border-radius: var(--modal-radius);
             max-width: 100%;
 
@@ -80,8 +79,63 @@
             }
             .modal-cart-content {
                 margin: 15px;
-                height: calc(var(--cart-height) - 1 - var(--margin-content)*2);
+                height: auto;
+                
+                #crtNoticeForm {
+                    .notice-mode-switch {
+                        display: flex;
+                        align-items: center;
+                        gap: 5px;
+                        
+                        > span {
+                            line-height: 34px;
+                            height: 34px;
+                        }
+                        
+                        label.switch {
+                            margin-bottom: 0;
+                        }
+                    }
+                    
+                    .notice-mode-fields {
+                        label {
+                            display: flex;
+                            align-items: center;
+                            margin-bottom: 10px;
+                            
+                            > span {
+                                width: 80px;
+                                flex-shrink: 0;
+                            }
+                            
+                            > div {
+                                flex: 1;
+                                position: relative;
+
+                                > input {
+                                    max-width: 120px;
+                                }
+                            }
+                        }
+                        
+                        .period-date-fields {
+                            display: grid;
+                            grid-template-columns: repeat(2, 1fr);
+                            gap: 10px;
+                            margin-bottom: 10px;
+                            
+                            @media (max-width: 480px) {
+                                grid-template-columns: 1fr;
+                            }
+                            
+                            label {
+                                margin-bottom: 0;
+                            }
+                        }
+                    }
+                }
             }
+            
         }
     }
 }
