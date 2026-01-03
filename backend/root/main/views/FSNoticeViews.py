@@ -13,6 +13,7 @@ from main.serializers.FSNoticeSerializers import (
     NoticeGetSerializer, NoticeCreateSerializer, NoticeUpdateSerializer,
     FolderGetSerializer, FolderCreateSerializer, FolderUpdateSerializer,
 )
+from main.serializers.utils import PeriodicDate
 
 
 class BlankFileSystemAPI2(APIView):
@@ -238,6 +239,24 @@ class NoticesAPI(APIView):
 
         validated_data = serializer.validated_data
 
+        if validated_data.get('period'):
+            pd = PeriodicDate(
+                period=validated_data['period'],
+                initial_date=validated_data['initial_date'],
+                time=validated_data['time']
+            )
+            next_date = pd.get_next_date()
+
+            if next_date is None:
+                resp = {
+                    'success': False,
+                    'msg': 'Error: Дата не найдена',
+                }
+                return Response(resp, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            next_date = validated_data['initial_date']
+
         try:
             folder = NoticeFolder.objects.get(
                 pk=validated_data['folder_id'].pk, user_id=user_id
@@ -248,7 +267,7 @@ class NoticesAPI(APIView):
 
         try:
             with transaction.atomic():
-                notice = serializer.save(user_id=user_id)
+                notice = serializer.save(user_id=user_id, next_date=next_date)
                 folder.add_object(notice.pk)
                 # initial_date автоматически удаляется в сериализаторе
                 folder.save()

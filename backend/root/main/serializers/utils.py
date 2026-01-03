@@ -58,32 +58,23 @@ class PeriodicDate:
         year1 = self.years == 1
 
         if all([days365, week0, month0, year0]):  # 1
-            print(1)
             return self.get_D()
         elif all([days7, weeks54, month0, year0]):  # 2
-            print(2)
             return self.get_DW()
         elif all([days7, weeks6, months12, year0]):  # 3
-            print(3)
             return self.get_DWM()
         elif all([days31, week0, months12, year0]):  # 4
-            print(4)
             return self.get_DM()
         elif all([days365, week0, month0, year1]):  # 5
-            print(5)
             return self.get_DY()
         elif all([days7, weeks54, month0, year1]):  # 6
-            print(6)
             return self.get_DWY()
         elif all([days7, weeks6, months12, year1]):  # 7
-            print(7)
             return self.get_DWMY()
         elif all([days31, week0, months12, year1]):  # 8
-            print(8)
             return self.get_DMY()
         else:
-            print('Неверный period')
-            return None
+            return None  # Неверный period
 
     def get_D(self) -> date:  # 1
         """Getting next day by Day"""
