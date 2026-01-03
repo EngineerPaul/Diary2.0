@@ -295,11 +295,47 @@ class NoticesAPI(APIView):
             return Response(
                 data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = NoticeUpdateSerializer(notice, data=request.data, partial=True)
+        serializer_data = request.data.dict()
+        # если есть хотя бы одно временное поле, то недостающие берем из БД
+        if serializer_data.get('time') or serializer_data.get('period') or serializer_data.get('initial_date'):
+            update_needed = True
+            serializer_data.setdefault('time', notice.time)
+            serializer_data.setdefault('period', notice.period)
+            serializer_data.setdefault('initial_date', notice.next_date)
+        else:
+            update_needed = False
+
+        serializer = NoticeUpdateSerializer(notice, data=serializer_data, partial=True)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer.save()
+        validated_data = serializer.validated_data
+
+        # если менеятся дата
+        if update_needed:
+            if request.data.get('period'):
+                pd = PeriodicDate(
+                    period=validated_data['period'],
+                    initial_date=validated_data['initial_date'],
+                    time=validated_data['time']
+                )
+                next_date = pd.get_next_date()
+
+                if next_date is None:
+                    resp = {
+                        'success': False,
+                        'msg': 'Error: Дата не найдена',
+                    }
+                    return Response(resp, status=status.HTTP_400_BAD_REQUEST)
+
+            else:
+                next_date = validated_data['initial_date']
+                validated_data['period'] = None
+
+            serializer.save(next_date=next_date)
+        else:
+            # дата не меняется
+            serializer.save()
 
         resp = {
             'success': True,
