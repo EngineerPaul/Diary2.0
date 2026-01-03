@@ -41,16 +41,18 @@ class SecretAPI(APIView):
 class TestDateAPI(APIView):
 
     def post(self, request):
-        from datetime import date
+        from datetime import date, time
         data = request.data
         initial_date = data['initial_date']
         period = data['period']
+        init_time = data['time']
         # проверка на дату
         # проверка на 4 целых числа
 
         pd = PeriodicDate(
             period=period,
-            initial_data=date.fromisoformat(initial_date)
+            initial_date=date.fromisoformat(initial_date),
+            time=time.fromisoformat(init_time)
         )
         next_date = pd.get_next_date()
 
@@ -65,4 +67,7 @@ class TestDateAPI(APIView):
             'success': True,
             'next_date': next_date,
         }
+        print('initial date= ', initial_date)
+        print('period= ', period)
+        print('next date= ', resp['next_date'])
         return Response(resp, status=status.HTTP_200_OK)
