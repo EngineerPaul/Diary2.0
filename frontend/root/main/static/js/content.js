@@ -1586,6 +1586,7 @@ let viewContent = {
         objectsList.innerHTML = ''
     },
     openObject: function(event) { // open record or folder or back-folder
+        // функция обрабатывает нажатия в обоих режимах (notes/notices)!!!
         if (mobileSettings.device === 'desktop' && !DragAndDrop.isClick) return
         let isDDobject = event.target.closest('.dd-object')
         let isBackFolder = event.target.closest(`.${classNames.backFolder}`)
@@ -1608,8 +1609,10 @@ let viewContent = {
         path.viewPath()
     },
     openRecord: function(record_id) { // opening the records
+        // данная функция открывает и record, и notice!!!
         // console.log('Переход на страницу записи ', session.section,' типа, id=', record_id)
-        window.location.href = `/notes/${record_id}/`
+        const section = session.section === 'notices' ? 'notices' : 'notes'
+        window.location.href = `/${section}/${record_id}/`
     },
     run: function() {
         this.currentFolderId = content.notesRoot
