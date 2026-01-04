@@ -171,13 +171,13 @@ let modals = {
                 form.noticeMode.checked = true
                 forms.switchNoticeMode({ target: noticeModePeriod })
 
-                from.fNoticeDay.value = data.period.split(',')[0]
-                from.fNoticeWeek.value = data.period.split(',')[1]
-                from.fNoticeMonth.value = data.period.split(',')[2]
-                from.fNoticeYear.value = data.period.split(',')[3]
-                from.fNoticeInitialDate.value = data.date
-                from.fNoticePeriodTime.value = data.time
-                from.fNoticePeriodDescription.value = data.description
+                form.fNoticeDay.value = data.period.split(',')[0]
+                form.fNoticeWeek.value = data.period.split(',')[1]
+                form.fNoticeMonth.value = data.period.split(',')[2]
+                form.fNoticeYear.value = data.period.split(',')[3]
+                form.fNoticeInitialDate.value = data.date
+                form.fNoticePeriodTime.value = data.time
+                form.fNoticePeriodDescription.value = data.description
                 
             } else { // once
                 form.fNoticeDate.value = data.date
@@ -560,10 +560,146 @@ const forms = {
             modals.modal.style['display'] = 'none'
         }
     },
-    updateNotice: async function(event) {  // blank for creation a notice
+    updateNotice: async function(event) {  // updating the notice (ajax and ui)
         event.preventDefault()
         console.log('updateNotice')
 
+        const form = event.target
+        const id = modals.editId
+        const formFields = {
+            mode: form.elements['noticeMode'],
+            fNoticeName: form.elements['fNoticeName'],
+            marker: form.elements['marker'],
+            
+            fNoticeDate: form.elements['fNoticeDate'],
+            fNoticeTime: form.elements['fNoticeTime'],
+            fNoticeDescription: form.elements['fNoticeDescription'],
+
+            fNoticeDay: form.elements['fNoticeDay'],
+            fNoticeWeek: form.elements['fNoticeWeek'],
+            fNoticeMonth: form.elements['fNoticeMonth'],
+            fNoticeYear: form.elements['fNoticeYear'],
+            fNoticeInitialDate: form.elements['fNoticeInitialDate'],
+            fNoticePeriodTime: form.elements['fNoticePeriodTime'],
+            fNoticePeriodDescription: form.elements['fNoticePeriodDescription'],
+        }
+
+        const day   = formFields.fNoticeDay.value   || '0'
+        const week  = formFields.fNoticeWeek.value  || '0'
+        const month = formFields.fNoticeMonth.value || '0'
+        const year  = formFields.fNoticeYear.value  || '0'
+        const period = `${day},${week},${month},${year}`
+
+        if (formFields.mode.checked && [day, week, month, year].every(v => v==='0')) {
+            const periodErrorField = document.getElementById('periodErrorField')
+            periodErrorField.textContent = 'Хотя бы одно поле периодичности должно быть заполнено'
+            periodErrorField.style.display = 'block'
+            return
+        } else {
+            const periodErrorField = document.getElementById('periodErrorField')
+            periodErrorField.style.display = 'none'
+        }
+
+        if (formFields.mode.checked) {
+            // проверка длины периода
+            if (period.length < 7 || period.length > 9) {
+                console.log('Ошибка периода')
+                return
+            }
+            // проверка формата периода
+            const re_pattern = /^\d+,\d+,\d+,\d+$/
+            if (!re_pattern.test(period)) {
+                console.log('Ошибка периода')
+                return
+            }
+        }
+
+        let data
+        if (formFields.mode.checked) {  // periodic
+            data = {
+                title: formFields.fNoticeName.value,
+                description: formFields.fNoticePeriodDescription.value.trim() || '',
+                color: conf.colors.forward[formFields.marker.value],
+                time: formFields.fNoticePeriodTime.value,
+                period: period,
+                initial_date: formFields.fNoticeInitialDate.value,
+            }
+        } else {  // once
+            data = {
+                title: formFields.fNoticeName.value,
+                description: formFields.fNoticeDescription.value.trim() || '',
+                color: conf.colors.forward[formFields.marker.value],
+                time: formFields.fNoticeTime.value,
+                initial_date: formFields.fNoticeDate.value,
+            }
+        }
+        
+        // проверка, что initial_date и time еще не прошли
+        if (data.initial_date && data.time) {
+            const initialDateTime = new Date(`${data.initial_date}T${data.time}`)
+            const now = new Date()
+            const dateTimeError = document.getElementById('dateTimeError')
+            const periodicDateTimeError = document.getElementById('periodicDateTimeError')
+            
+            if (initialDateTime <= now) {
+                if (formFields.mode.checked) { // period
+                    periodicDateTimeError.textContent = 'Дата и время не могут быть прошедшими'
+                    periodicDateTimeError.style.display = 'block'
+                    if (dateTimeError) dateTimeError.style.display = 'none'
+                } else {
+                    dateTimeError.textContent = 'Дата и время не могут быть прошедшими'
+                    dateTimeError.style.display = 'block'
+                    if (periodicDateTimeError) periodicDateTimeError.style.display = 'none'
+                }
+                return
+            } else {
+                if (dateTimeError) dateTimeError.style.display = 'none'
+                if (periodicDateTimeError) periodicDateTimeError.style.display = 'none'
+            }
+        }
+
+        const url = conf.Domains['server'] + conf.Urls.FSNotice(id)
+        const options = {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(data),
+        }
+        
+        const response = await conf.AJAX.send(url, options)
+
+        if (response === undefined) {
+            console.log(`Error: неопознанная ошибка`)
+            return
+        }
+        
+        if (response.success) {
+            // обновление объекта notice в content
+            content.notices[id].title = response.data['title']
+            content.notices[id].description = response.data['description'] || ''
+            content.notices[id].color = conf.colors.revers[response.data['color']] || content.notices[id].color
+            content.notices[id].changed_at = response.data['changed_at']
+            content.notices[id].date = response.data['next_date'] || ''
+            content.notices[id].time = response.data['time'] || ''
+            content.notices[id].period = response.data['period'] || ''
+            
+            viewContent.removeObjects()
+            viewContent.displayItems()
+            
+            // сброс полей ошибок
+            const periodErrorField = document.getElementById('periodErrorField')
+            const dateTimeError = document.getElementById('dateTimeError')
+            const periodicDateTimeError = document.getElementById('periodicDateTimeError')
+            if (periodErrorField) periodErrorField.textContent = ''
+            if (dateTimeError) dateTimeError.style.display = 'none'
+            if (periodicDateTimeError) periodicDateTimeError.style.display = 'none'
+
+            modalBlock.style['display'] = 'none'
+            modals.modal.style['display'] = 'none'
+            modals.resetMode()
+        }
     },
 
     createNoticeFolder: async function(event) {  // blank for creation a new notice folder

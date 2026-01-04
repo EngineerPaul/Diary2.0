@@ -295,12 +295,13 @@ class NoticesAPI(APIView):
             return Response(
                 data=msg, status=status.HTTP_404_NOT_FOUND)
 
-        serializer_data = request.data.dict()
+        serializer_data = dict(request.data)
         # если есть хотя бы одно временное поле, то недостающие берем из БД
         if serializer_data.get('time') or serializer_data.get('period') or serializer_data.get('initial_date'):
             update_needed = True
             serializer_data.setdefault('time', notice.time)
-            serializer_data.setdefault('period', notice.period)
+            if notice.period:
+                serializer_data.setdefault('period', notice.period)
             serializer_data.setdefault('initial_date', notice.next_date)
         else:
             update_needed = False
