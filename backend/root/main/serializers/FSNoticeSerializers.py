@@ -164,3 +164,32 @@ class FolderUpdateSerializer(serializers.ModelSerializer):
             'title': {'required': False},
             'color': {'required': False},
         }
+
+
+class PeriodicDateSerializer(serializers.Serializer):
+    """Сериализатор для отображения следующей даты уведомления в форме"""
+
+    period = serializers.CharField(min_length=7, max_length=9, required=True)
+    initial_date = serializers.DateField(required=True)
+    time = serializers.TimeField(required=True)
+
+    def validate_period(self, value):
+        re_pattern = r'^\d+,\d+,\d+,\d+$'
+        if not re.match(re_pattern, value):
+            msg = 'Validate error: period pattern is incorrect'
+            raise serializers.ValidationError(msg)
+        return value
+
+    def validate(self, attrs):
+        # validation of initial_date & time
+        initial_date = attrs.get('initial_date')
+        time_value = attrs.get('time')
+        if initial_date and time_value:
+            initial_datetime = datetime.combine(initial_date, time_value)
+            now = datetime.now()
+            if initial_datetime <= now:
+                msg = ('Validate error: initial_date and time together must '
+                       'be greater than current datetime')
+                raise serializers.ValidationError(msg)
+
+        return attrs

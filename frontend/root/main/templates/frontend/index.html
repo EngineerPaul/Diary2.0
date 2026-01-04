@@ -205,6 +205,7 @@
                             <div>
                                 <input class="modal-input" type="time" id="fNoticeTime" name="fNoticeTime" required>
                                 <div class="error">Invalid value.</div>
+                                <div class="error" id="dateTimeError" style="display: none;">Invalid value.</div>
                             </div>
                         </label>
                         <label for="fNoticeDescription">
@@ -221,31 +222,32 @@
                             <label for="fNoticeDay">
                                 <span>День:</span>
                                 <div>
-                                    <input class="modal-input" type="number" id="fNoticeDay" name="fNoticeDay" min="1" max="365" required>
+                                    <input class="modal-input" type="number" id="fNoticeDay" name="fNoticeDay" min="1" max="365">
                                     <div class="error">Invalid value.</div>
                                 </div>
                             </label>
                             <label for="fNoticeWeek">
                                 <span>Неделя:</span>
                                 <div>
-                                    <input class="modal-input" type="number" id="fNoticeWeek" name="fNoticeWeek" min="0" max="54" required>
+                                    <input class="modal-input" type="number" id="fNoticeWeek" name="fNoticeWeek" min="0" max="54">
                                     <div class="error">Invalid value.</div>
                                 </div>
                             </label>
                             <label for="fNoticeMonth">
                                 <span>Месяц:</span>
                                 <div>
-                                    <input class="modal-input" type="number" id="fNoticeMonth" name="fNoticeMonth" min="0" max="12" required>
+                                    <input class="modal-input" type="number" id="fNoticeMonth" name="fNoticeMonth" min="0" max="12">
                                     <div class="error">Invalid value.</div>
                                 </div>
                             </label>
                             <label for="fNoticeYear">
                                 <span>Год:</span>
                                 <div>
-                                    <input class="modal-input" type="number" id="fNoticeYear" name="fNoticeYear" min="0" max="1" required>
+                                    <input class="modal-input" type="number" id="fNoticeYear" name="fNoticeYear" min="0" max="1">
                                     <div class="error">Invalid value.</div>
                                 </div>
                             </label>
+                            <div class="error" id="periodErrorField"></div>
                         </div>
                         <p>Итоговый период: <span id="fNoticePeriodTotal"></span></p>
                         <label for="fNoticeInitialDate">
@@ -255,14 +257,15 @@
                                 <div class="error">Invalid value.</div>
                             </div>
                         </label>
-                        <p>Следующая дата: <span id="fNoticeNextDate"></span></p>
                         <label for="fNoticePeriodTime">
                             <span>Время:</span>
                             <div>
                                 <input class="modal-input" type="time" id="fNoticePeriodTime" name="fNoticePeriodTime" required>
                                 <div class="error">Invalid value.</div>
+                                <div class="error" id="periodicDateTimeError" style="display: none;">Invalid value.</div>
                             </div>
                         </label>
+                        <p>Следующая дата: <span id="fNoticeNextDate"></span></p>
                         <label for="fNoticePeriodDescription">
                             <span>Описание:</span>
                             <div>

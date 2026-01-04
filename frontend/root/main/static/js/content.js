@@ -434,14 +434,34 @@ const forms = {
             fNoticePeriodDescription: form.elements['fNoticePeriodDescription'],
         }
 
-        const day = formFields.fNoticeDay.value || ''
-        const week = formFields.fNoticeWeek.value || ''
-        const month = formFields.fNoticeMonth.value || ''
-        const year = formFields.fNoticeYear.value || ''
+        const day   = formFields.fNoticeDay.value   || '0'
+        const week  = formFields.fNoticeWeek.value  || '0'
+        const month = formFields.fNoticeMonth.value || '0'
+        const year  = formFields.fNoticeYear.value  || '0'
         const period = `${day},${week},${month},${year}`
 
-        if (formFields.mode.checked && !PeriodDate.validate_period(period)) {
-            console.log('Ошибка периода')
+        if (formFields.mode.checked && [day, week, month, year].every(v => v==='0')) {
+            const periodErrorField = document.getElementById('periodErrorField')
+            periodErrorField.textContent = 'Хотя бы одно поле периодичности должно быть заполнено'
+            periodErrorField.style.display = 'block'
+            return
+        } else {
+            const periodErrorField = document.getElementById('periodErrorField')
+            periodErrorField.style.display = 'none'
+        }
+
+        if (formFields.mode.checked) {
+            // проверка длины периода
+            if (period.length < 7 || period.length > 9) {
+                console.log('Ошибка периода')
+                return
+            }
+            // проверка формата периода
+            const re_pattern = /^\d+,\d+,\d+,\d+$/
+            if (!re_pattern.test(period)) {
+                console.log('Ошибка периода')
+                return
+            }
         }
 
         let data
@@ -462,8 +482,32 @@ const forms = {
                 description: formFields.fNoticeDescription.value.trim() || '',
                 color: conf.colors.forward[formFields.marker.value],
                 time: formFields.fNoticeTime.value,
-                period: '',
+                // period: '',
                 initial_date: formFields.fNoticeDate.value,
+            }
+        }
+        
+        // проверка, что initial_date и time еще не прошли
+        if (data.initial_date && data.time) {
+            const initialDateTime = new Date(`${data.initial_date}T${data.time}`)
+            const now = new Date()
+            const dateTimeError = document.getElementById('dateTimeError')
+            const periodicDateTimeError = document.getElementById('periodicDateTimeError')
+            
+            if (initialDateTime <= now) {
+                if (formFields.mode.checked) { // period
+                    periodicDateTimeError.textContent = 'Дата и время не могут быть прошедшими'
+                    periodicDateTimeError.style.display = 'block'
+                    if (dateTimeError) dateTimeError.style.display = 'none'
+                } else {
+                    dateTimeError.textContent = 'Дата и время не могут быть прошедшими'
+                    dateTimeError.style.display = 'block'
+                    if (periodicDateTimeError) periodicDateTimeError.style.display = 'none'
+                }
+                return
+            } else {
+                if (dateTimeError) dateTimeError.style.display = 'none'
+                if (periodicDateTimeError) periodicDateTimeError.style.display = 'none'
             }
         }
 
@@ -497,6 +541,20 @@ const forms = {
                 period: response.data['period'] || '',
             }
             content.change.addNotice(resp_data)
+
+            // сброс формы и полей ошибок
+            form.reset()
+            const noticeModePeriod = document.getElementById('noticeModePeriod')
+            if (noticeModePeriod) {
+                noticeModePeriod.checked = false
+                forms.switchNoticeMode({ target: noticeModePeriod })
+            }
+            const periodErrorField = document.getElementById('periodErrorField')
+            const dateTimeError = document.getElementById('dateTimeError')
+            const periodicDateTimeError = document.getElementById('periodicDateTimeError')
+            if (periodErrorField) periodErrorField.textContent = ''
+            if (dateTimeError) dateTimeError.style.display = 'none'
+            if (periodicDateTimeError) periodicDateTimeError.style.display = 'none'
 
             modalBlock.style['display'] = 'none'
             modals.modal.style['display'] = 'none'
@@ -626,10 +684,6 @@ const forms = {
                 modeComment.textContent = '(постоянное)'
             }
 
-            if (fNoticeDay) fNoticeDay.required = true
-            if (fNoticeWeek) fNoticeWeek.required = true
-            if (fNoticeMonth) fNoticeMonth.required = true
-            if (fNoticeYear) fNoticeYear.required = true
             if (fNoticeInitialDate) fNoticeInitialDate.required = true
             if (fNoticePeriodTime) fNoticePeriodTime.required = true
             if (fNoticeDate) fNoticeDate.required = false
@@ -651,6 +705,110 @@ const forms = {
             if (fNoticePeriodTime) fNoticePeriodTime.required = false
         }
     },
+    viewPeriodic: function(event) {
+        const fNoticePeriodTotal = document.getElementById('fNoticePeriodTotal')
+        let totalMessage = ''
+
+        const fNoticeDay = document.getElementById('fNoticeDay').value
+        const fNoticeWeek = document.getElementById('fNoticeWeek').value || '0'
+        const fNoticeMonth = document.getElementById('fNoticeMonth').value || '0'
+        const fNoticeYear = document.getElementById('fNoticeYear').value || '0'
+        const period = `${fNoticeDay},${fNoticeWeek},${fNoticeMonth},${fNoticeYear}`
+
+        if (!fNoticeDay) {
+            fNoticePeriodTotal.textContent = 'Необходимо указать день'
+            return
+        }
+        
+        // дни
+        if (/^\d+,0,0,0$/.test(period)) {
+            totalMessage += `Каждые ${fNoticeDay} дней (дня)`
+        // } else if (/^\d+,0,\d+,0$/.test(period)) {
+        //     totalMessage += `Каждый ${fNoticeDay}(ый) день`
+        } else if (/^\d+,\d+,\d+,\d+$/.test(period)) {
+            totalMessage += `Каждый ${fNoticeDay}(ый) день`
+        }
+
+        // недели
+        if (/^\d+,0,\d+,\d+$/.test(period)) {
+            totalMessage += ``
+        } else if (/^\d+,\d+,0,0$/.test(period)) {
+            totalMessage += ` каждой ${fNoticeWeek}(ой) недели в месяце`
+        } else if (/^\d+,\d+,\d+,0$/.test(period)) {
+            totalMessage += ` каждой ${fNoticeWeek}(ой) недели в году`
+        }
+
+        // месяц
+        if (/^\d+,\d+,0,\d+$/.test(period)) {
+            totalMessage += ``
+        } else if (/^\d+,\d+,\d+,0$/.test(period)) {
+            totalMessage += ` каждого ${fNoticeMonth}(го) месяца`
+        }
+
+        // год
+        if (/^\d+,\d+,\d+,0$/.test(period)) {
+            totalMessage += ``
+        } else if (/^\d+,\d+,\d+,\d+$/.test(period)) {
+            totalMessage += ` каждые ${fNoticeYear} лет`
+        }
+
+        fNoticePeriodTotal.textContent = totalMessage
+    },
+    getNextDate: async function(event) {
+        const fNoticeNextDate = document.getElementById('fNoticeNextDate')
+        fNoticeNextDate.textContent = ''
+
+        const fNoticeDay = document.getElementById('fNoticeDay').value
+        const fNoticeWeek = document.getElementById('fNoticeWeek').value || '0'
+        const fNoticeMonth = document.getElementById('fNoticeMonth').value || '0'
+        const fNoticeYear = document.getElementById('fNoticeYear').value || '0'
+        const period = `${fNoticeDay},${fNoticeWeek},${fNoticeMonth},${fNoticeYear}`
+        const date = document.getElementById('fNoticeInitialDate').value
+        const time = document.getElementById('fNoticePeriodTime').value
+
+        
+        if (!(fNoticeDay && /^\d+,\d+,\d+,\d+$/.test(period) && date && time)) {
+            return
+        }
+        const initialDateTime = new Date(`${date}T${time}`)
+        const now = new Date()
+        if (initialDateTime <= now) {
+            return
+        }
+        
+        const url = conf.Domains['server'] + conf.Urls['getNextDate']
+        console.log(url)
+        const data = {
+            'period': period,
+            'initial_date': date,
+            'time': time,
+        }
+
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(data),
+        }
+        
+        const response = await conf.AJAX.send(url, options)
+        
+        if (response === undefined) {
+            console.log(`Error: неопознанная ошибка при получении следующей даты`)
+            return
+        }
+        
+        if (fNoticeNextDate) {
+            if (response.success === false) {
+                console.log(`Error: ${response.msg || 'Ошибка при получении следующей даты'}`)
+                fNoticeNextDate.textContent = ''
+            } else {
+                fNoticeNextDate.textContent = response || ''
+            }
+        }
+    },
     run: function() {
         const crtRecordForm = document.getElementById('crtRecordForm')
         const crtNoticeForm = document.getElementById('crtNoticeForm')
@@ -666,6 +824,25 @@ const forms = {
             noticeModePeriod.addEventListener('change', this.switchNoticeMode.bind(this))
             this.switchNoticeMode({ target: noticeModePeriod })
         }
+
+        // view periodicity
+        const fNoticeDay = document.getElementById('fNoticeDay')
+        const fNoticeWeek = document.getElementById('fNoticeWeek')
+        const fNoticeMonth = document.getElementById('fNoticeMonth')
+        const fNoticeYear = document.getElementById('fNoticeYear')
+        fNoticeDay.addEventListener('change', this.viewPeriodic.bind(this))
+        fNoticeWeek.addEventListener('change', this.viewPeriodic.bind(this))
+        fNoticeMonth.addEventListener('change', this.viewPeriodic.bind(this))
+        fNoticeYear.addEventListener('change', this.viewPeriodic.bind(this))
+
+        const fNoticeInitialDate = document.getElementById('fNoticeInitialDate')
+        const fNoticePeriodTime = document.getElementById('fNoticePeriodTime')
+        fNoticeDay.addEventListener('change', this.getNextDate.bind(this))
+        fNoticeWeek.addEventListener('change', this.getNextDate.bind(this))
+        fNoticeMonth.addEventListener('change', this.getNextDate.bind(this))
+        fNoticeYear.addEventListener('change', this.getNextDate.bind(this))
+        fNoticeInitialDate.addEventListener('change', this.getNextDate.bind(this))
+        fNoticePeriodTime.addEventListener('change', this.getNextDate.bind(this))
     }
 }
 forms.run()
@@ -2180,9 +2357,3 @@ const settingsGear = {
     }
 }
 settingsGear.run()
-
-const PeriodDate = {
-    validate_period: function(period) {
-        return true
-    }
-}

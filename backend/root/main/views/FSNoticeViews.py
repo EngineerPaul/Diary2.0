@@ -12,6 +12,7 @@ from main.serializers.FSNoticeSerializers import (
     NoticeFolderFSSerializer, NoticeFSSerializer,
     NoticeGetSerializer, NoticeCreateSerializer, NoticeUpdateSerializer,
     FolderGetSerializer, FolderCreateSerializer, FolderUpdateSerializer,
+    PeriodicDateSerializer,
 )
 from main.serializers.utils import PeriodicDate
 
@@ -234,7 +235,6 @@ class NoticesAPI(APIView):
 
         serializer = NoticeCreateSerializer(data=request.data)
         if not serializer.is_valid():
-            print(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         validated_data = serializer.validated_data
@@ -480,3 +480,30 @@ class NoticeFoldersAPI(APIView):
 
         msg = 'Папка успешно удалена'
         return Response(data=msg, status=status.HTTP_200_OK)
+
+
+class DisplayPeriodicDate(APIView):
+    """ Display date in the form """
+
+    def post(self, request):
+        serializer = PeriodicDateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        validated_data = serializer.validated_data
+
+        pd = PeriodicDate(
+            period=validated_data['period'],
+            initial_date=validated_data['initial_date'],
+            time=validated_data['time']
+        )
+        next_date = pd.get_next_date()
+
+        if next_date is None:
+            resp = {
+                'success': False,
+                'msg': 'Error: Дата не найдена',
+            }
+            return Response(resp, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(next_date, status=status.HTTP_200_OK)

@@ -11,6 +11,7 @@ from .views.FSRecordViews import (
 from .views.FSNoticeViews import (
     BlankFileSystemAPI2, NoticesFSAPI,
     NoticesAPI, NoticeFoldersAPI,
+    DisplayPeriodicDate,
 )
 from .views.FSMoveViews import (
     MoveBetweenAPI, MoveInsideAPI,
@@ -106,6 +107,11 @@ file_system_notice_urls = [
         view=NoticeFoldersAPI.as_view(),
         name='change_notice_folder'
     ),
+    path(  # post - getting nextdate into a form
+        route='get-nextdate/',
+        view=DisplayPeriodicDate.as_view(),
+        name='get_nextdate'
+    )
 ]
 urlpatterns += [path("file-system/notice-content/", include(file_system_notice_urls))]
 

@@ -158,6 +158,19 @@
                             label {
                                 margin-bottom: 0;
                             }
+                            
+                            #periodErrorField,
+                            #dateTimeError,
+                            #periodicDateTimeError  {
+                                position: static;
+                                grid-column: 1 / -1;
+                            }
+                        }
+                        
+                        p {
+                            margin-bottom: 10px;
+                            color: #059e85;
+                            font-weight: 600;
                         }
                     }
                 }

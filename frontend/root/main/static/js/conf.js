@@ -27,6 +27,7 @@ export const Urls = {  // backend urls
     FSNotice: (notice_id) => `api/file-system/notice-content/notices/${notice_id}/`, // patch/delete notice
     FSFoldersNotice: 'api/file-system/notice-content/folders/', // post folder
     FSFolderNotice: (folder_id) => `api/file-system/notice-content/folders/${folder_id}/`, // patch/delete folder
+    getNextDate: 'api/file-system/notice-content/get-nextdate/', // get nextdate in a periodic form
 
     // Move API
     moveBetween: 'api/file-system/move/between/',  // post - change objects order
