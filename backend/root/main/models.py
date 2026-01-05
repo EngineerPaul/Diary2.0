@@ -1,4 +1,8 @@
 from django.db import models
+import uuid
+import os
+from datetime import datetime
+from functools import partial
 
 
 colors = [
@@ -89,19 +93,17 @@ class Note(models.Model):
     changed_at = models.DateTimeField(auto_now=True)
 
 
-def get_unique_path(instance, filename):
-    """ Создание уникального пути для сохранения файлов """
-
-    import uuid
-    import os
-    from datetime import datetime
+def get_unique_path(instance, filename, subfolder):
+    """ Создание уникального пути для сохранения файлов.
+    Файлы заметок и напоминаний сохраняются в разные папки,
+    указанные в классах картинок как subfolder """
 
     ext = os.path.splitext(filename)[1].lower()
     unique_name = f'{uuid.uuid4().hex}{ext}'
     date = datetime.now()
     date = f'{date.month}.{date.year}'
     user_id = instance.user_id
-    path = os.path.join("uploads", "test-records", f"user_{user_id}",
+    path = os.path.join("uploads", subfolder, f"user_{user_id}",
                         date, unique_name)
     return path
 
@@ -110,7 +112,9 @@ class Image(models.Model):
     msg_id = models.ForeignKey(
         Message, on_delete=models.CASCADE, related_name='images')
     name = models.CharField()
-    file = models.ImageField(upload_to=get_unique_path)
+    file = models.ImageField(
+        upload_to=partial(get_unique_path, subfolder="records")
+    )
     user_id = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -136,6 +140,8 @@ class NoticeImage(models.Model):
     notice = models.ForeignKey(Notice, on_delete=models.CASCADE,
                                related_name='images')
     name = models.CharField()
-    file = models.ImageField(upload_to=get_unique_path)
+    file = models.ImageField(
+        upload_to=partial(get_unique_path, subfolder="notices")
+    )
     user_id = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)

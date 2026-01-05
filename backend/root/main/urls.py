@@ -17,12 +17,14 @@ from .views.FSMoveViews import (
     MoveBetweenAPI, MoveInsideAPI,
 )
 from .views.content import (
-    RecordContentAPI, BlankDataAPI, NoteAPI, ImageAPI, ImagesAPI
+    RecordContentAPI, BlankDataAPI, NoteAPI, ImageAPI, ImagesAPI,
+    NoticeImageAPI, NoticesImageAPI
 )
 
 
 urlpatterns = []
 
+# ===== Test API =====
 test_urls = [
     path(  # get test public content
         route='public/',
@@ -42,6 +44,11 @@ test_urls = [
 ]
 urlpatterns += test_urls
 
+test_router = routers.DefaultRouter()  # test file upload
+
+urlpatterns += [path("", include(test_router.urls))]
+
+# ===== File system API =====
 file_system_record_urls = [
     path(  # create test filesystem content
         route='set-test/',
@@ -129,6 +136,7 @@ file_system_move_urls = [
 ]
 urlpatterns += [path("file-system/move/", include(file_system_move_urls))]
 
+# ===== Content (record/notice) API =====
 records_urls = [
     path(  # create test messages
         route='set-content/',
@@ -173,8 +181,16 @@ records_urls = [
 ]
 urlpatterns += [path("records/", include(records_urls))]
 
-
-# === Router URLs ===
-test_router = routers.DefaultRouter()  # test file upload
-
-urlpatterns += [path("", include(test_router.urls))]
+notice_urls = [
+    path(  # get/delete notice image
+        route='<int:notice_id>/images/<int:image_id>/',
+        view=NoticeImageAPI.as_view(),
+        name='create_notice_image'
+    ),
+    path(  # get/post/delete notice images
+        route='<int:notice_id>/images/',
+        view=NoticesImageAPI.as_view(),
+        name='create_notice_image'
+    ),
+]
+urlpatterns += [path("notices/", include(notice_urls))]

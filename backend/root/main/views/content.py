@@ -8,12 +8,13 @@ from django.conf import settings
 from main.permissions import CustomPermission
 
 from main.models import (
-    Record, Message, Note, Image,
+    Record, Message, Note, Image, NoticeImage, Notice,
 )
 from main.serializers.contentSerializer import (
     NoteGetSerializer, NoteWriteSerializer,
     ImageGetSerializer, ImageCreateSerializer,
-    ImagesGetSerializer, ImagesCreateSerializer
+    ImagesGetSerializer, ImagesCreateSerializer,
+    ImageNoticeCreateSerializer, ImageNoticeGetSerializer,
 )
 
 
@@ -374,6 +375,8 @@ class ImageAPI(APIView):
 class ImagesAPI(APIView):
     """ The block Image view """
 
+    # permission_classes = [CustomPermission]  # откл для работы без токена
+
     def get(self, request, record_id, msg_id):
         """ Creating the images block """
 
@@ -460,4 +463,126 @@ class ImagesAPI(APIView):
             return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
 
         msg = f'Блок картинок {msg_id} удален'
+        return Response(data=msg, status=status.HTTP_200_OK)
+
+
+class NoticeImageAPI(APIView):
+    """ The single Notice Image view """
+
+    # permission_classes = [CustomPermission]  # откл для работы без токена
+
+    def get(self, request, notice_id, image_id):
+        """ Getting the single notice image """
+
+        user_id = request.user_info['id']
+        user_id = 1  # для работы без токена
+
+        try:
+            image = NoticeImage.objects.get(
+                pk=image_id, notice_id=notice_id, user_id=user_id
+            )
+        except NoticeImage.DoesNotExist:
+            msg = 'Error: картинка не найдена'
+            return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ImageNoticeGetSerializer(image, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, notice_id, image_id):
+        """ Removing the single notice image """
+
+        user_id = request.user_info['id']
+        user_id = 1  # для работы без токена
+
+        try:
+            img = NoticeImage.objects.get(
+                pk=image_id, notice_id=notice_id, user_id=user_id
+            )
+        except NoticeImage.DoesNotExist:
+            msg = 'Error: картинка не найдена'
+            return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            img.delete()
+        except Exception as e:
+            msg = f'Error: ошибка удаления картинки - {e}'
+            return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
+
+        msg = 'Картинка удалена'
+        return Response(data=msg, status=status.HTTP_200_OK)
+
+
+class NoticesImageAPI(APIView):
+    """ The Notice Images view """
+
+    # permission_classes = [CustomPermission]  # откл для работы без токена
+
+    def get(self, request, notice_id):
+        """ Getting all images by notice """
+
+        user_id = request.user_info['id']
+        user_id = 1  # для работы без токена
+
+        images = NoticeImage.objects.filter(notice_id=notice_id, user_id=user_id)
+        serializer = ImageNoticeGetSerializer(
+            images, many=True, context={'request': request}
+        )
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, notice_id):
+        """ Creating new images for the notice """
+
+        user_id = request.user_info['id']
+        user_id = 1  # для работы без токена
+
+        try:
+            notice = Notice.objects.get(pk=notice_id, user_id=user_id)
+        except Notice.DoesNotExist:
+            msg = 'Error: напоминание не найдено'
+            return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
+
+        # Получаем список файлов из FormData
+        files = request.FILES.getlist('file')
+        if not files:
+            return Response('Error: файлы не найдены', status=status.HTTP_400_BAD_REQUEST)
+
+        # Преобразуем список файлов в список словарей для сериализатора с many=True
+        data_list = []
+        for file in files:
+            data_list.append({'file': file})
+
+        try:
+            with transaction.atomic():
+                serializer = ImageNoticeCreateSerializer(
+                    data=data_list, many=True,
+                    context={'user_id': user_id, 'notice': notice}
+                )
+                if not serializer.is_valid():
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                serializer.save()
+        except (transaction.TransactionManagementError, ValueError) as e:
+            msg = f'Error: Ошибка сохранения картинок - {e}'
+            return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
+
+        msg = f'Картинки для напоминания {notice_id} сохранены'
+        return Response(data=msg, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, notice_id):
+        """ Remove all notice images """
+
+        user_id = request.user_info['id']
+        user_id = 1  # для работы без токена
+
+        images = NoticeImage.objects.filter(notice_id=notice_id, user_id=user_id)
+
+        try:
+            with transaction.atomic():
+                for img in images:
+                    img.file.delete(save=False)
+                images.delete()
+        except Exception:
+            msg = 'Error: ошибка удаления картинок напоминания'
+            return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
+
+        msg = f'Все картинки напоминания {notice_id} удалены'
         return Response(data=msg, status=status.HTTP_200_OK)
