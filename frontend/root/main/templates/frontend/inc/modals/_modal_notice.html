@@ -1,0 +1,144 @@
+<div class="modal-cart modal-createN" id="modalNotice">
+    <div class="modal-cart-header">
+        <div class="modal-title">
+            <p id="modalNoticeTitle">Создание напоминания</p>
+        </div>
+        <div class="modal-header-right">
+            <div class="modal-cross" id="modalCross">
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512.021 512.021" xml:space="preserve">
+                    <path d="M301.258,256.01L502.645,54.645c12.501-12.501,12.501-32.769,0-45.269c-12.501-12.501-32.769-12.501-45.269,0l0,0   L256.01,210.762L54.645,9.376c-12.501-12.501-32.769-12.501-45.269,0s-12.501,32.769,0,45.269L210.762,256.01L9.376,457.376   c-12.501,12.501-12.501,32.769,0,45.269s32.769,12.501,45.269,0L256.01,301.258l201.365,201.387   c12.501,12.501,32.769,12.501,45.269,0c12.501-12.501,12.501-32.769,0-45.269L301.258,256.01z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div class="modal-cart-content modal-create">
+        <form autocomplete="off" id="crtNoticeForm">
+            {% csrf_token %}
+            <label for="fNoticeName">
+                <span>Название:</span>
+                <div>
+                    <input class="modal-input" type="text" id="fNoticeName" name="fNoticeName" required>
+                    <div class="error">Invalid value.</div>
+                </div>
+            </label>
+            <div class="notice-mode-switch">
+                <span>Периодичность:</span>
+                <label class="switch">
+                    <input type="checkbox" name="noticeMode" id="noticeModePeriod">
+                    <span class="slider round"></span>
+                </label>
+                <span id="noticeModeComment">(одиночное)</span>
+            </div>
+
+            <div class="notice-mode-fields" id="noticeModeDateFields">
+                <label for="fNoticeDate">
+                    <span>Дата:</span>
+                    <div>
+                        <input class="modal-input" type="date" id="fNoticeDate" name="fNoticeDate" required>
+                        <div class="error">Invalid value.</div>
+                    </div>
+                </label>
+                <label for="fNoticeTime">
+                    <span>Время:</span>
+                    <div>
+                        <input class="modal-input" type="time" id="fNoticeTime" name="fNoticeTime" required>
+                        <div class="error">Invalid value.</div>
+                        <div class="error" id="dateTimeError" style="display: none;">Invalid value.</div>
+                    </div>
+                </label>
+                <label for="fNoticeDescription">
+                    <span>Описание:</span>
+                    <div>
+                        <textarea class="modal-input" id="fNoticeDescription" name="fNoticeDescription" rows="3"></textarea>
+                        <div class="error">Invalid value.</div>
+                    </div>
+                </label>
+            </div>
+
+            <div class="notice-mode-fields" id="noticeModePeriodFields" style="display: none;">
+                <div class="period-date-fields">
+                    <label for="fNoticeDay">
+                        <span>День:</span>
+                        <div>
+                            <input class="modal-input" type="number" id="fNoticeDay" name="fNoticeDay" min="1" max="365">
+                            <div class="error">Invalid value.</div>
+                        </div>
+                    </label>
+                    <label for="fNoticeWeek">
+                        <span>Неделя:</span>
+                        <div>
+                            <input class="modal-input" type="number" id="fNoticeWeek" name="fNoticeWeek" min="0" max="54">
+                            <div class="error">Invalid value.</div>
+                        </div>
+                    </label>
+                    <label for="fNoticeMonth">
+                        <span>Месяц:</span>
+                        <div>
+                            <input class="modal-input" type="number" id="fNoticeMonth" name="fNoticeMonth" min="0" max="12">
+                            <div class="error">Invalid value.</div>
+                        </div>
+                    </label>
+                    <label for="fNoticeYear">
+                        <span>Год:</span>
+                        <div>
+                            <input class="modal-input" type="number" id="fNoticeYear" name="fNoticeYear" min="0" max="1">
+                            <div class="error">Invalid value.</div>
+                        </div>
+                    </label>
+                    <div class="error" id="periodErrorField"></div>
+                </div>
+                <p>Итоговый период: <span id="fNoticePeriodTotal"></span></p>
+                <label for="fNoticeInitialDate">
+                    <span>Начать с:</span>
+                    <div>
+                        <input class="modal-input" type="date" id="fNoticeInitialDate" name="fNoticeInitialDate" required>
+                        <div class="error">Invalid value.</div>
+                    </div>
+                </label>
+                <label for="fNoticePeriodTime">
+                    <span>Время:</span>
+                    <div>
+                        <input class="modal-input" type="time" id="fNoticePeriodTime" name="fNoticePeriodTime" required>
+                        <div class="error">Invalid value.</div>
+                        <div class="error" id="periodicDateTimeError" style="display: none;">Invalid value.</div>
+                    </div>
+                </label>
+                <p>Следующая дата: <span id="fNoticeNextDate"></span></p>
+                <label for="fNoticePeriodDescription">
+                    <span>Описание:</span>
+                    <div>
+                        <textarea class="modal-input" id="fNoticePeriodDescription" name="fNoticePeriodDescription" rows="3"></textarea>
+                        <div class="error">Invalid value.</div>
+                    </div>
+                </label>
+            </div>
+
+            <label>
+                <span>Маркер:</span>
+                <div>
+                    <div class="form-marker">
+                        <label>
+                            <input type="radio" name="marker" value="white" checked>
+                            <div class="marker" data-color="white" ></div>
+                        </label>
+                        <label>
+                            <input type="radio" name="marker" value="green">
+                            <div class="marker" data-color="green"></div>
+                        </label>
+                        <label>
+                            <input type="radio" name="marker" value="yellow">
+                            <div class="marker" data-color="yellow"></div>
+                        </label>
+                        <label>
+                            <input type="radio" name="marker" value="red">
+                            <div class="marker" data-color="red"></div>
+                        </label>
+                    </div>
+                </div>
+            </label>
+            <button class="submitButton btn-default" type="submit" id="crtNoticeBtn">Создать</button>
+        </form>
+    </div>
+</div>
+

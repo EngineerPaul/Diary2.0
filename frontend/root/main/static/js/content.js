@@ -1,4 +1,5 @@
 import * as conf from "./conf.js";
+import { noticeFormUtils } from "./utils/periodic-form-utils.js";
 
 let session = {
     section: sessionStorage.getItem('section')?
@@ -168,6 +169,7 @@ let modals = {
             if (markerRadio) markerRadio.checked = true
             
             if (data.period) { //periodic
+                const noticeModePeriod = document.getElementById('noticeModePeriod')
                 form.noticeMode.checked = true
                 forms.switchNoticeMode({ target: noticeModePeriod })
 
@@ -178,6 +180,11 @@ let modals = {
                 form.fNoticeInitialDate.value = data.date
                 form.fNoticePeriodTime.value = data.time
                 form.fNoticePeriodDescription.value = data.description
+                
+                // Заполняем поля "Итоговый период" и "Следующая дата"
+                const syntheticEvent = { target: form.fNoticeDay }
+                forms.viewPeriodic(syntheticEvent)
+                forms.getNextDate(syntheticEvent)
                 
             } else { // once
                 form.fNoticeDate.value = data.date
@@ -212,6 +219,17 @@ let modals = {
         modalCreateFBtn.addEventListener('click', this.getModal.bind(this))
 
         document.addEventListener('keyup', this.hideModal.bind(this))
+
+        // Установка значений для модалок на главной странице
+        const modalRecordTitle = document.getElementById('modalRecordTitle')
+        const modalRecordBtn = document.getElementById('crtRecordBtn')
+        if (modalRecordTitle) modalRecordTitle.textContent = 'Создание заметки'
+        if (modalRecordBtn) modalRecordBtn.textContent = 'Создать'
+
+        const modalNoticeTitle = document.getElementById('modalNoticeTitle')
+        const modalNoticeBtn = document.getElementById('crtNoticeBtn')
+        if (modalNoticeTitle) modalNoticeTitle.textContent = 'Создание напоминания'
+        if (modalNoticeBtn) modalNoticeBtn.textContent = 'Создать'
     }
 }
 modals.run()
@@ -841,109 +859,11 @@ const forms = {
             if (fNoticePeriodTime) fNoticePeriodTime.required = false
         }
     },
-    viewPeriodic: function(event) {
-        const fNoticePeriodTotal = document.getElementById('fNoticePeriodTotal')
-        let totalMessage = ''
-
-        const fNoticeDay = document.getElementById('fNoticeDay').value
-        const fNoticeWeek = document.getElementById('fNoticeWeek').value || '0'
-        const fNoticeMonth = document.getElementById('fNoticeMonth').value || '0'
-        const fNoticeYear = document.getElementById('fNoticeYear').value || '0'
-        const period = `${fNoticeDay},${fNoticeWeek},${fNoticeMonth},${fNoticeYear}`
-
-        if (!fNoticeDay) {
-            fNoticePeriodTotal.textContent = 'Необходимо указать день'
-            return
-        }
-        
-        // дни
-        if (/^\d+,0,0,0$/.test(period)) {
-            totalMessage += `Каждые ${fNoticeDay} дней (дня)`
-        // } else if (/^\d+,0,\d+,0$/.test(period)) {
-        //     totalMessage += `Каждый ${fNoticeDay}(ый) день`
-        } else if (/^\d+,\d+,\d+,\d+$/.test(period)) {
-            totalMessage += `Каждый ${fNoticeDay}(ый) день`
-        }
-
-        // недели
-        if (/^\d+,0,\d+,\d+$/.test(period)) {
-            totalMessage += ``
-        } else if (/^\d+,\d+,0,0$/.test(period)) {
-            totalMessage += ` каждой ${fNoticeWeek}(ой) недели в месяце`
-        } else if (/^\d+,\d+,\d+,0$/.test(period)) {
-            totalMessage += ` каждой ${fNoticeWeek}(ой) недели в году`
-        }
-
-        // месяц
-        if (/^\d+,\d+,0,\d+$/.test(period)) {
-            totalMessage += ``
-        } else if (/^\d+,\d+,\d+,0$/.test(period)) {
-            totalMessage += ` каждого ${fNoticeMonth}(го) месяца`
-        }
-
-        // год
-        if (/^\d+,\d+,\d+,0$/.test(period)) {
-            totalMessage += ``
-        } else if (/^\d+,\d+,\d+,\d+$/.test(period)) {
-            totalMessage += ` каждые ${fNoticeYear} лет`
-        }
-
-        fNoticePeriodTotal.textContent = totalMessage
+    viewPeriodic: function(event) {  // display user friendly periodic script in the form
+        noticeFormUtils.viewPeriodic(event)  // implementation in the utils folder
     },
-    getNextDate: async function(event) {
-        const fNoticeNextDate = document.getElementById('fNoticeNextDate')
-        fNoticeNextDate.textContent = ''
-
-        const fNoticeDay = document.getElementById('fNoticeDay').value
-        const fNoticeWeek = document.getElementById('fNoticeWeek').value || '0'
-        const fNoticeMonth = document.getElementById('fNoticeMonth').value || '0'
-        const fNoticeYear = document.getElementById('fNoticeYear').value || '0'
-        const period = `${fNoticeDay},${fNoticeWeek},${fNoticeMonth},${fNoticeYear}`
-        const date = document.getElementById('fNoticeInitialDate').value
-        const time = document.getElementById('fNoticePeriodTime').value
-
-        
-        if (!(fNoticeDay && /^\d+,\d+,\d+,\d+$/.test(period) && date && time)) {
-            return
-        }
-        const initialDateTime = new Date(`${date}T${time}`)
-        const now = new Date()
-        if (initialDateTime <= now) {
-            return
-        }
-        
-        const url = conf.Domains['server'] + conf.Urls['getNextDate']
-        console.log(url)
-        const data = {
-            'period': period,
-            'initial_date': date,
-            'time': time,
-        }
-
-        const options = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify(data),
-        }
-        
-        const response = await conf.AJAX.send(url, options)
-        
-        if (response === undefined) {
-            console.log(`Error: неопознанная ошибка при получении следующей даты`)
-            return
-        }
-        
-        if (fNoticeNextDate) {
-            if (response.success === false) {
-                console.log(`Error: ${response.msg || 'Ошибка при получении следующей даты'}`)
-                fNoticeNextDate.textContent = ''
-            } else {
-                fNoticeNextDate.textContent = response || ''
-            }
-        }
+    getNextDate: async function(event) {  // display next date using period in the form
+        await noticeFormUtils.getNextDate(event)  // implementation in the utils folder
     },
     run: function() {
         const crtRecordForm = document.getElementById('crtRecordForm')

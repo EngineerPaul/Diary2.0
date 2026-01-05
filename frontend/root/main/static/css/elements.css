@@ -13,6 +13,7 @@
     --margin-content: 15px;
 
     display: none;
+    border: none;
 
     .global-shadow {
         display: block;
@@ -29,8 +30,6 @@
             /* display: block; */
             width: var(--cart-width);
             height: auto;
-            max-height: 90vh;
-            overflow-y: auto;
             background-color: var(--bg-color);
             position: absolute;
             top: 50%;
@@ -80,6 +79,150 @@
             .modal-cart-content {
                 margin: 15px;
                 height: auto;
+                
+                /* Общие стили для всех форм в модалках */
+                form {
+                    label {
+                        display: block;
+                        position: relative;
+                        margin-bottom: 10px;
+                    }
+                    
+                    input {
+                        display: block;
+                    }
+                    
+                    textarea {
+                        resize: none;
+                    }
+                    
+                    .form-marker {
+                        label {
+                            display: inline;
+                        }
+                        input {
+                            display: none;
+                        }
+                        input + .marker {
+                            opacity: 60%;
+                        }
+                        input:checked + .marker {
+                            border-width: 1px;
+                            opacity: 100%;
+                            box-shadow: 0px 0px 5px 5px rgba(0, 0, 0, 0.1);
+                        }
+                    }
+                    
+                    .modal-input {
+                        display: block;
+                        width: 100%;
+                        border: var(--border-color) 1px solid;
+                        border-radius: 4px;
+                        outline: none;
+                    }
+                    
+                    .error {
+                        font-size: 14px;
+                        display: none;
+                        justify-content: center;
+                        align-items: center;
+                        position: absolute;
+                        z-index: 10;
+                        top: calc(100% + 5px);
+                        left: 0;
+                        background-color: #d63031;
+                        color: #ffffff;
+                        border-radius: 3px;
+                        padding: 4px 8px;
+                        transition: all ease-in-out 260ms;
+                        
+                        &:after,
+                        &:before {
+                            bottom: 100%;
+                            left: 16px;
+                            border: solid transparent;
+                            content: "";
+                            height: 0;
+                            width: 0;
+                            position: absolute;
+                            pointer-events: none;
+                        }
+                        
+                        &:before {
+                            border-bottom-color: #d63031;
+                            border-width: 5px;
+                            margin-left: -5px;
+                        }
+                    }
+                    
+                    button.submitButton {
+                        display: block;
+                        margin-top: 20px;
+                        padding: 12px 35px;
+                    }
+                    
+                    &.form-sort {
+                        label {
+                            display: block;
+                        }
+                        input {
+                            display: inline;
+                        }
+                    }
+                }
+                
+                /* Стили для кнопок в модалках */
+                .buttons-row {
+                    margin-top: 10px;
+                    display: flex;
+                    width: 100%;
+                    justify-content: space-evenly;
+                    flex-wrap: nowrap;
+                }
+                
+                /* Стили для загрузки файлов */
+                .file-input-label {
+                    display: block;
+                    
+                    span {
+                        display: block;
+                    }
+                    
+                    .file-input-wrapper {
+                        position: relative;
+                        display: inline-block;
+                        
+                        .file-input-button {
+                            border: 1px solid var(--border-color);
+                            border-radius: 4px;
+                            padding: 6px 12px;
+                            background-color: var(--header-sector-color);
+                            cursor: pointer;
+                            font-family: inherit;
+                            font-size: inherit;
+                            color: black;
+                            font-weight: 600;
+                            position: relative;
+                            z-index: 1;
+                            
+                            &:hover {
+                                background-color: var(--header-sector-hover-color);
+                            }
+                        }
+                        
+                        .file-input {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            opacity: 0;
+                            width: 0;
+                            height: 0;
+                            border: none;
+                            outline: none;
+                            pointer-events: none;
+                        }
+                    }
+                }
                 
                 #crtNoticeForm {
                     > label {
@@ -176,6 +319,13 @@
                 }
             }
             
+            /* Специфичные стили для разных типов модалок */
+            &.delete-cart {
+                height: 170px;
+            }
+            &#modalAddImages {
+                height: 230px;
+            }
         }
     }
 }

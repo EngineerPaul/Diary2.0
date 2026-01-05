@@ -872,6 +872,12 @@ let settings = {
             document.addEventListener('keyup', this.modals.hideModal.bind(this))
             document.addEventListener('click', this.modals.hideModalCross.bind(this))
 
+            // Установка значений для импортируемой модалки заметки на странице note.html
+            const modalRecordTitle = document.getElementById('modalRecordTitle')
+            const modalRecordBtn = document.getElementById('crtRecordBtn')
+            if (modalRecordTitle) modalRecordTitle.textContent = 'Изменение заметки'
+            if (modalRecordBtn) modalRecordBtn.textContent = 'Сохранить'
+
             const AddNoteBtn = document.getElementById('AddNoteBtn')
             const AddImagesBtn = document.getElementById('AddImagesBtn')
             AddNoteBtn.addEventListener('click', this.modals.openAddNoteModal.bind(this))
