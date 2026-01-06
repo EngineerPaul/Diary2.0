@@ -69,9 +69,22 @@ export const AJAX = {  // general implementation of AJAX requests
         if (!response.ok) {
             if (response.status==401) {
                 console.log("Error 401: credentials not valid")
+                // Logout и переадресация на страницу авторизации
+                localStorage.setItem('IsLoggedIn', false)
+                localStorage.removeItem('username')
+                
+                // Обновление UI элементов, если они существуют
+                const loginBTN = document.getElementById('loginBTN')
+                const logoutBTN = document.getElementById('logoutBTN')
+                if (loginBTN) loginBTN.style['display'] = 'inline-block'
+                if (logoutBTN) logoutBTN.style['display'] = 'none'
+                
+                window.location.href = Domains['frontend'] + 'login'
+                return Promise.reject(new Error(response.statusText))
             }
             if (response.status==403) {
                 console.log("Error 403: no access rights")
+                alert('Ошибка: у Вас недостаточно прав')
             }
             if (![401, 403].includes(response.status)) {  // если не
                 console.log(`Error ${response.status}`)
