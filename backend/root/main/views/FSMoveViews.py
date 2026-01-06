@@ -18,7 +18,6 @@ class MoveBetweenAPI(APIView):
     def post(self, request):
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         serializer = MoveBetweenSerializer(data=request.data)
         if not serializer.is_valid():
@@ -102,7 +101,6 @@ class MoveInsideAPI(APIView):
     def post(self, request):
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         serializer = MoveInsideSerializer(data=request.data)
         if not serializer.is_valid():

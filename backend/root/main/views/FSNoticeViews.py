@@ -197,7 +197,6 @@ class NoticesFSAPI(APIView):
         """ Getting filesystem content """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         folders = NoticeFolder.objects.filter(user_id=user_id)
         notices = Notice.objects.filter(user_id=user_id)
@@ -218,7 +217,6 @@ class NoticesAPI(APIView):
         """Getting the notice by id"""
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             notice = Notice.objects.get(pk=notice_id, user_id=user_id)
@@ -231,7 +229,6 @@ class NoticesAPI(APIView):
         """ Creating the new notices """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         serializer = NoticeCreateSerializer(data=request.data)
         if not serializer.is_valid():
@@ -286,7 +283,6 @@ class NoticesAPI(APIView):
         """ Update notice fields """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             notice = Notice.objects.get(pk=notice_id, user_id=user_id)
@@ -349,7 +345,6 @@ class NoticesAPI(APIView):
         """ Removing the notice """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             notice = Notice.objects.select_related('folder_id').get(
@@ -380,7 +375,6 @@ class NoticeFoldersAPI(APIView):
         """Getting the folder"""
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             folder = NoticeFolder.objects.get(
@@ -397,7 +391,6 @@ class NoticeFoldersAPI(APIView):
         """ Creating the new folder """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         serializer = FolderCreateSerializer(data=request.data)
         if not serializer.is_valid():
@@ -433,7 +426,6 @@ class NoticeFoldersAPI(APIView):
         """ Updating folder fields """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             folder = NoticeFolder.objects.get(pk=folder_id, user_id=user_id)
@@ -457,7 +449,6 @@ class NoticeFoldersAPI(APIView):
     def delete(self, request, folder_id):
         """ Removing the folder """
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             folder = NoticeFolder.objects.select_related('parent_id').get(

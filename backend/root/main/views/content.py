@@ -39,8 +39,6 @@ class BlankDataAPI(APIView):
     def test_set_data(self, request):
         """Создать тестовые данные: 1 record, 1 note, 2 imgGr"""
 
-        user_id = 1
-
         record = Record.objects.first()  # он уже должен лежать в root
 
         msg1 = Message.objects.create(record_id=record)
@@ -90,7 +88,6 @@ class RecordContentAPI(APIView):
         )"""
 
         user_id = request.user_info['id']
-        user_id = 1  # исправить. для работы без токена
 
         record = self.get_record(user_id, record_id)
         if not record:
@@ -199,7 +196,6 @@ class NoteAPI(APIView):
         """ Gettings the note """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             note = Note.objects.select_related(
@@ -218,7 +214,6 @@ class NoteAPI(APIView):
         """ Creating the new note """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         serializer = NoteWriteSerializer(data=request.data)
         if not serializer.is_valid():
@@ -245,7 +240,6 @@ class NoteAPI(APIView):
         """ Update note fields """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             note = Note.objects.select_related(
@@ -267,7 +261,6 @@ class NoteAPI(APIView):
         """ Removing the note """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             note = Note.objects.select_related(
@@ -296,7 +289,6 @@ class ImageAPI(APIView):
         """ Gettings the single image """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             image = Image.objects.select_related('msg_id', 'msg_id__record_id')
@@ -313,7 +305,6 @@ class ImageAPI(APIView):
         """ Add the image to the existing message """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         msg_id = request.data.get('msg_id')
         if not msg_id:
@@ -343,7 +334,6 @@ class ImageAPI(APIView):
         """ Removing the singe image from the  message """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             img = Image.objects.prefetch_related('msg_id__images').select_related(
@@ -381,7 +371,6 @@ class ImagesAPI(APIView):
         """ Creating the images block """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             message = Message.objects.prefetch_related(
@@ -403,7 +392,6 @@ class ImagesAPI(APIView):
         """ Creating the new images block """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             record = Record.objects.get(pk=record_id, user_id=user_id)
@@ -442,7 +430,6 @@ class ImagesAPI(APIView):
         """ Removing the images block """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             message = Message.objects.prefetch_related('images').select_related('record_id').get(
@@ -475,7 +462,6 @@ class NoticeImageAPI(APIView):
         """ Getting the single notice image """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             image = NoticeImage.objects.get(
@@ -492,7 +478,6 @@ class NoticeImageAPI(APIView):
         """ Removing the single notice image """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             img = NoticeImage.objects.get(
@@ -521,7 +506,6 @@ class NoticesImageAPI(APIView):
         """ Getting all images by notice """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         images = NoticeImage.objects.filter(notice_id=notice_id, user_id=user_id)
         serializer = ImageNoticeGetSerializer(
@@ -533,7 +517,6 @@ class NoticesImageAPI(APIView):
         """ Creating new images for the notice """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             notice = Notice.objects.get(pk=notice_id, user_id=user_id)
@@ -571,7 +554,6 @@ class NoticesImageAPI(APIView):
         """ Remove all notice images """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         images = NoticeImage.objects.filter(notice_id=notice_id, user_id=user_id)
 

@@ -168,7 +168,6 @@ class RecordsFSAPI(APIView):
         """ Getting filesystem content """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         folders = RecordFolder.objects.filter(user_id=user_id)
         records = Record.objects.filter(user_id=user_id)
@@ -189,7 +188,6 @@ class RecordsAPI(APIView):
         """Getting the record by id"""
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             record = Record.objects.get(pk=record_id, user_id=user_id)
@@ -202,7 +200,6 @@ class RecordsAPI(APIView):
         """ Creating the new records """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         serializer = RecordCreateSerializer(data=request.data)
         if not serializer.is_valid():
@@ -239,7 +236,6 @@ class RecordsAPI(APIView):
         """ Update record fields """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             record = Record.objects.get(pk=record_id, user_id=user_id)
@@ -264,7 +260,6 @@ class RecordsAPI(APIView):
         """ Removing the record """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             record = Record.objects.select_related('folder_id').get(
@@ -295,7 +290,6 @@ class RecordFoldersAPI(APIView):
         """Getting the folder"""
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             folder = RecordFolder.objects.get(
@@ -311,7 +305,6 @@ class RecordFoldersAPI(APIView):
         """ Creating the new folder """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         serializer = FolderCreateSerializer(data=request.data)
         if not serializer.is_valid():
@@ -346,7 +339,6 @@ class RecordFoldersAPI(APIView):
         """ Updating folder fields """
 
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             folder = RecordFolder.objects.get(pk=folder_id, user_id=user_id)
@@ -369,7 +361,6 @@ class RecordFoldersAPI(APIView):
     def delete(self, request, folder_id):
         """ Removing the folder """
         user_id = request.user_info['id']
-        user_id = 1  # для работы без токена
 
         try:
             folder = RecordFolder.objects.select_related('parent_id').get(
