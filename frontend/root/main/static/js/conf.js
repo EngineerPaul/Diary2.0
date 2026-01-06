@@ -41,6 +41,10 @@ export const Urls = {  // backend urls
     image: (record_id, image_id) => `api/records/${record_id}/images/${image_id}/`, // get/delete image
     imagesGroups: (record_id) => `api/records/${record_id}/images-group/`, // post images group
     imagesGroup: (record_id, msg_id) => `api/records/${record_id}/images-group/${msg_id}/`, // get/delete images group
+
+    // Notice API
+    noticeImages: (notice_id) => `api/notices/${notice_id}/images/`,  // get/post/delete images by notice
+    noticeImage: (notice_id, img_id) => `api/notices/${notice_id}/images/${img_id}/`,  // get/delete single image by id
 }
 
 export const AJAX = {  // general implementation of AJAX requests

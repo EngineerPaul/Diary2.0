@@ -1,58 +1,7 @@
 import * as conf from "./conf.js";
+import { slider, sliderView } from "./utils/image-slider.js";
+import * as domUtils from "./utils/dom-utils.js";
 
-let slider = {
-    shiftLeft: function(slider, imageArea) {  // shift images left
-        let leftSliderBorder = slider.getBoundingClientRect().left
-        let childrenArea = imageArea.children
-        let nextElem = null
-        for (let i=childrenArea.length-1; i >= 0; i--) {
-            if (childrenArea[i].getBoundingClientRect().left < leftSliderBorder) {
-                nextElem = childrenArea[i]
-                break
-            }
-        }
-        if (!nextElem) return
-
-        let leftImageBorder = nextElem.getBoundingClientRect().left
-        let currentShift = imageArea.style.left.slice(0,-2)
-        imageArea.style.left = currentShift - Math.floor(leftImageBorder-leftSliderBorder) + 'px'
-    },
-    shiftRight: function(slider, imageArea) {  // shift images right
-        let rightSliderBorder = slider.getBoundingClientRect().right
-        let childrenArea = imageArea.children
-        let nextElem = null
-        for (let i=0; i < childrenArea.length; i++) {
-            if (childrenArea[i].getBoundingClientRect().right > rightSliderBorder) {
-                nextElem = childrenArea[i]
-                break
-            }
-        }
-        if (!nextElem) return
-
-        let rightImageBorder = nextElem.getBoundingClientRect().right
-        let currentShift = imageArea.style.left.slice(0,-2)
-        imageArea.style.left = currentShift - Math.ceil(rightImageBorder-rightSliderBorder) + 'px'
-    },
-    shiftSlider: function(event) {  // shift images into the slider
-        let shiftButton = event.target.closest('.rectangle')
-        if (!shiftButton) return false
-        let images = shiftButton.closest('.images')
-        let slider = images.querySelector('.slider')
-        let imageArea = images.querySelector('.image-area')
-
-        let direction = shiftButton.dataset['direction']
-        if (direction === 'right') {
-            this.shiftRight(slider, imageArea)
-        } else if (direction === 'left') {
-            this.shiftLeft(slider, imageArea)
-        } else {
-            console.log('Error: getSlider()')
-        }
-    },
-    run: function() {
-        document.addEventListener('click', this.shiftSlider.bind(this))
-    }
-}
 slider.run()
 
 let queries = {
@@ -437,74 +386,23 @@ let content = {
         const imageIdNum = Number(imageId)
         const msgIdNum = Number(msgId)
         
-        let imagesGroup = null
-        let groupIndex = -1
-        for (let i = 0; i < this.messages.length; i++) {
-            if (this.messages[i].type === 'images' && this.messages[i].msg_id === msgIdNum) {
-                imagesGroup = this.messages[i]
-                groupIndex = i
-                break
-            }
-        }
-        
-        if (!imagesGroup || !imagesGroup.images) {
-            console.log('Error: группа изображений не найдена')
-            return
-        }
-        
-        const imageIndex = imagesGroup.images.findIndex(img => img.image_id === imageIdNum)
-        if (imageIndex !== -1) {
-            imagesGroup.images.splice(imageIndex, 1)
-        }
-
-        if (imagesGroup.images.length === 0 && groupIndex !== -1) {
-            this.messages.splice(groupIndex, 1)
-        }
+        const success = sliderView.delImage(imageIdNum, msgIdNum, this.messages)
+        if (!success) return
         
         await queries.delImage(imageIdNum)
         this.viewContent()
     },
     updateSliderHeight: function(slider) { // change slider height using the heighter image
-        if (!slider) return
-        
-        let imageArea = slider.querySelector('.image-area')
-        if (!imageArea) return
-        
-        let images = imageArea.querySelectorAll('.image')
-        if (images.length === 0) return
-        
-        // Находим самую высокую картинку
-        let maxHeight = 0
-        for (let j = 0; j < images.length; j++) {
-            let img = images[j].querySelector('img')
-            if (img) {
-                let imgHeight = img.offsetHeight || img.naturalHeight || 0
-                if (imgHeight > maxHeight) {
-                    maxHeight = imgHeight
-                }
-            }
-        }
-        
-        // Устанавливаем высоту блока на основе самой высокой картинки (не выше 300 css)
-        if (maxHeight > 0) {
-            slider.style.height = Math.min(maxHeight, 300) + 'px'
-        }
+        sliderView.updateSliderHeight(slider)
     },
     updateImagesBlockHeight: function() { // пересчет высоты всех блоков изображений на основе самой высокой картинки
-        let imagesBlocks = document.querySelectorAll('.images')
-        for (let i = 0; i < imagesBlocks.length; i++) {
-            let slider = imagesBlocks[i].querySelector('.slider')
-            this.updateSliderHeight(slider)
-        }
+        sliderView.updateImagesBlockHeight()
     },
     delImages: async function(msgId) { // event of deletion any image group (with images)
         const msgIdNum = Number(msgId)
-        this.messages = this.messages.filter(msg => {
-            if (msg.type === 'images' && msg.msg_id === msgIdNum) {
-                return false
-            }
-            return true
-        })
+        const success = sliderView.delImages(msgIdNum, this.messages)
+        if (!success) return
+
         await queries.delImages(msgIdNum)
         this.viewContent()
     },
@@ -588,165 +486,13 @@ let content = {
         })
     },
     viewImages: function(imagesData) { // display an images block from messages data
-        let content = document.getElementById('content')
-        let images = this.createElement({
-            tag: 'div',
-            classList: ['images'],
-            parent: content,
-            params: {id: imagesData.msg_id},
-        })
-
-        let sliderDirecrionLeft = this.createElement({
-            tag: 'div',
-            classList: ['slide-direction'],
-            parent: images,
-            params: {},
-        })
-        let rectangleLeft = this.createElement({
-            tag: 'div',
-            classList: ['rectangle'],
-            parent: sliderDirecrionLeft,
-            params: {},
-        })
-        rectangleLeft['dataset']['direction'] = 'left'
-        let svgLeft = this.createSVG({
-            parent: rectangleLeft,
-            className: '',
-            viewBox: '0 0 24 24',
-            pathLst: ['M17.921,1.505a1.5,1.5,0,0,1-.44,1.06L9.809,10.237a2.5,2.5,0,0,0,0,3.536l7.662,7.662a1.5,1.5,0,0,1-2.121,2.121L7.688,15.9a5.506,5.506,0,0,1,0-7.779L15.36.444a1.5,1.5,0,0,1,2.561,1.061Z'],
-        })
-
-        let slider = this.createElement({
-            tag: 'div',
-            classList: ['slider'],
-            parent: images,
-            params: {},
-        })
-        // Скрываем блок до загрузки всех изображений
-        slider.style.opacity = '0'
-        let imageArea = this.createElement({
-            tag: 'div',
-            classList: ['image-area'],
-            parent: slider,
-            params: {},
-        })
-        let imagesList = imagesData.images
-        let loadedImagesCount = 0
-        let totalImagesCount = imagesList.length
-        let allImagesLoaded = false
-        
-        // Функция для установки высоты и показа блока
-        const showSlider = () => {
-            if (!allImagesLoaded) {
-                allImagesLoaded = true
-                this.updateSliderHeight(slider)
-                // Показываем блок с плавным переходом
-                slider.style.transition = 'opacity 0.2s ease-in'
-                slider.style.opacity = '1'
-            }
-        }
-        
-        for (let i=0; i<imagesList.length; i++) {
-            let image = this.createElement({
-                tag: 'div',
-                classList: ['image'],
-                parent: imageArea,
-                params: {},
-            })
-            let img = this.createElement({
-                tag: 'img',
-                classList: [],
-                parent: image,
-                params: {src: imagesList[i].url, id: imagesList[i].image_id},
-            })
-            let imageCross = this.createSVG({
-                parent: image,
-                className: 'image-cross',
-                viewBox: '0 0 512.021 512.021',
-                pathLst: ['M301.258,256.01L502.645,54.645c12.501-12.501,12.501-32.769,0-45.269c-12.501-12.501-32.769-12.501-45.269,0l0,0   L256.01,210.762L54.645,9.376c-12.501-12.501-32.769-12.501-45.269,0s-12.501,32.769,0,45.269L210.762,256.01L9.376,457.376   c-12.501,12.501-12.501,32.769,0,45.269s32.769,12.501,45.269,0L256.01,301.258l201.365,201.387   c12.501,12.501,32.769,12.501,45.269,0c12.501-12.501,12.501-32.769,0-45.269L301.258,256.01z'],
-            })
-            
-            // Добавляем обработчик загрузки изображения для пересчета высоты
-            img.addEventListener('load', () => {
-                loadedImagesCount++
-                if (loadedImagesCount === totalImagesCount) {
-                    // Все изображения загружены
-                    showSlider()
-                }
-            })
-            
-            // Если изображение уже загружено (из кэша), сразу увеличиваем счетчик
-            if (img.complete) {
-                loadedImagesCount++
-                if (loadedImagesCount === totalImagesCount) {
-                    showSlider()
-                }
-            }
-        }
-        let editor = this.createSVG({
-            parent: images,
-            className: 'editor',
-            viewBox: '0 0 24 24',
-            pathLst: [
-                'M1.172,19.119A4,4,0,0,0,0,21.947V24H2.053a4,4,0,0,0,2.828-1.172L18.224,9.485,14.515,5.776Z',
-                'M23.145.855a2.622,2.622,0,0,0-3.71,0L15.929,4.362l3.709,3.709,3.507-3.506A2.622,2.622,0,0,0,23.145.855Z'
-            ],
-        })
-        let cross = this.createSVG({
-            parent: images,
-            className: 'cross',
-            viewBox: '0 0 512.021 512.021',
-            pathLst: ['M301.258,256.01L502.645,54.645c12.501-12.501,12.501-32.769,0-45.269c-12.501-12.501-32.769-12.501-45.269,0l0,0   L256.01,210.762L54.645,9.376c-12.501-12.501-32.769-12.501-45.269,0s-12.501,32.769,0,45.269L210.762,256.01L9.376,457.376   c-12.501,12.501-12.501,32.769,0,45.269s32.769,12.501,45.269,0L256.01,301.258l201.365,201.387   c12.501,12.501,32.769,12.501,45.269,0c12.501-12.501,12.501-32.769,0-45.269L301.258,256.01z'],
-        })
-        let sliderDirecrionRight = this.createElement({
-            tag: 'div',
-            classList: ['slide-direction'],
-            parent: images,
-            params: {},
-        })
-        let rectangleRight = this.createElement({
-            tag: 'div',
-            classList: ['rectangle'],
-            parent: sliderDirecrionRight,
-            params: {},
-        })
-        rectangleRight.dataset['direction'] = 'right'
-        let svgRight = this.createSVG({
-            parent: rectangleRight,
-            className: '',
-            viewBox: '0 0 24 24',
-            pathLst: ['M6.079,22.5a1.5,1.5,0,0,1,.44-1.06l7.672-7.672a2.5,2.5,0,0,0,0-3.536L6.529,2.565A1.5,1.5,0,0,1,8.65.444l7.662,7.661a5.506,5.506,0,0,1,0,7.779L8.64,23.556A1.5,1.5,0,0,1,6.079,22.5Z'],
-        })
+        sliderView.viewImages(imagesData, domUtils)
     },
     createElement: function(options) { // create usual HTML elem
-        // options: {tag, classList, parent, params}
-        let element = document.createElement(options.tag)
-        if (options.classList) {
-            for (let i=0; i<options.classList.length; i++) {
-                element.classList.add(options.classList[i])
-            }
-        }
-        if (options.params) {
-            for (let param of Object.keys(options.params)) {
-                element[param] = options.params[param]
-            }
-        }
-        options.parent.appendChild(element)
-        return element
+        return domUtils.createElement(options)
     },
     createSVG: function(options) { // create usual HTML svg elem
-        // options: {parent, className, viewBox, pathLst}
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-        svg.setAttributeNS(null, 'class', options.className)
-        svg.setAttributeNS(null, 'viewBox', options.viewBox)
-        for (let i=0; i < options.pathLst.length; i++) {
-            let svgPath = document.createElementNS("http://www.w3.org/2000/svg", 'path')
-            svgPath.setAttributeNS(null, 'd', options.pathLst[i])
-            svg.appendChild(svgPath)
-        }
-        options.parent.append(svg)
-        return svg
-        // https://ru.stackoverflow.com/questions/1123250/%D0%9A%D0%B0%D0%BA-%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%B8%D1%82%D1%8C-svg-%D0%BA%D0%BE%D0%B4-%D0%BD%D0%B0-%D1%81%D0%B0%D0%B9%D1%82-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-js    
+        return domUtils.createSVG(options)
     },
     run: async function() {
         await this.getContent()
