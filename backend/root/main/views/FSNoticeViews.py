@@ -20,7 +20,7 @@ from main.serializers.utils import PeriodicDate
 class BlankFileSystemAPI2(APIView):
     """ Представления для создания тестовых данных """
 
-    # permission_classes = [CustomPermission]  # для работы без токена
+    permission_classes = [CustomPermission]  # для работы без токена
 
     def get(self, request):
         """ Перезапуск базы данных """
@@ -191,7 +191,7 @@ class BlankFileSystemAPI2(APIView):
 class NoticesFSAPI(APIView):
     """ The main filesystem view """
 
-    # permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def get(self, request):
         """ Getting filesystem content """
@@ -211,7 +211,7 @@ class NoticesFSAPI(APIView):
 class NoticesAPI(APIView):
     """ The main Notice view """
 
-    # permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def get(self, request, notice_id):
         """Getting the notice by id"""
@@ -369,7 +369,7 @@ class NoticesAPI(APIView):
 class NoticeFoldersAPI(APIView):
     """ The main NoticeFolder view """
 
-    # permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def get(self, request, folder_id):
         """Getting the folder"""
@@ -476,6 +476,8 @@ class NoticeFoldersAPI(APIView):
 
 class DisplayPeriodicDate(APIView):
     """ Display date in the form """
+
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def post(self, request):
         serializer = PeriodicDateSerializer(data=request.data)

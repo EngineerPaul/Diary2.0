@@ -162,7 +162,7 @@ class BlankFileSystemAPI(APIView):
 class RecordsFSAPI(APIView):
     """ The main filesitem view """
 
-    # permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def get(self, request):
         """ Getting filesystem content """
@@ -182,7 +182,7 @@ class RecordsFSAPI(APIView):
 class RecordsAPI(APIView):
     """ The main Record view """
 
-    # permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def get(self, request, record_id):
         """Getting the record by id"""
@@ -284,7 +284,7 @@ class RecordsAPI(APIView):
 class RecordFoldersAPI(APIView):
     """ The main RecordFolder view """
 
-    # permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def get(self, request, folder_id):
         """Getting the folder"""

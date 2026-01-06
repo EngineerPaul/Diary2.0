@@ -74,7 +74,8 @@ class BlankDataAPI(APIView):
 
 class RecordContentAPI(APIView):
     """Вывод всей информации (детали и контент) по всей заметке"""
-    # permission_classes = [CustomPermission]  # откл для работы без токена
+
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def get(self, request, record_id: int):
         """Получение всего контента заметки в одном запросе.
@@ -190,7 +191,7 @@ class RecordContentAPI(APIView):
 class NoteAPI(APIView):
     """ The main Note view """
 
-    # permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def get(self, request, record_id, note_id):
         """ Gettings the note """
@@ -283,7 +284,7 @@ class NoteAPI(APIView):
 class ImageAPI(APIView):
     """ The single Image view """
 
-    # permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def get(self, request, record_id, image_id):
         """ Gettings the single image """
@@ -365,7 +366,7 @@ class ImageAPI(APIView):
 class ImagesAPI(APIView):
     """ The block Image view """
 
-    # permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def get(self, request, record_id, msg_id):
         """ Creating the images block """
@@ -456,7 +457,7 @@ class ImagesAPI(APIView):
 class NoticeImageAPI(APIView):
     """ The single Notice Image view """
 
-    # permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def get(self, request, notice_id, image_id):
         """ Getting the single notice image """
@@ -500,7 +501,7 @@ class NoticeImageAPI(APIView):
 class NoticesImageAPI(APIView):
     """ The Notice Images view """
 
-    # permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def get(self, request, notice_id):
         """ Getting all images by notice """

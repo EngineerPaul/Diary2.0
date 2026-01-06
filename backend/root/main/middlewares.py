@@ -21,7 +21,7 @@ class AuthMiddleware(MiddlewareMixin):
                 'id': 1,
                 'username': 'Тестовое имя',
                 'role': 'Anonymous',
-                'is_auth': False,
+                'is_auth': True,  # для работы CustomPermission
             }
             return None
 

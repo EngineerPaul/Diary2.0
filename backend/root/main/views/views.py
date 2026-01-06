@@ -7,7 +7,9 @@ from main.serializers.utils import PeriodicDate
 
 
 class PublicAPI(APIView):
-    # authentication_classes = []
+    """ Проверка запроса секретной информации (без провеки доступа) """
+
+    permission_classes = []
 
     def get(self, request):
         return Response(
@@ -23,6 +25,8 @@ class PublicAPI(APIView):
 
 
 class SecretAPI(APIView):
+    """ Проверка запроса секретной информации (с провекой доступа) """
+
     permission_classes = [CustomPermission]
 
     def get(self, request):
@@ -39,6 +43,7 @@ class SecretAPI(APIView):
 
 
 class TestDateAPI(APIView):
+    """Veiw для проверки работы парсера периода 0,0,0,0"""
 
     def post(self, request):
         from datetime import date, time

@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction
 
+from main.permissions import CustomPermission
 from main.models import (
     RecordFolder, Record,
     # NoticeFolder, Notice
@@ -14,6 +15,8 @@ from main.serializers.FSMoveSerializers import (
 
 class MoveBetweenAPI(APIView):
     """ API for moving an object between another objects in a folder """
+
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def post(self, request):
 
@@ -97,6 +100,8 @@ class MoveBetweenAPI(APIView):
 
 class MoveInsideAPI(APIView):
     """ API for moving an object between folders """
+
+    permission_classes = [CustomPermission]  # откл для работы без токена
 
     def post(self, request):
 
