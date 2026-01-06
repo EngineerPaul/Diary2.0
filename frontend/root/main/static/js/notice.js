@@ -1,13 +1,83 @@
 import * as conf from "./conf.js";
 import { noticeFormUtils } from "./utils/periodic-form-utils.js";
+import { slider, sliderView } from "./utils/image-slider.js";
+import * as domUtils from "./utils/dom-utils.js";
+
+slider.run()
 
 
 let queries = {
     noticeId: null, // id of current notice
 
-    createImages: async function(files) {}, // заготовка
-    delImage: async function(files) {}, // заготовка
-    delImages: async function(files) {}, // заготовка
+    createImages: async function(files) { // send creation images form to server
+        if (!this.noticeId) {
+            console.log('Error: noticeId не установлен')
+            return null
+        }
+        
+        const url = conf.Domains['server'] + conf.Urls.noticeImages(this.noticeId)
+        const formData = new FormData()
+        
+        // Добавляем каждый файл в FormData с одинаковым ключом 'file' для Django
+        for (let i = 0; i < files.length; i++) {
+            formData.append('file', files[i])
+        }
+        
+        const options = {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+        }
+        
+        try {
+            const response = await fetch(url, options)
+            const responseData = await response.json().catch(() => response.text())
+            
+            if (!response.ok) {
+                return { error: true, status: response.status, data: responseData }
+            }
+            
+            return responseData
+        } catch (error) {
+            return { error: true, message: error.message }
+        }
+    },
+    getImages: async function() { // getting all images from server
+        const url = conf.Domains['server'] + conf.Urls.noticeImages(this.noticeId)
+        const options = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        }
+        const response = await conf.AJAX.send(url, options)
+        return response
+    },
+    delImage: async function(imageId) { // delete any single image
+        const url = conf.Domains['server'] + conf.Urls.noticeImage(this.noticeId, imageId)
+        const options = {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        }
+        const response = await conf.AJAX.send(url, options)
+        return response
+    },
+    delImages: async function() { // delete all images for notice
+        const url = conf.Domains['server'] + conf.Urls.noticeImages(this.noticeId)
+        const options = {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        }
+        const response = await conf.AJAX.send(url, options)
+        return response
+    },
     delNotice: async function() { // delete current notice
         const url = conf.Domains['server'] + conf.Urls.FSNotice(this.noticeId)
         const options = {
@@ -88,7 +158,7 @@ let content = {
         date: null,            // next date of notice (formatted)
         time: null,            // time of notice (formatted)
     },
-    images: null,      // array of images (задел на будущее)
+    images: [],      // array of images
 
     getContent: async function() { // parsing data from server
         const data = await queries.getContent()
@@ -117,6 +187,14 @@ let content = {
             this.periodicData.date = formattedDate
             this.periodicData.time = formattedTime
         }
+
+        // Получаем изображения
+        const imagesData = await queries.getImages()
+        if (imagesData && Array.isArray(imagesData)) {
+            this.images = imagesData
+        } else {
+            this.images = []
+        }
     },
     _formatDate: function(dateStr) { // formating date firld
         if (!dateStr) return ''
@@ -134,7 +212,7 @@ let content = {
         return timeStr.slice(0, 5)
     },
 
-    viewContent: function() { // display whole content (without images)
+    viewContent: function() { // display whole content (with images)
         const themeElement = document.querySelector('.theme')
         themeElement.textContent = this.theme || ''
 
@@ -175,6 +253,9 @@ let content = {
             if (onceBlock) onceBlock.style.display = 'none'
             if (periodicBlock) periodicBlock.style.display = 'none'
         }
+
+        // Отображаем изображения
+        this.viewImages()
     },
 
     editNotice: async function(event) {  // send PATCH and update UI
@@ -346,11 +427,112 @@ let content = {
         }
     },
 
+    viewImages: function() { // display images slider
+        let content = document.getElementById('content')
+        if (!content) {
+            console.log('Error: не найден контейнер для изображений')
+            return
+        }
+        
+        // Очищаем существующий контейнер
+        content.innerHTML = ''
+
+        if (this.images && this.images.length > 0) {
+            const imagesData = {
+                msg_id: queries.noticeId,
+                images: this.images
+            }
+            sliderView.viewImages(imagesData, domUtils)
+        }
+    },
+    handleAddImagesSubmit: async function(event) { // handler for submitting add images form
+        event.preventDefault()
+        const fileInput = document.getElementById('fImages')
+        const files = fileInput.files
+        
+        if (!files || files.length === 0) {
+            console.log('Error: необходимо выбрать хотя бы один файл')
+            return
+        }
+        
+        const response = await queries.createImages(files)
+        
+        if (!response) return
+        if (response && typeof response === 'object' && response.error) return
+        
+        // Успешное сохранение (response - строка или успешный объект)
+        if (settings && settings.modalBlock) {
+            settings.modalBlock.style.display = 'none'
+        }
+        
+        fileInput.value = ''  // очищаем после отправки формы
+        const fileInputButton = document.querySelector('.file-input-button')
+        if (fileInputButton) {
+            fileInputButton.textContent = 'Выберите файл'
+        }
+        
+        await this.getContent()
+        this.viewContent()
+    },
+    delImage: async function(imageId) { // event of deletion any single image
+        const imageIdNum = Number(imageId)
+        
+        this.images = this.images.filter(img => img.image_id !== imageIdNum)
+        
+        await queries.delImage(imageIdNum)
+        this.viewContent()
+    },
+    delImages: async function() { // event of deletion all images group
+        this.images = []
+        await queries.delImages()
+        this.viewContent()
+    },
+    delImagesHandler: function(event) { // event of deletion any type image content by cross
+        // cross of any image
+        let imageCross = event.target.closest('.image-cross')
+        if (imageCross) {
+            let image = imageCross.closest('.image')
+            if (image) {
+                let img = image.querySelector('img')
+                if (img && img.id) {
+                    this.delImage(Number(img.id))
+                    return
+                }
+            }
+        }
+        
+        // cross of the whole images group
+        let cross = event.target.closest('.images .cross')
+        if (cross) {
+            this.delImages()
+        }
+    },
+    updateSliderHeight: function(slider) { // change slider height using the heighter image
+        sliderView.updateSliderHeight(slider)
+    },
+    updateImagesBlockHeight: function() { // пересчет высоты всех блоков изображений на основе самой высокой картинки
+        sliderView.updateImagesBlockHeight()
+    },
+    createElement: function(options) { // create usual HTML elem
+        return domUtils.createElement(options)
+    },
+    createSVG: function(options) { // create usual HTML svg elem
+        return domUtils.createSVG(options)
+    },
     editTheme: async function() {}, // заготовка
     editDescription: async function() {}, // заготовка
     run: async function() {
         await this.getContent()
         this.viewContent()
+        let content = document.getElementById('content')
+        if (content) {
+            content.addEventListener('click', this.delImagesHandler.bind(this))
+        }
+        
+        const addImagesForm = document.getElementById('addImagesForm')
+        if (addImagesForm) {
+            addImagesForm.addEventListener('submit', this.handleAddImagesSubmit.bind(this))
+        }
     }
 }
 content.run()
@@ -396,7 +578,7 @@ let settings = {
             this.modals.viewModal.bind(this)('modalRecord')
         },
         openAddImagesModal: function() { // open modal for adding images
-            this.modals.viewModal.bind(this)('modalAddImages')
+            this.viewModal('modalAddImages')
         },
         openEditNoticeModal: async function() { // open modal for editing current notice
             const modalNotice = document.getElementById('modalNotice')
@@ -537,7 +719,7 @@ let settings = {
             }
             
             const AddImagesBtn = document.getElementById('AddImagesBtn')
-            AddImagesBtn.addEventListener('click', this.modals.openAddImagesModal.bind(this))
+            AddImagesBtn.addEventListener('click', this.modals.openAddImagesModal.bind(this.modals))
 
             const editorBtn = document.querySelector('.menu-item.editor')  // record update pencil
             editorBtn.addEventListener('click', this.modals.openEditNoticeModal.bind(this.modals))

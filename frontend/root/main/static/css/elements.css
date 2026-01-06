@@ -477,3 +477,116 @@ label.switch {
         }
     }
 }
+
+/* Image slider styles */
+.images {
+    display: flex;
+    position: relative;
+    max-width: 100%;
+    max-height: 300px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+
+    .slide-direction {
+        width: 50px;
+
+        .rectangle {
+            display: flex;
+            vertical-align: middle;
+            align-self: center;
+            width: 100%;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.75);
+            transition: .5s ease;
+            opacity: .5;
+        }
+        .rectangle:hover {
+            user-select: none;
+            opacity: 1;
+
+            svg {
+                fill: rgba(255, 255, 255, 0.6);
+                transition: .5s ease;
+            }
+        }
+    }
+    .slider {
+        display: inline-block;
+        position: relative;
+        margin: 0 5px 0 5px;
+        height: 300px;
+        width: 40%;
+        overflow: hidden;
+        border: 1px solid var(--content-images-border-color);
+        border-radius: 10px;
+        transition: height 0.3s ease;
+
+        .image-area {
+            position: absolute;
+            left: 0px;
+            transition: left .2s ease;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-wrap: nowrap;
+
+            .image {
+                display: inline-block;
+                position: relative;
+                max-width: 200px;
+                max-height: 300px;
+                transition: 
+                        max-width 0.5s ease-out,
+                        opacity 0.5s ease-out;
+
+                img {
+                    display: inline;
+                    max-width: 200px;
+                    max-height: 300px;
+                }
+
+                .image-cross {
+                    position: absolute;
+                    right: 5px;
+                    top: 5px;
+                    width: 8px;
+                    cursor: pointer;
+                    z-index: 10;
+                    
+                    &:hover {
+                        transform: scale(1.2);
+                        fill: #ff4545;
+                        filter: drop-shadow(0 0 0.5px #ff4545);
+                    }
+                }
+            }
+        }
+    }
+    .editor {
+        position: absolute;
+        right: calc(50% - 20% - 5px - 10px);
+        top: 5px;
+        width: 8px;
+        cursor: pointer;
+        z-index: 20;
+        
+        &:hover {
+            transform: scale(1.2);
+            fill: #ff4545;
+        }
+    }
+    .cross {
+        position: absolute;
+        right: calc(50% - 20% - 5px - 10px - 15px);
+        top: 5px;
+        width: 8px;
+        cursor: pointer;
+        z-index: 20;
+        
+        &:hover {
+            transform: scale(1.2);
+            fill: #ff4545;
+        }
+    }
+}
