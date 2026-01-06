@@ -2,17 +2,27 @@
 {% load static %}
 
 {% block content %}
-<h4>Авторизация</h4>
-<div>
-    <p>Перейти на страницу <a href="{% url 'registration_url' %}">Регистрации</a></p>
+<div class="auth-page">
+    <div class="title">
+        <p>Авторизация</p>
+    </div>
+    <div class="switch-link">
+        <p>Перейти на страницу <a href="{% url 'registration_url' %}">Регистрации</a></p>
+    </div>
+    <form id="authorizationForm">
+        <div class="form-field">
+            <label for="username">Логин</label>
+            <input type="text" name="username" id="username" autocomplete="off" value="">
+            <div class="error">Invalid value.</div>
+        </div>
+        <div class="form-field">
+            <label for="password">Пароль</label>
+            <input type="password" name="password" id="password" autocomplete="new-password" value="">
+            <div class="error">Invalid value.</div>
+        </div>
+        <button>Войти</button>
+    </form>
 </div>
-<form id="authorizationForm">
-    <label>username:</label>
-    <input type="text" name="username" value=""> <br>
-    <label>password:</label>
-    <input type="text" name="password" value=""> <br>
-    <button>Войти</button>
-</form>
 
 <script type="module" src="{% static 'js/login.js' %}"></script>
 {% endblock content %}
