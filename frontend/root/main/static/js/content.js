@@ -905,7 +905,7 @@ forms.run()
 
 let search = {
     getSearchList: function() {  // getting a search list
-        searchListTest = [ // Заглушка для теста до получения настоящего контента
+        const searchListTest = [ // Заглушка для теста до получения настоящего контента
             'О Нас',
             'Основа',
             'Блог',
@@ -928,15 +928,15 @@ let search = {
 
         searchDropdown.style['display'] = 'block'
         searchDropdown.innerHTML = ''
-        searchListOriginal = this.getSearchList()
-        seacrhListFiltered = []
+        const searchListOriginal = this.getSearchList()
+        let seacrhListFiltered = []
         for (let i = 0; i < searchListOriginal.length; i++) {
             if (searchListOriginal[i].toUpperCase().includes(searchValueUpper)) {
                 seacrhListFiltered.push(searchListOriginal[i])
             }
         }
         for (let i = 0; i < seacrhListFiltered.length; i++) {
-            searchElemI = document.createElement('a')
+            const searchElemI = document.createElement('a')
             searchElemI.href = '#' + seacrhListFiltered[i]
             searchElemI.innerHTML = seacrhListFiltered[i]
             searchDropdown.append(searchElemI)

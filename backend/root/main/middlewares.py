@@ -23,7 +23,7 @@ class AuthMiddleware(MiddlewareMixin):
                 'role': 'Anonymous',
                 'is_auth': False,
             }
-            return
+            return None
 
         if tokens['access_token']:
             access_info = self.verify(tokens['access_token'])
@@ -35,7 +35,7 @@ class AuthMiddleware(MiddlewareMixin):
                     'role': access_info['role'],
                     'is_auth': True,
                 }
-                return
+                return None
 
         if tokens['refresh_token']:
             refresh_info = self.refresh(tokens['refresh_token'])
@@ -50,7 +50,7 @@ class AuthMiddleware(MiddlewareMixin):
                     'access_token': refresh_info['access'],
                     'refresh_token': refresh_info['refresh'],
                 }
-                return
+                return None
 
         response = HttpResponseRedirect(PROJECT_HOSTS['frontend'] + '')
         response.delete_cookie(
@@ -67,6 +67,7 @@ class AuthMiddleware(MiddlewareMixin):
 
     # def process_view(self, request, view_func, view_args, view_kwargs):
     #     print('function_2')
+    #     запускается после process_request (выше). но перед view
 
     def process_response(self, request, response):
         if hasattr(request, 'tokens'):

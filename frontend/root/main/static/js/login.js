@@ -54,6 +54,7 @@ const sendAuthorization = async function(event) {
     } else {
         console.log(`Авторизация завершена`)
         logIn(data['username'])
+        window.location.href = conf.Domains['frontend'] + ''
     }
     
 }

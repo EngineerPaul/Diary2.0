@@ -1,4 +1,15 @@
 from django.views.generic import TemplateView
+from django.http import HttpResponseRedirect
+from root.settings import PROJECT_HOSTS
+
+
+class LoginRequiredMixin:
+    """Миксин для проверки аутентификации пользователя"""
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.get('is_auth', False):
+            return HttpResponseRedirect(PROJECT_HOSTS['frontend'] + 'login')
+        return super().dispatch(request, *args, **kwargs)
 
 
 class RegistrationPage(TemplateView):
@@ -9,7 +20,7 @@ class LoginPage(TemplateView):
     template_name = 'frontend/login.html'
 
 
-class HomePage(TemplateView):
+class HomePage(LoginRequiredMixin, TemplateView):
     template_name = 'frontend/index.html'
 
 
@@ -21,17 +32,17 @@ class OtherPage(TemplateView):  # удалить!
     template_name = 'frontend/other.html'
 
 
-class SettingsPage(TemplateView):
+class SettingsPage(LoginRequiredMixin, TemplateView):
     template_name = 'frontend/settings.html'
 
 
-class SearchPage(TemplateView):
+class SearchPage(LoginRequiredMixin, TemplateView):
     template_name = 'frontend/search.html'
 
 
-class NotePage(TemplateView):
+class NotePage(LoginRequiredMixin, TemplateView):
     template_name = 'frontend/note.html'
 
 
-class NoticePage(TemplateView):
+class NoticePage(LoginRequiredMixin, TemplateView):
     template_name = 'frontend/notice.html'
