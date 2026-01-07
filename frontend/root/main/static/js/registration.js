@@ -49,6 +49,7 @@ const sendRegistration = async function(event) {
     } else {
         console.log(`Регистрация завершена. Username=${data['username']}`)
         logIn(data['username'])
+        window.location.href = conf.Domains['frontend'] + ''
     }
 }
 

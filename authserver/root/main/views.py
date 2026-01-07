@@ -12,6 +12,7 @@ from rest_framework_simplejwt.exceptions import InvalidToken
 
 from .serializers import RegSerializer, VerifySerializer, ObtainSerializer
 from root.settings import SIMPLE_JWT
+from .queries import create_root_folders
 
 
 class Registration(APIView):
@@ -37,7 +38,11 @@ class Registration(APIView):
             )
 
         try:
-            user = serializer.save()  # нет проверки на существование пользователя!!!
+            user = serializer.save()
+
+            # Create root folders on backend server
+            create_root_folders(user.id)
+
             refresh = RefreshToken.for_user(user)  # Создание Refesh и Access
             refresh.payload.update({  # Полезная информация в самом токене
                 'id': user.id,

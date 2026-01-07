@@ -20,6 +20,7 @@ from .views.content import (
     RecordContentAPI, BlankDataAPI, NoteAPI, ImageAPI, ImagesAPI,
     NoticeImageAPI, NoticesImageAPI
 )
+from .views.common import FirstSetUp
 
 
 urlpatterns = []
@@ -47,6 +48,16 @@ urlpatterns += test_urls
 test_router = routers.DefaultRouter()  # test file upload
 
 urlpatterns += [path("", include(test_router.urls))]
+
+# ===== Common API =====
+auth_requests_urls = [
+    path(  # create root directories (post from the auth server)
+        route='create-roots/',
+        view=FirstSetUp.as_view(),
+        name='create_roots'
+    ),
+]
+urlpatterns += [path("auth/", include(auth_requests_urls))]
 
 # ===== File system API =====
 file_system_record_urls = [

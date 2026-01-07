@@ -22,6 +22,7 @@ DEBUG = json.loads(os.getenv('DEBUG'))
 ALLOWED_HOSTS = []
 CORS_ALLOWED_ORIGINS = json.loads(os.getenv('CORS_ALLOWED_ORIGINS'))
 CORS_ALLOW_CREDENTIALS = json.loads(os.getenv('CORS_ALLOW_CREDENTIALS'))
+PROJECT_HOSTS = json.loads(os.getenv('PROJECT_HOSTS'))
 
 
 # Application definition
