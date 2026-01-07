@@ -6,7 +6,7 @@ from django.db import transaction
 from main.permissions import CustomPermission
 from main.models import (
     RecordFolder, Record,
-    # NoticeFolder, Notice
+    NoticeFolder, Notice
 )
 from main.serializers.FSMoveSerializers import (
     MoveInsideSerializer, MoveBetweenSerializer
@@ -72,28 +72,26 @@ class MoveBetweenAPI(APIView):
     def move_notice(self, data, user_id):
         """Change the notice order inside the folder"""
         try:
-            pass
-            # Notice.objects.get(pk=data['object_id'], user_id=user_id)
-            # folder = NoticeFolder.objects.get(pk=data['folder_id'], user_id=user_id)
-        except Exception:  # (Notice.DoesNotExist, NoticeFolder.DoesNotExist)
+            Notice.objects.get(pk=data['object_id'], user_id=user_id)
+            folder = NoticeFolder.objects.get(pk=data['folder_id'], user_id=user_id)
+        except (Notice.DoesNotExist, NoticeFolder.DoesNotExist):
             return {'success': False, 'msg': 'Данные не найдены'}
 
-        # folder.nested_notices = ','.join(map(str, data['nested_list']))
-        # folder.save()
+        folder.nested_objects = ','.join(map(str, data['nested_list']))
+        folder.save()
 
         return {'success': True, 'msg': 'Данные сохранены'}
 
     def move_notice_folder(self, data, user_id):
         """Change the notice folder order inside the parent folder"""
         try:
-            pass
-            # NoticeFolder.objects.get(pk=data['object_id'], user_id=user_id)
-            # parent_folder = NoticeFolder.objects.get(pk=data['folder_id'], user_id=user_id)
-        except Exception:  # NoticeFolder.DoesNotExist
+            NoticeFolder.objects.get(pk=data['object_id'], user_id=user_id)
+            parent_folder = NoticeFolder.objects.get(pk=data['folder_id'], user_id=user_id)
+        except NoticeFolder.DoesNotExist:
             return {'success': False, 'msg': 'Данные не найдены'}
 
-        # parent_folder.nested_folders = ','.join(map(str, data['nested_list']))
-        # parent_folder.save()
+        parent_folder.nested_folders = ','.join(map(str, data['nested_list']))
+        parent_folder.save()
 
         return {'success': True, 'msg': 'Данные сохранены'}
 
@@ -179,49 +177,47 @@ class MoveInsideAPI(APIView):
     def move_notice(self, data, user_id):
         """Put the notice inside the folder"""
         try:
-            pass
-            # notice = Notice.objects.get(pk=data['object_id'], user_id=user_id)
-            # old_folder = NoticeFolder.objects.get(pk=data['old_folder_id'], user_id=user_id)
-            # new_folder = NoticeFolder.objects.get(pk=data['new_folder_id'], user_id=user_id)
-        except Exception:  # (Notice.DoesNotExist, NoticeFolder.DoesNotExist)
+            notice = Notice.objects.get(pk=data['object_id'], user_id=user_id)
+            old_folder = NoticeFolder.objects.get(pk=data['old_folder_id'], user_id=user_id)
+            new_folder = NoticeFolder.objects.get(pk=data['new_folder_id'], user_id=user_id)
+        except (Notice.DoesNotExist, NoticeFolder.DoesNotExist):
             return {'success': False, 'msg': 'Данные не найдены'}
 
-        # try:
-        #     with transaction.atomic():
-        #         notice.folder_id = new_folder
-        #         old_folder.del_notice(notice.pk)
-        #         new_folder.add_notice(notice.pk)
-        #
-        #         notice.save()
-        #         old_folder.save()
-        #         new_folder.save()
-        # except Exception as e:
-        #     msg = f'Error: Ошибка перемещения - {str(e)}'
-        #     return {'success': False, 'msg': msg}
+        try:
+            with transaction.atomic():
+                notice.folder_id = new_folder
+                old_folder.del_object(notice.pk)
+                new_folder.add_object(notice.pk)
+
+                notice.save()
+                old_folder.save()
+                new_folder.save()
+        except Exception as e:
+            msg = f'Error: Ошибка перемещения - {str(e)}'
+            return {'success': False, 'msg': msg}
 
         return {'success': True, 'msg': 'Данные сохранены'}
 
     def move_notice_folder(self, data, user_id):
         """Put the notice folder inside another folder"""
         try:
-            pass
-            # folder = NoticeFolder.objects.get(pk=data['object_id'], user_id=user_id)
-            # old_parent = NoticeFolder.objects.get(pk=data['old_folder_id'], user_id=user_id)
-            # new_parent = NoticeFolder.objects.get(pk=data['new_folder_id'], user_id=user_id)
-        except Exception:  # NoticeFolder.DoesNotExist
+            folder = NoticeFolder.objects.get(pk=data['object_id'], user_id=user_id)
+            old_parent = NoticeFolder.objects.get(pk=data['old_folder_id'], user_id=user_id)
+            new_parent = NoticeFolder.objects.get(pk=data['new_folder_id'], user_id=user_id)
+        except NoticeFolder.DoesNotExist:
             return {'success': False, 'msg': 'Данные не найдены'}
 
-        # try:
-        #     with transaction.atomic():
-        #         folder.parent_id = new_parent
-        #         old_parent.del_folder(folder.pk)
-        #         new_parent.add_folder(folder.pk)
-        #
-        #         folder.save()
-        #         old_parent.save()
-        #         new_parent.save()
-        # except Exception as e:
-        #     msg = f'Error: Ошибка перемещения - {str(e)}'
-        #     return {'success': False, 'msg': msg}
+        try:
+            with transaction.atomic():
+                folder.parent_id = new_parent
+                old_parent.del_folder(folder.pk)
+                new_parent.add_folder(folder.pk)
+
+                folder.save()
+                old_parent.save()
+                new_parent.save()
+        except Exception as e:
+            msg = f'Error: Ошибка перемещения - {str(e)}'
+            return {'success': False, 'msg': msg}
 
         return {'success': True, 'msg': 'Данные сохранены'}
