@@ -63,11 +63,11 @@ def check_connection(tries: int = 5):
     for _ in range(tries):
         try:
             sock = socket.create_connection(("www.google.com", 80))
-            print('Internet connection established successfully')
-            print(f'Socket: {sock}')
-            break
         except BaseException:
             print('Error: connection not established. Try again in 3s')
             time.sleep(3)
         else:
+            print('Internet connection established successfully')
+            # print(f'Socket: {sock}')
             sock.close()
+            break

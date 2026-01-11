@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework import routers
 
 from .views.views import (
-    PublicAPI, SecretAPI, TestDateAPI
+    PublicAPI, SecretAPI, TestDateAPI, TestTGAPI, TestFromTGAPI
 )
 from .views.FSRecordViews import (
     BlankFileSystemAPI, RecordsFSAPI,
@@ -42,8 +42,18 @@ test_urls = [
         view=TestDateAPI.as_view(),
         name='get_test_periodic_date'
     ),
+    path(  # get/post test tg server
+        route='tg-test/',
+        view=TestTGAPI.as_view(),
+        name='test_tg_server'
+    ),
+    path(  # get/post test tg server
+        route='from-fastapi/',
+        view=TestFromTGAPI.as_view(),
+        name='from_fastapi'
+    ),
 ]
-urlpatterns += test_urls
+urlpatterns += [path("tests/", include(test_urls))]
 
 test_router = routers.DefaultRouter()  # test file upload
 

@@ -1,23 +1,26 @@
 from telebot import types
 from config import MY_ID, SITELINK
 import json
-from api_requests import (
-    send_hour_repeat, send_day_repeat, send_new_reminder, send_info
+from api.server.queries import (
+    # send_hour_repeat, send_day_repeat,
+    send_new_reminder, send_info,
+    send_django, send_notice_shift
 )
 from utils import get_date, get_now_format
 
 
-def get_info(bot, command):
+def get_info(bot, command):  # выводит ифнормацию из msg (для раработки)
+    """ /info - выводит ифнормацию, которая заложена в msg (для раработки) """
     @bot.message_handler(commands=[command])
     def get_info(msg):
         # https://habr.com/ru/articles/821661/ - краткое описание инфы в msg
-        from_user = {
-            'id': MY_ID,  # id чата (у пользователей похоже нет id)
-            'is_bot': False,  # это бот?
-            'first_name': 'user name',  # имя
-            'username': 'user nickname',  # никнейм без собачки @
-            'last_name': 'user second name',  # отчество
-        }
+        # from_user = {  # пример вывода из msg.from_user
+        #     'id': MY_ID,  # id чата (у пользователей похоже нет id)
+        #     'is_bot': False,  # это бот?
+        #     'first_name': 'user name',  # имя
+        #     'username': 'user nickname',  # никнейм без собачки @
+        #     'last_name': 'user second name',  # отчество
+        # }
         # print(msg)  # вся информация о сообщении
         # print(msg.from_user)  # информация о пользователе
         print(msg.text)  # текст сообщения
@@ -25,7 +28,9 @@ def get_info(bot, command):
         print(msg.date)  # дата в секундах
 
 
-def start(bot, command):
+def start(bot, command):  # стартовая команда при запуске бота
+    """ /start - обработка включения бота у польователя. Сохранение инфы об
+    аккаунте в БД """
     @bot.message_handler(commands=[command])
     def start(msg):
         first_mess = (
@@ -43,11 +48,13 @@ def start(bot, command):
         # отправить usr_id в БД для дальнейшей отправки напоминаний по id
         info = {
             'tg_user_id': msg.from_user.id,
+            'chat_id': msg.chat.id,
         }
-        send_info(info)
+        send_info(info)  # отправка http
 
 
-def send_test(bot, command):
+def send_test(bot, command):  # шаблон для ручной отправки напоминания
+    """ /send (debug==True) отправляет уведомление с кнопками перенести на час и день """
     @bot.message_handler(commands=[command])
     def send_test(msg):
         message = 'Отправка напоминания'
@@ -95,8 +102,8 @@ def send_test(bot, command):
         )
 
 
-def sitelink(bot, command):
-    # link to the site
+def sitelink(bot, command):  # ссылка на сайт (тест)
+    """отправка ссылки с гиперссылкой"""
     @bot.message_handler(commands=[command])
     def send_reminder(msg):
         link = SITELINK
@@ -106,7 +113,9 @@ def sitelink(bot, command):
         )
 
 
-def create_reminder(bot, command):
+def create_reminder(bot, command):  # создание нового уведомления
+    """ Создание нового уведомления по кнопке в меню. Можно создать только
+    одиночное уведомление """
     @bot.message_handler(commands=[command])
     def create_reminder(msg):
         bot.send_message(  # отправляем сообщение пользователю
@@ -116,7 +125,9 @@ def create_reminder(bot, command):
         bot.register_next_step_handler(msg, create_reminder_title, bot)
 
 
-def create_reminder_title(msg, bot):
+def create_reminder_title(msg, bot):  # создание нового уведомления (шаг 2)
+    """ Запускается последователно при создании уведомления.
+    Сохраняет заголовок """
     if msg.text.lower() == 'отмена':
         return
     bot.send_message(  # отправляем сообщение пользователю
@@ -128,7 +139,9 @@ def create_reminder_title(msg, bot):
     bot.register_next_step_handler(msg, create_reminder_date, bot, msg.text)
 
 
-def create_reminder_date(msg, bot, title):
+def create_reminder_date(msg, bot, title):  # создание нового уведомления (шаг 3)
+    """ Запускается последователно при создании уведомления.
+    Сохраняет дату """
     if msg.text.lower() == 'отмена':
         return
 
@@ -141,15 +154,22 @@ def create_reminder_date(msg, bot, title):
         bot.register_next_step_handler(msg, create_reminder_date, bot, msg.text)
         return
 
-    response = send_new_reminder(msg.from_user.username, title, date['details'])
+    response = send_new_reminder(msg.from_user.username, title, date['details'], msg.chat.id)
     if response:
         bot.send_message(  # отправляем сообщение пользователю
             msg.chat.id,  # находим чат
             'Напоминание успешно создано',  # вставляем сообщение
         )
+    else:
+        bot.send_message(  # отправляем сообщение пользователю
+            msg.chat.id,  # находим чат
+            'Ошибка создания напоминания',  # вставляем сообщение
+        )
 
 
-def callback(bot):
+def callback(bot):  # обработчик всех inline кнопок
+    """ Обрабатывает события всех inline кнопок (например, в напоминаниях
+    send_test)"""
     # handler of all callbacks
     @bot.callback_query_handler(func=lambda call: True)
     def callback(function_call):
@@ -161,38 +181,53 @@ def callback(bot):
         }
         call = data['exec']
 
+        # вызов функций справа, если выполняются условия слева
         call == 'test' and call_test(bot, function_call)
-        call == 'rep_hour' and call_repeat_hour(bot, function_call, data)
-        call == 'rep_day' and call_repeat_day(bot, function_call, data)
+        call == 'rep_hour' and call_repeat_hour(bot, function_call, data, function_call.message.chat.id)
+        call == 'rep_day' and call_repeat_day(bot, function_call, data, function_call.message.chat.id)
 
 
-def call_repeat_hour(bot, function_call, data):
-    # перенос напоминания на час
-    user_id = data['user_id']
-    reminder_id = data['reminder_id']
-    response = send_hour_repeat(user_id, reminder_id)
+def call_repeat_hour(bot, function_call, data, chat_id):  # перенос напоминания на час
+    """Перенос конкретного напоминания на час при нажатии inline-кнопки"""
+    user_id = int(data['user_id'])
+    reminder_id = int(data['reminder_id'])
+    # response = send_hour_repeat(user_id, reminder_id)
+    response = send_notice_shift(user_id, reminder_id, 'day', chat_id)
 
     if response:
         bot.send_message(
             chat_id=function_call.message.chat.id,
             text='Напоминание перенесено на 1 час',
         )
+    else:
+        bot.send_message(  # отправляем сообщение пользователю
+            chat_id,  # находим чат
+            'Ошибка изменения напоминания',  # вставляем сообщение
+        )
 
 
-def call_repeat_day(bot, function_call, data):
-    # перенос напоминания на день
-    user_id = data['user_id']
-    reminder_id = data['reminder_id']
-    response = send_day_repeat(user_id, reminder_id)
+def call_repeat_day(bot, function_call, data, chat_id):  # перенос напоминания на день
+    """Перенос конкретного напоминания на день при нажатии inline-кнопки"""
+    user_id = int(data['user_id'])
+    reminder_id = int(data['reminder_id'])
+    # response = send_day_repeat(user_id, reminder_id)
+    response = send_notice_shift(user_id, reminder_id, 'hour', chat_id)
 
     if response:
         bot.send_message(
             chat_id=function_call.message.chat.id,
             text='Напоминание перенесено на 1 день',
         )
+    else:
+        bot.send_message(  # отправляем сообщение пользователю
+            chat_id,  # находим чат
+            'Ошибка изменения напоминания',  # вставляем сообщение
+        )
 
 
-def call_test(bot, callback):
+def call_test(bot, callback):  # тестовая функция inline-кнопки
+    """Тестовая функция для отладки. Срабатывает при нажатии на inline
+    кнопку конкретного уведомления с надписью "test message" (send_test)"""
     print('---callback: ', callback)
     # print('---data: ', callback.data)  # сообщение кнопки
     # print('---from_user: ', callback.from_user)  # инфа о пользователе
@@ -203,3 +238,27 @@ def call_test(bot, callback):
     print('---inline_keyboard: ', callback.message.reply_markup.keyboard[0][0])  # инфа о кнопке (двумерный список)
     print('---inline_keyboard: ', callback.message.reply_markup.keyboard[0][0].text)  # сообщение кнопки
     print('---inline_keyboard: ', callback.message.reply_markup.keyboard[0][0].callback_data)  # функция
+
+
+def test_to_django(bot, command):  # тестовая отправка http
+    """ /testdajngo_get - Тестовая функция отправки уведомления на
+    fastapi (и потом django) """
+    @bot.message_handler(commands=[command])
+    def test_to_django(msg):
+        # /testdajngo_get
+        print('Сообщение обработано')
+        # https://habr.com/ru/articles/821661/ - краткое описание инфы в msg
+        # from_user = {  # пример вывода из msg.from_user
+        #     'id': MY_ID,  # id чата (у пользователей похоже нет id)
+        #     'is_bot': False,  # это бот?
+        #     'first_name': 'user name',  # имя
+        #     'username': 'user nickname',  # никнейм без собачки @
+        #     'last_name': 'user second name',  # отчество
+        # }
+        # print(msg)  # вся информация о сообщении
+        # print(msg.from_user)  # информация о пользователе
+        print(msg.text)  # текст сообщения
+        print(msg.chat)  # информация о чате
+        print(msg.date)  # дата в секундах
+
+        send_django(msg)  # отправка http

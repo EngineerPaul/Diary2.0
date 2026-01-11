@@ -4,6 +4,7 @@ from rest_framework import status
 
 from main.permissions import CustomPermission
 from main.serializers.utils import PeriodicDate
+from main.queries import test_get, test_post
 
 
 class PublicAPI(APIView):
@@ -76,3 +77,34 @@ class TestDateAPI(APIView):
         print('period= ', period)
         print('next date= ', resp['next_date'])
         return Response(resp, status=status.HTTP_200_OK)
+
+
+class TestTGAPI(APIView):
+    """ Тест запросов к телеграм серверу """
+
+    permission_classes = []
+
+    def get(self, request):
+        print('get fastapi')
+        test_get()  # queries.py
+        return Response()
+
+    def post(self, request):
+        print('post fastapi')
+        test_post()  # queries.py
+        return Response()
+
+
+class TestFromTGAPI(APIView):
+    """ Тест запросов к телеграм серверу """
+
+    permission_classes = []
+
+    def get(self, request):
+        print('get запрос получен')
+        return Response()
+
+    def post(self, request):
+        print('post запрос получен')
+        print(f'{request.data=}')
+        return Response()
