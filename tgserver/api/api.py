@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
+import aiohttp
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, Depends
 from fastapi.responses import JSONResponse
 
 from api.schemas import (
@@ -13,6 +14,7 @@ from queries.to_server import (
     send_create_notice, send_notice_shift, send_userinfo
 )
 from config import MY_TG_ID
+from dependencies import get_session
 # from services import RemindData
 
 
@@ -205,11 +207,11 @@ async def test_dajngo_post(req: TestDjango):  # получение тестов�
     tags=['from-tg-to-django'],
     summary="Передача запроса от TG в Django"
 )
-async def test_dajngo_post():  # тестовая передача запроса от TG в backend
-    """  """
+async def test_dajngo_post(session: aiohttp.ClientSession = Depends(get_session)):  # тестовая передача запроса от TG в backend
+    """ Передача тестового запроса от TG-bot в server (Django) """
 
-    await send_test_to_Django('data')
     print('Получен post запрос от TG')
+    await send_test_to_Django(data='data', session=session)
     # await send_msg_bot(
     #     chat_id=MY_TG_ID,
     #     text='Какой-то текст из API',  # можно дополнить любой информацией

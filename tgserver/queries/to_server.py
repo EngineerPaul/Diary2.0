@@ -7,18 +7,32 @@ from api.schemas import (
 from config import PROJECT_HOSTS
 
 
-async def send_test_to_Django(data):
+# async def send_test_to_Django(data):
+#    """ Тестовый запрос на сервер с созданием новой сессии """
+
+#     url = 'http://127.0.0.1:8002/api/tests/from-fastapi/'
+#     body = {
+#         'msg': 'Works! from fastapi'
+#     }
+
+#     async with aiohttp.ClientSession() as session:  # в реальных приложениях его обычно создают один раз и используют многократно
+#         async with session.post(url, json=body) as resp:
+#             res = await resp.text()
+#             # print(f'Закончил выполнение: {res}')
+#             return res
+
+async def send_test_to_Django(data, session):
+    """ Тестовый запрос на сервер с использованием сессии """
 
     url = 'http://127.0.0.1:8002/api/tests/from-fastapi/'
     body = {
         'msg': 'Works! from fastapi'
     }
 
-    async with aiohttp.ClientSession() as session:  # в реальных приложениях его обычно создают один раз и используют многократно
-        async with session.post(url, json=body) as resp:
-            res = await resp.text()
-            # print(f'Закончил выполнение: {res}')
-            return res
+    async with session.post(url, json=body) as resp:
+        res = await resp.text()
+        # print(f'Закончил выполнение: {res}')
+        return res
 
 
 async def send_create_notice(data: NewNoticeSchema):  # создание notice
