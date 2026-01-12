@@ -2,12 +2,13 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Response
 from fastapi.responses import JSONResponse
-from schemas import (
+
+from api.schemas import (
     ReminderCreater, TestDjango,
     NewNoticeSchema, NoticeShiftSchema, UserInfoSchema, NoticeListSchema
 )
-from queries_tg import send_msg_bot
-from queries_serv import (
+from queries.to_tgbot import send_msg_bot
+from queries.to_server import (
     send_test_to_Django,
     send_create_notice, send_notice_shift, send_userinfo
 )

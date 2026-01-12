@@ -3,7 +3,7 @@ import asyncio
 
 from celery_client import celery_app
 from services import RemindData
-from queries_tg import send_msg_bot
+from queries.to_tgbot import send_msg_bot
 
 
 # @celery_app.task  # worker test

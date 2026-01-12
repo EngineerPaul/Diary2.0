@@ -1,7 +1,7 @@
 import asyncio
 import aiohttp
 
-from schemas import (
+from api.schemas import (
     NewNoticeSchema, NoticeShiftSchema, UserInfoSchema
 )
 from config import PROJECT_HOSTS
