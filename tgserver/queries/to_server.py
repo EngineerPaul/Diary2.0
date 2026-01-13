@@ -1,6 +1,3 @@
-import asyncio
-import aiohttp
-
 from api.schemas import (
     NewNoticeSchema, NoticeShiftSchema, UserInfoSchema
 )
@@ -35,28 +32,45 @@ async def send_test_to_Django(data, session):
         return res
 
 
-async def send_create_notice(data: NewNoticeSchema):  # создание notice
+async def send_create_notice(data: NewNoticeSchema, session):  # создание notice
     """ Creating the new notice using tg bot """
 
     url = PROJECT_HOSTS['backend'] + 'api/tg-server/new-notice/'
 
     print('send_create_notice: Отправка сообщения в backend')
-    return True
+    async with session.post(url, json=data.dict()) as resp:
+        res = await resp.text()
+        return res
 
 
-async def send_notice_shift(data: NoticeShiftSchema):  # сдвиг notice
+async def send_notice_shift(data: NoticeShiftSchema, session):  # сдвиг notice
     """ Shifting the notice to the next hour/day using tg bot """
 
     url = PROJECT_HOSTS['backend'] + 'api/tg-server/notice-shift/'
 
     print('send_notice_shift: Отправка сообщения в backend')
-    return True
+    async with session.post(url, json=data.dict()) as resp:
+        res = await resp.text()
+        return res
 
 
-async def send_userinfo(data: UserInfoSchema):  # сохранение инфы пользователя
+async def send_userinfo(data: UserInfoSchema, session):  # сохранение инфы пользователя
     """ Saving the user info using tg bot """
 
     url = PROJECT_HOSTS['backend'] + 'api/tg-server/save-user-info/'
 
     print('send_userinfo: Отправка сообщения в backend?')
-    return True
+    async with session.post(url, json=data.dict()) as resp:
+        res = await resp.text()
+        return res
+
+
+async def send_mailing_list_report(data: dict, session):  # отправка отчета о рассылке напоминаний
+    """ Sending the mailing list report to the backend """
+
+    url = PROJECT_HOSTS['backend'] + 'api/tg-server/mailing-list-report/'
+
+    print('send_mailing_list_report: Отправка сообщения в backend')
+    async with session.post(url, json=data) as resp:
+        res = await resp.text()
+        return res

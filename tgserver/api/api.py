@@ -26,8 +26,11 @@ router = APIRouter()
     tags=['From TG'],
     summary="Create new reminder using the TG bot"
 )
-async def create_notice_api(data: NewNoticeSchema):  # создание нового уведомления через бота
-    server_response = await send_create_notice(data)  # отпправить HTTP запрос на сервер
+async def create_notice_api(  # создание нового уведомления через бота
+    data: NewNoticeSchema,
+    session: aiohttp.ClientSession = Depends(get_session)
+):
+    server_response = await send_create_notice(data, session)  # отпправить HTTP запрос на сервер
     if server_response:
         response = JSONResponse(
             content={'success': True},
@@ -48,8 +51,11 @@ async def create_notice_api(data: NewNoticeSchema):  # создание ново
     tags=['From TG'],
     summary="Rescheduling the notice to the next hour/day"
 )
-async def notice_shift_api(data: NoticeShiftSchema):  # Смещение уведомления на час/день
-    server_response = send_notice_shift(data)  # отпправить HTTP запрос на сервер
+async def notice_shift_api(  # Смещение уведомления на час/день
+    data: NoticeShiftSchema,
+    session: aiohttp.ClientSession = Depends(get_session)
+):
+    server_response = await send_notice_shift(data, session)  # отпправить HTTP запрос на сервер
     server_response = None
     if server_response:
         response = Response(
@@ -71,8 +77,11 @@ async def notice_shift_api(data: NoticeShiftSchema):  # Смещение уве�
     tags=['From TG'],
     summary="Saving user info during registration"
 )
-async def userinfo_api(data: UserInfoSchema):  # сохранение инфы о пользователе (хз, где)
-    server_response = send_userinfo(data)  # отпправить HTTP запрос на сервер
+async def userinfo_api(  # сохранение инфы о пользователе (хз, где)
+    data: UserInfoSchema,
+    session: aiohttp.ClientSession = Depends(get_session)
+):
+    server_response = await send_userinfo(data, session)  # отпправить HTTP запрос на сервер
     server_response = None
     if server_response:
         response = Response(
@@ -104,45 +113,6 @@ async def get_notice_list_api(data: NoticeListSchema):  # получение с�
         media_type="application/json"
     )
     return response
-
-
-
-# @router.post(
-#     "/reminders",
-#     tags=['From TG'],
-#     summary="Create new reminder using the TG bot"
-# )
-# async def create_reminder(reminder: ReminderCreater):  # тест (удалить!)
-#     """ Create new reminder using the TG bot """
-
-#     # переотправка напоминания на основной сервер
-#     # сервер сохраняет и проверяет даты
-#     # при необходимости сервер создает и отправляет новый список
-
-#     print(reminder)
-#     return {"detail": "success"}
-
-
-# @router.patch(
-#     "/reminders",
-#     tags=['From TG'],
-#     summary="Move the date forward one hour/day (PATCH)"
-# )
-# async def shift_reminder():
-#     """ Move the date forward one hour/day """
-
-#     return {"detail": "success"}
-
-
-# @router.post(
-#     "/reminders-list",
-#     tags=['From Server'],
-#     summary="Getting new reminders list and date"
-# )
-# async def set_reminder_list():
-#     """ Create new reminders list and date from the main server """
-
-#     return {"detail": "success"}
 
 
 @router.post(

@@ -21,6 +21,9 @@ from .views.content import (
     NoticeImageAPI, NoticesImageAPI
 )
 from .views.common import FirstSetUp
+from .views.TGServer import (
+    CreateNoticeAPI, NoticeShiftAPI, UserInfoAPI
+)
 
 
 urlpatterns = []
@@ -202,6 +205,7 @@ records_urls = [
 ]
 urlpatterns += [path("records/", include(records_urls))]
 
+# ===== Notice API =====
 notice_urls = [
     path(  # get/delete notice image
         route='<int:notice_id>/images/<int:image_id>/',
@@ -215,3 +219,23 @@ notice_urls = [
     ),
 ]
 urlpatterns += [path("notices/", include(notice_urls))]
+
+# ===== TG Server API =====
+tg_server_urls = [
+    path(  # post new notice
+        route='new-notice/',
+        view=CreateNoticeAPI.as_view(),
+        name='create_notice'
+    ),
+    path(  # post shift notice
+        route='notice-shift/',
+        view=NoticeShiftAPI.as_view(),
+        name='shift_notice'
+    ),
+    path(  # save user info ???
+        route='save-user-info/',
+        view=UserInfoAPI.as_view(),
+        name='save_user_info'
+    ),
+]
+urlpatterns += [path("tg-server/", include(tg_server_urls))]

@@ -4,6 +4,7 @@ import asyncio
 from celery_client import celery_app
 from services import RemindData
 from queries.to_tgbot import send_msg_bot
+from queries.to_server import send_mailing_list_report
 
 
 # @celery_app.task  # worker test
@@ -54,6 +55,12 @@ def send_all_reminders():
     RemindData.set_reminders_list(None)
     RemindData.set_date(None)
     print('Список напоминаний очищен')
-    print('Ожидается получение нового списка напоминаний от сервера...')
 
-    # получение новых даты и списка от сервера
+    # сохранение новых данных в редис и отправка отчета серверу
+    new_data = send_mailing_list_report(rem_list)
+    if new_data is None:
+        print('Error: список сообщений пуст')
+        return
+    RemindData.set_reminders_list(new_data['notice_list'])
+    RemindData.set_date(new_data['next_date'])
+    print('Ожидается получение нового списка напоминаний от сервера...')
