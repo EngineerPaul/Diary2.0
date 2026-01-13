@@ -108,3 +108,12 @@ class TestFromTGAPI(APIView):
         print('post запрос получен')
         print(f'{request.data=}')
         return Response()
+
+
+class TestAPI(APIView):
+    """ Апи для проверки конкретного функционала """
+
+    def get(self, request):
+        from main.queries import send_notice_list
+        send_notice_list()
+        return Response()

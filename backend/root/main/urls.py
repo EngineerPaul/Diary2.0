@@ -2,7 +2,8 @@ from django.urls import path, include
 from rest_framework import routers
 
 from .views.views import (
-    PublicAPI, SecretAPI, TestDateAPI, TestTGAPI, TestFromTGAPI
+    PublicAPI, SecretAPI, TestDateAPI, TestTGAPI, TestFromTGAPI,
+    TestAPI,
 )
 from .views.FSRecordViews import (
     BlankFileSystemAPI, RecordsFSAPI,
@@ -54,6 +55,11 @@ test_urls = [
         route='from-fastapi/',
         view=TestFromTGAPI.as_view(),
         name='from_fastapi'
+    ),
+    path(  # get test any function
+        route='any-test/',
+        view=TestAPI.as_view(),
+        name='any_test'
     ),
 ]
 urlpatterns += [path("tests/", include(test_urls))]
