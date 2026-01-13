@@ -58,13 +58,13 @@ async def notice_shift_api(  # Смещение уведомления на ча
     server_response = await send_notice_shift(data, session)  # отпправить HTTP запрос на сервер
     server_response = None
     if server_response:
-        response = Response(
+        response = JSONResponse(
             content={'success': True},
             status_code=200,
             media_type="application/json"
         )
     else:
-        response = Response(
+        response = JSONResponse(
             content={'success': False},
             status_code=400,
             media_type="application/json"
@@ -82,15 +82,14 @@ async def userinfo_api(  # сохранение инфы о пользовате
     session: aiohttp.ClientSession = Depends(get_session)
 ):
     server_response = await send_userinfo(data, session)  # отпправить HTTP запрос на сервер
-    server_response = None
     if server_response:
-        response = Response(
+        response = JSONResponse(
             content={'success': True},
             status_code=200,
             media_type="application/json"
         )
     else:
-        response = Response(
+        response = JSONResponse(
             content={'success': False},
             status_code=400,
             media_type="application/json"
@@ -107,7 +106,7 @@ async def get_notice_list_api(data: NoticeListSchema):  # получение с�
     # RemindData.set_reminders_list(data.notice_list)
     # RemindData.set_date(data.next_date)
 
-    response = Response(
+    response = JSONResponse(
         content={'success': True},
         status_code=200,
         media_type="application/json"

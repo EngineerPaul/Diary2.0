@@ -33,6 +33,7 @@ def start(bot, command):  # стартовая команда при запус�
     аккаунте в БД """
     @bot.message_handler(commands=[command])
     def start(msg):
+        user_id = msg.text.split(' ')[1]
         first_mess = (
             f"Привет, <b>{msg.from_user.first_name}</b>!\n"
             f"Бот получения уведомлений активирован.\n"
@@ -46,11 +47,12 @@ def start(bot, command):  # стартовая команда при запус�
         )
 
         # отправить usr_id в БД для дальнейшей отправки напоминаний по id
-        info = {
+        user_info = {
+            'user_id': user_id,
             'tg_user_id': msg.from_user.id,
             'chat_id': msg.chat.id,
         }
-        send_info(info)  # отправка http
+        send_info(user_info)  # отправка http
 
 
 def send_test(bot, command):  # шаблон для ручной отправки напоминания
