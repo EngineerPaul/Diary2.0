@@ -37,7 +37,6 @@ async def send_create_notice(data: NewNoticeSchema, session):  # создани�
 
     url = PROJECT_HOSTS['backend'] + 'api/tg-server/new-notice/'
 
-    print('send_create_notice: Отправка сообщения в backend')
     async with session.post(url, json=data.dict()) as resp:
         res = await resp.text()
         return res
@@ -48,7 +47,6 @@ async def send_notice_shift(data: NoticeShiftSchema, session):  # сдвиг not
 
     url = PROJECT_HOSTS['backend'] + 'api/tg-server/notice-shift/'
 
-    print('send_notice_shift: Отправка сообщения в backend')
     async with session.post(url, json=data.dict()) as resp:
         res = await resp.text()
         return res
@@ -59,7 +57,6 @@ async def send_userinfo(data: UserInfoSchema, session):  # сохранение 
 
     url = PROJECT_HOSTS['auth_server'] + 'api/tg-auth/save'
 
-    # print('send_userinfo: Отправка данных на auth сервер')
     async with session.post(url, json=data.dict()) as resp:
         res = await resp.text()
         return res
@@ -70,7 +67,7 @@ async def send_mailing_list_report(data: dict, session):  # отправка о�
 
     url = PROJECT_HOSTS['backend'] + 'api/tg-server/mailing-list-report/'
 
-    print('send_mailing_list_report: Отправка сообщения в backend')
     async with session.post(url, json=data) as resp:
-        res = await resp.text()
-        return res
+        if resp.status != 200:
+            print("Error: send_mailing_list_report doesn't work")
+        return

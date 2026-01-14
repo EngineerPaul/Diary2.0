@@ -76,10 +76,13 @@ def test_post():
 class UpcomingNoticeList:
     """ Send next notice list to telegram server """
 
-    def main(self) -> bool:
+    def main(self, new_date: Optional[datetime] = None) -> bool:
         next_notices, min_datetime = self.get_next_notice_list()
         if not next_notices:
             return False
+
+        if new_date and new_date > min_datetime:  # создание напоминания
+            return False  # проверяем, что новая дата не ближайшая
 
         chat_ids = self.get_chat_ids(next_notices)
         if not chat_ids:

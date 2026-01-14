@@ -23,7 +23,7 @@ from .views.content import (
 )
 from .views.common import FirstSetUp
 from .views.TGServer import (
-    CreateNoticeAPI, NoticeShiftAPI
+    CreateNoticeAPI, NoticeShiftAPI, UpcomingNoticeListAPI
 )
 
 
@@ -237,6 +237,11 @@ tg_server_urls = [
         route='notice-shift/',
         view=NoticeShiftAPI.as_view(),
         name='shift_notice'
+    ),
+    path(  # post report about sent notice
+        route='mailing-list-report/',
+        view=UpcomingNoticeListAPI.as_view(),
+        name='mailing_list_report'
     ),
 ]
 urlpatterns += [path("tg-server/", include(tg_server_urls))]

@@ -5,9 +5,10 @@ from django.db import transaction
 from datetime import datetime, timedelta
 
 from ..serializers.TGServerSerializer import (
-    NewNoticeSerializer, NoticeShiftSerializer
+    NewNoticeSerializer, NoticeShiftSerializer, UpcomingNoticeListSerializer
 )
 from ..models import Notice, NoticeFolder
+from main.queries import UpcomingNoticeList
 
 
 class CreateNoticeAPI(APIView):
@@ -35,6 +36,9 @@ class CreateNoticeAPI(APIView):
                     folder.save()
             except transaction.TransactionManagementError:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            UpcomingNoticeList().main(new_date=notice.next_date)  # отправка нового списка
+
             return Response(
                 {'success': True, 'message': 'Notice created successfully'},
                 status=status.HTTP_201_CREATED
@@ -63,10 +67,21 @@ class NoticeShiftAPI(APIView):
             notice.time = new_datetime.time()
             notice.save()
 
-            # TODO: Добавить проверку на ближайшее напоминание
-            # и генерацию нового списка напоминаний
+            UpcomingNoticeList().main(new_date=notice.next_date)  # отправка нового списка
+
             return Response(
                 {'success': True, 'message': 'Notice shifted successfully'},
                 status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UpcomingNoticeListAPI(APIView):
+    """ Получение отчета об отправленных уведомлениях """
+
+    def post(self, request):
+        serializer = UpcomingNoticeListSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        UpcomingNoticeList().main()  # отправка нового списка
+        return Response(status=status.HTTP_200_OK)

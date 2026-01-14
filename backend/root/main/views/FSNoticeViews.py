@@ -15,6 +15,7 @@ from main.serializers.FSNoticeSerializers import (
     PeriodicDateSerializer,
 )
 from main.serializers.utils import PeriodicDate
+from main.queries import UpcomingNoticeList
 
 
 class BlankFileSystemAPI2(APIView):
@@ -191,7 +192,7 @@ class BlankFileSystemAPI2(APIView):
 class NoticesFSAPI(APIView):
     """ The main filesystem view """
 
-    permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]
 
     def get(self, request):
         """ Getting filesystem content """
@@ -211,7 +212,7 @@ class NoticesFSAPI(APIView):
 class NoticesAPI(APIView):
     """ The main Notice view """
 
-    permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]
 
     def get(self, request, notice_id):
         """Getting the notice by id"""
@@ -271,6 +272,8 @@ class NoticesAPI(APIView):
         except Exception as e:
             msg = f'Error: Ошибка создания напоминания - {str(e)}'
             return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
+
+        UpcomingNoticeList().main(new_date=next_date)  # отправка нового списка
 
         resp = {
             'success': True,
@@ -369,7 +372,7 @@ class NoticesAPI(APIView):
 class NoticeFoldersAPI(APIView):
     """ The main NoticeFolder view """
 
-    permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]
 
     def get(self, request, folder_id):
         """Getting the folder"""
@@ -477,7 +480,7 @@ class NoticeFoldersAPI(APIView):
 class DisplayPeriodicDate(APIView):
     """ Display date in the form """
 
-    permission_classes = [CustomPermission]  # откл для работы без токена
+    permission_classes = [CustomPermission]
 
     def post(self, request):
         serializer = PeriodicDateSerializer(data=request.data)

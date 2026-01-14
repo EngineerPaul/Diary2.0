@@ -54,13 +54,6 @@ def send_all_reminders():
     print('Сообщения отправлены')
     RemindData.set_reminders_list(None)
     RemindData.set_date(None)
-    print('Список напоминаний очищен')
 
-    # сохранение новых данных в редис и отправка отчета серверу
-    new_data = send_mailing_list_report(rem_list)
-    if new_data is None:
-        print('Error: список сообщений пуст')
-        return
-    RemindData.set_reminders_list(new_data['notice_list'])
-    RemindData.set_date(new_data['next_date'])
-    print('Ожидается получение нового списка напоминаний от сервера...')
+    # отправка отчета серверу
+    send_mailing_list_report(rem_list)
