@@ -60,3 +60,17 @@ class ObtainSerializer(CredentialSerializer, TokenObtainPairSerializer):
         token['username'] = user.username
         token['role'] = 'user-role'
         return token
+
+
+class TelegramActivationSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField(write_only=True)
+    chat_id = serializers.IntegerField(write_only=True)
+    tg_user_id = serializers.IntegerField(write_only=True)
+
+
+class GetChatIdsSerializer(serializers.Serializer):
+    user_ids = serializers.ListField(child=serializers.IntegerField())
+
+
+class GetUserIdSerializer(serializers.Serializer):
+    chat_id = serializers.IntegerField(write_only=True)
