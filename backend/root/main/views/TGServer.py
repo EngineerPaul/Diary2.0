@@ -8,7 +8,7 @@ from ..serializers.TGServerSerializer import (
     NewNoticeSerializer, NoticeShiftSerializer, UpcomingNoticeListSerializer
 )
 from ..models import Notice, NoticeFolder
-from main.queries import UpcomingNoticeList
+from main.queries import UpcomingNoticeList, get_user_id
 
 
 class CreateNoticeAPI(APIView):
@@ -17,8 +17,12 @@ class CreateNoticeAPI(APIView):
     def post(self, request):
         serializer = NewNoticeSerializer(data=request.data)
         if serializer.is_valid():
-            # TODO: получить по nickname user_id
-            user_id = 1
+
+            chat_id = serializer.validated_data['chat_id']
+            user_id = get_user_id(chat_id)  # получаем от authserver
+            if not user_id:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
             folder = NoticeFolder.objects.get(user_id=user_id, title='root')
             try:
                 with transaction.atomic():

@@ -451,7 +451,8 @@ class GetChatIds(APIView):
         serializer.is_valid(raise_exception=True)
 
         user_ids = serializer.validated_data['user_ids']
-        users = User.objects.filter(id__in=user_ids).annotate(
+        users = User.objects.select_related('userdetails').filter(
+            id__in=user_ids).annotate(
             user_id=F('id'),
             chat_id=F('userdetails__chat_id')
         ).values('user_id', 'chat_id')
@@ -462,7 +463,7 @@ class GetChatIds(APIView):
 
 
 class GetUserId(APIView):
-    """ Получение user_id (pk) по chat_id """
+    """ Возвращает user_id (pk) по chat_id """
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -470,7 +471,8 @@ class GetUserId(APIView):
         serializer.is_valid(raise_exception=True)
 
         chat_id = serializer.validated_data['chat_id']
-        user = User.objects.filter(userdetails__chat_id=chat_id).first()
+        user = User.objects.select_related('userdetails').filter(
+            userdetails__chat_id=chat_id).first()
         if not user:
             return Response(
                 {'success': False, 'error': 'User not found'},
@@ -488,7 +490,4 @@ class TestRequest(APIView):
         print(request.COOKIES.get('refresh_token'))
         print(request.COOKIES.get('access_token'))
         print(request.data)
-        request_data = {
-
-        }
         return Response()

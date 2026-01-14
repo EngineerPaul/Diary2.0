@@ -185,3 +185,25 @@ class UpcomingNoticeList:
         if respone.status_code != 200:
             return False
         return respone
+
+
+def get_user_id(chat_id: int) -> int:
+    """ Get user_id by tg chat_id from auth server """
+
+    try:
+        url = PROJECT_HOSTS['auth_server'] + "api/users/user-id/"
+        headers = {
+            'Content-Type': 'application/json'
+        }
+
+        data = {'chat_id': chat_id}
+        response = requests.post(
+            url, json=data, headers=headers, timeout=15
+        )
+        if response.status_code != 200:
+            return False
+
+        return response.json()
+
+    except (requests.exceptions.RequestException, Exception):
+        return False
