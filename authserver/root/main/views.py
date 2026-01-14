@@ -59,14 +59,14 @@ class Registration(APIView):
             refresh.payload.update({  # Полезная информация в самом токене
                 'id': user.id,
                 'username': user.username,
-                'role': 'user-role'  # from UserDetail
+                'role': 'user-role'  # from UserDetails
             })
             data = {
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),  # Отправка на клиент
                 'id': user.id,
                 'username': user.username,
-                'role': 'user-role'  # from UserDetail
+                'role': 'user-role'  # from UserDetails
             }
             status_code = status.HTTP_201_CREATED
         except Exception as e:
@@ -108,7 +108,7 @@ class ObtainTokens(TokenObtainPairView):
             raise InvalidToken(e.args[0]) from e
 
         try:
-            user = User.objects.select_related('userdetail').get(
+            user = User.objects.select_related('userdetails').get(
                 username=request.data.get('username')
             )
         except User.DoesNotExist:
@@ -116,12 +116,18 @@ class ObtainTokens(TokenObtainPairView):
                 {'success': False, 'error': 'User not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+        try:
+            tg_nickname = user.userdetails.tg_nickname
+        except UserDetails.DoesNotExist:
+            tg_nickname = None
+
         data = {
             'success': True,
             'username': user.username,
             'role': 'user-role',
             'id': user.pk,
-            'tg_nickname': user.userdetail.tg_nickname if user.userdetail else None,
+            'tg_nickname': tg_nickname,
         }
         response = Response(data=data, status=status.HTTP_200_OK)
         # response = Response(serializer.validated_data, status=status.HTTP_200_OK)
@@ -375,10 +381,10 @@ class TGAuthDate(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        user = User.objects.select_related('userdetail').get(id=user_id)
+        user = User.objects.select_related('userdetails').get(id=user_id)
         try:
-            user.userdetail.tg_activation_date = timezone.now()
-            user.userdetail.save()
+            user.userdetails.tg_activation_date = timezone.now()
+            user.userdetails.save()
         except UserDetails.DoesNotExist:
             UserDetails.objects.create(
                 user_id=user,
@@ -404,17 +410,17 @@ class TGAuthDetails(APIView):
         chat_id = serializer.validated_data['chat_id']
         tg_user_id = serializer.validated_data['tg_user_id']
 
-        user = User.objects.select_related('userdetail').get(id=user_id)
+        user = User.objects.select_related('userdetails').get(id=user_id)
 
         try:
-            if user.userdetail.tg_activation_date is None:
+            if user.userdetails.tg_activation_date is None:
                 return Response(
                     {'success': False, 'is_valid': False,
                      'error': 'Activation date is None'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            if timezone.now() - user.userdetail.tg_activation_date > timedelta(
+            if timezone.now() - user.userdetails.tg_activation_date > timedelta(
                 seconds=settings.TGAuthTimeout
             ):
                 return Response(
@@ -423,10 +429,10 @@ class TGAuthDetails(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            user.userdetail.chat_id = chat_id
-            user.userdetail.tg_user_id = tg_user_id
-            user.userdetail.tg_activation_date = None
-            user.userdetail.save()
+            user.userdetails.chat_id = chat_id
+            user.userdetails.tg_user_id = tg_user_id
+            user.userdetails.tg_activation_date = None
+            user.userdetails.save()
 
         except UserDetails.DoesNotExist:
             return Response(
@@ -449,7 +455,7 @@ class GetChatIds(APIView):
         user_ids = serializer.validated_data['user_ids']
         users = User.objects.filter(id__in=user_ids).annotate(
             user_id=F('id'),
-            chat_id=F('userdetail__chat_id')
+            chat_id=F('userdetails__chat_id')
         ).values('user_id', 'chat_id')
         return Response(
             {'success': True, 'data': users},
@@ -466,7 +472,7 @@ class GetUserId(APIView):
         serializer.is_valid(raise_exception=True)
 
         chat_id = serializer.validated_data['chat_id']
-        user = User.objects.filter(userdetail__chat_id=chat_id).first()
+        user = User.objects.filter(userdetails__chat_id=chat_id).first()
         if not user:
             return Response(
                 {'success': False, 'error': 'User not found'},
