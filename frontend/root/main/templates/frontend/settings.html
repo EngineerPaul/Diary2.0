@@ -1,15 +1,33 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<h1>Настройки</h1>
+<div class="container mt-4">
+    <h1>Настройки</h1>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Профиль пользователя</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="username" class="form-label">Логин:</label>
+                <div id="username" class="form-control-plaintext fw-bold">-</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="tgNickname" class="form-label">TG никнейм:</label>
+                <div id="tgNickname" class="form-control-plaintext fw-bold">-</div>
+            </div>
+            
+            <div id="enableBotSection" class="mt-4" style="display: none;">
+                <button id="enableBotBtn" class="btn btn-primary">
+                    <i class="fab fa-telegram me-2"></i>Включить бота
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-<h3>navbar</h3>
-<ul>
-    <li>Профиль</li>
-    <li>Кастомизация сайта</li>
-    <li>Архив</li>
-    <li>Друзья</li>
-    <li>О сайте</li>
-</ul>
-
+<script type="module" src="{% static 'js/settings.js' %}"></script>
 {% endblock content %}

@@ -39,7 +39,7 @@ const logOut = async function() { // выключение индикаторов
     // mark.style['background-color'] = 'darkkhaki'
     // mark.innerHTML = 'Не авторизован'
     localStorage.setItem('IsLoggedIn', false)
-    localStorage.removeItem('username')
+    localStorage.removeItem('userInfo')
 
     const loginBTN = document.getElementById('loginBtn')
     const logoutBTN = document.getElementById('logoutBTN')

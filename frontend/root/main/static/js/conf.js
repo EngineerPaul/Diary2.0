@@ -46,6 +46,14 @@ export const Urls = {  // backend urls
     // Notice API
     noticeImages: (notice_id) => `api/notices/${notice_id}/images/`,  // get/post/delete images by notice
     noticeImage: (notice_id, img_id) => `api/notices/${notice_id}/images/${img_id}/`,  // get/delete single image by id
+
+    // TG Auth API
+    tgAuthDate: 'api/tg-auth/date',
+}
+
+export const TelegramBot = {
+    name: 'first2362bot',
+    baseUrl: 'https://t.me/',
 }
 
 export const AJAX = {  // general implementation of AJAX requests
@@ -71,7 +79,7 @@ export const AJAX = {  // general implementation of AJAX requests
                 console.log("Error 401: credentials not valid")
                 // Logout и переадресация на страницу авторизации
                 localStorage.setItem('IsLoggedIn', false)
-                localStorage.removeItem('username')
+                localStorage.removeItem('userInfo')
                 
                 // Обновление UI элементов, если они существуют
                 const loginBTN = document.getElementById('loginBTN')

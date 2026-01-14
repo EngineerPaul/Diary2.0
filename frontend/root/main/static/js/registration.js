@@ -5,14 +5,11 @@ const loginBTN = document.getElementById('loginBTN')
 const logoutBTN = document.getElementById('logoutBTN')
 
 
-const logIn = function(username) { // включение индикаторов авторизации
+const logIn = function(userInfo) { // включение индикаторов авторизации
     localStorage.setItem('IsLoggedIn', true)
+    localStorage.setItem('userInfo', JSON.stringify(userInfo))
     
-    if (username) {
-        localStorage.setItem('username', username)
-    } else {
-        username = localStorage.getItem('username')
-    }
+    const username = userInfo.username
     console.log(`Username: ${username}`)
     loginBTN.style['display'] = 'none'
     logoutBTN.style['display'] = 'inline-block'
@@ -48,7 +45,16 @@ const sendRegistration = async function(event) {
         console.log(`Ошшибка запроса: ${JSON.stringify(response.error)}`)
     } else {
         console.log(`Регистрация завершена. Username=${data['username']}`)
-        logIn(data['username'])
+        
+        // Извлекаем только известные поля из ответа
+        const userInfo = {
+            username: response.username,
+            id: response.id,
+            role: response.role,
+            tg_nickname: null
+        }
+        
+        logIn(userInfo)
         window.location.href = conf.Domains['frontend'] + ''
     }
 }
