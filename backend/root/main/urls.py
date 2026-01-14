@@ -23,7 +23,7 @@ from .views.content import (
 )
 from .views.common import FirstSetUp
 from .views.TGServer import (
-    CreateNoticeAPI, NoticeShiftAPI, UserInfoAPI
+    CreateNoticeAPI, NoticeShiftAPI
 )
 
 
@@ -237,11 +237,6 @@ tg_server_urls = [
         route='notice-shift/',
         view=NoticeShiftAPI.as_view(),
         name='shift_notice'
-    ),
-    path(  # save user info ???
-        route='save-user-info/',
-        view=UserInfoAPI.as_view(),
-        name='save_user_info'
     ),
 ]
 urlpatterns += [path("tg-server/", include(tg_server_urls))]

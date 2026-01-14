@@ -5,7 +5,7 @@ from django.db import transaction
 from datetime import datetime, timedelta
 
 from ..serializers.TGServerSerializer import (
-    NewNoticeSerializer, NoticeShiftSerializer, UserInfoSerializer
+    NewNoticeSerializer, NoticeShiftSerializer
 )
 from ..models import Notice, NoticeFolder
 
@@ -68,20 +68,5 @@ class NoticeShiftAPI(APIView):
             return Response(
                 {'success': True, 'message': 'Notice shifted successfully'},
                 status=status.HTTP_200_OK
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class UserInfoAPI(APIView):
-    """ Сохранение информации о пользователе (например, при регистрации) """
-
-    def post(self, request):
-        serializer = UserInfoSerializer(data=request.data)
-        if serializer.is_valid():
-            # TODO: Добавить логику сохранения информации о пользователе
-            # вероятно, функцию нужно будет убрать и добавить в tg_server
-            return Response(
-                {'success': True, 'message': 'User info saved successfully'},
-                status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

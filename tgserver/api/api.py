@@ -98,9 +98,9 @@ async def userinfo_api(  # сохранение инфы о пользовате
 
 
 @router.post(
-    "/bot/set-notice-list/",
+    "/set-notice-list/",
     tags=['From Django server'],
-    summary="Create new reminder using the TG bot"
+    summary="Set new reminder list"
 )
 async def get_notice_list_api(data: NoticeListSchema):  # получение списка уведомлений от сервера
     # RemindData.set_reminders_list(data.notice_list)

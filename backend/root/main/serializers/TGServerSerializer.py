@@ -15,9 +15,3 @@ class NoticeShiftSerializer(serializers.Serializer):
     reminder_id = serializers.IntegerField(min_value=1)
     mode = serializers.ChoiceField(choices=['hour', 'day'])
     chat_id = serializers.IntegerField()
-
-
-class UserInfoSerializer(serializers.Serializer):
-    """ Сериализатор для сохранения информации о пользователе """
-    tg_user_id = serializers.IntegerField()
-    chat_id = serializers.IntegerField()

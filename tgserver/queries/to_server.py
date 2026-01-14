@@ -57,7 +57,7 @@ async def send_notice_shift(data: NoticeShiftSchema, session):  # сдвиг not
 async def send_userinfo(data: UserInfoSchema, session):  # сохранение инфы пользователя
     """ Saving user info into auth server using tg bot """
 
-    url = PROJECT_HOSTS['auth'] + 'api/tg-auth/details/'
+    url = PROJECT_HOSTS['auth_server'] + 'api/tg-auth/save'
 
     # print('send_userinfo: Отправка данных на auth сервер')
     async with session.post(url, json=data.dict()) as resp:
