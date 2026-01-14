@@ -6,6 +6,7 @@ class UserDetails(models.Model):
     """ Additional (telegram) user data """
     user_id = models.OneToOneField(User, on_delete=models.CASCADE)
     tg_user_id = models.IntegerField(null=True)
+    tg_nickname = models.CharField(max_length=32, null=True)
     chat_id = models.IntegerField(null=True)
     tg_activation_date = models.DateTimeField(null=True)
 

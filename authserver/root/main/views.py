@@ -107,12 +107,21 @@ class ObtainTokens(TokenObtainPairView):
         except TokenError as e:
             raise InvalidToken(e.args[0]) from e
 
-        user = User.objects.get(username=request.data.get('username'))
+        try:
+            user = User.objects.select_related('userdetail').get(
+                username=request.data.get('username')
+            )
+        except User.DoesNotExist:
+            return Response(
+                {'success': False, 'error': 'User not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
         data = {
             'success': True,
             'username': user.username,
             'role': 'user-role',
             'id': user.pk,
+            'tg_nickname': user.userdetail.tg_nickname if user.userdetail else None,
         }
         response = Response(data=data, status=status.HTTP_200_OK)
         # response = Response(serializer.validated_data, status=status.HTTP_200_OK)
@@ -121,7 +130,7 @@ class ObtainTokens(TokenObtainPairView):
         access = serializer.validated_data['access']
         response.set_cookie(
             key='access_token',      # имя cookie
-            value=str(access)+'1',       # значение (токен)
+            value=str(access),       # значение (токен)
             httponly=True,           # недоступно из JS
             secure=True,             # только по HTTPS (рекомендуется)
             samesite='Lax',          # защита от CSRF
