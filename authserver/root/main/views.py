@@ -407,8 +407,6 @@ class TGAuthDetails(APIView):
         serializer.is_valid(raise_exception=True)
 
         user_id = serializer.validated_data['user_id']
-        chat_id = serializer.validated_data['chat_id']
-        tg_user_id = serializer.validated_data['tg_user_id']
 
         user = User.objects.select_related('userdetails').get(id=user_id)
 
@@ -429,10 +427,10 @@ class TGAuthDetails(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            user.userdetails.chat_id = chat_id
-            user.userdetails.tg_user_id = tg_user_id
-            user.userdetails.tg_activation_date = None
-            user.userdetails.save()
+            serializer.save(
+                instance=user.userdetails,
+                tg_activation_date=None
+            )
 
         except UserDetails.DoesNotExist:
             return Response(

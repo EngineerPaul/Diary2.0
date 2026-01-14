@@ -3,6 +3,8 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from .models import UserDetails
+
 
 class CredentialSerializer(serializers.Serializer):
     username = serializers.CharField(
@@ -62,10 +64,17 @@ class ObtainSerializer(CredentialSerializer, TokenObtainPairSerializer):
         return token
 
 
-class TelegramActivationSerializer(serializers.Serializer):
+class TelegramActivationSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(write_only=True)
-    chat_id = serializers.IntegerField(write_only=True)
-    tg_user_id = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = UserDetails
+        fields = ['chat_id', 'tg_user_id', 'tg_username']
+        extra_kwargs = {
+            'chat_id': {'write_only': True},
+            'tg_user_id': {'write_only': True},
+            'tg_username': {'write_only': True},
+        }
 
 
 class GetChatIdsSerializer(serializers.Serializer):
