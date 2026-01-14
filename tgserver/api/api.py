@@ -81,8 +81,8 @@ async def userinfo_api(  # сохранение инфы о пользовате
     data: UserInfoSchema,
     session: aiohttp.ClientSession = Depends(get_session)
 ):
-    server_response = await send_userinfo(data, session)  # отпправить HTTP запрос на сервер
-    if server_response:
+    auth_response = await send_userinfo(data, session)  # отпправить HTTP запрос на сервер
+    if auth_response:
         response = JSONResponse(
             content={'success': True},
             status_code=200,

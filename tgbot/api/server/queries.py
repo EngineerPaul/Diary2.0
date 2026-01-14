@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 from .client import api_client, api_tg_client, api_auth_client
 
@@ -103,9 +104,11 @@ def send_info(info: dict) -> bool:  # отправка инфы о чате на
     url = 'tgapi/bot/create-user/'
     body = info
     response = api_tg_client.post(url, body)
-    if response:
-        return True
-    else:
+
+    try:
+        response_data = json.loads(response)
+        return response_data.get('success', False)
+    except (json.JSONDecodeError, AttributeError, TypeError):
         return False
 
 

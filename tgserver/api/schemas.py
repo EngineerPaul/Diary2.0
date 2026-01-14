@@ -46,9 +46,11 @@ class NoticeShiftSchema(BaseModel):
 
 
 class UserInfoSchema(BaseModel):
-    """ Схема для сохранения игформации о пользователе """
+    """ Схема для сохранения информации о пользователе """
 
+    user_id: int
     tg_user_id: int
+    tg_username: str
     chat_id: int
 
 

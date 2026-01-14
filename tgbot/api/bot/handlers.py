@@ -50,9 +50,25 @@ def start(bot, command):  # стартовая команда при запус�
         user_info = {
             'user_id': user_id,
             'tg_user_id': msg.from_user.id,
+            'tg_username': msg.from_user.username,
             'chat_id': msg.chat.id,
         }
-        send_info(user_info)  # отправка http
+
+        # Отправляем информацию на сервер и проверяем результат
+        registration_success = send_info(user_info)
+
+        if registration_success:
+            bot.send_message(
+                chat_id=msg.chat.id,
+                text="Регистрация завершена",
+                parse_mode='html'
+            )
+        else:
+            bot.send_message(
+                chat_id=msg.chat.id,
+                text="Ошибка при регистрации. Попробуйте снова.",
+                parse_mode='html'
+            )
 
 
 def send_test(bot, command):  # шаблон для ручной отправки напоминания
