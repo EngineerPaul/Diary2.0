@@ -69,12 +69,19 @@ class TelegramActivationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserDetails
-        fields = ['chat_id', 'tg_user_id', 'tg_username']
+        fields = ['user_id', 'chat_id', 'tg_user_id', 'tg_username']
         extra_kwargs = {
             'chat_id': {'write_only': True},
             'tg_user_id': {'write_only': True},
             'tg_username': {'write_only': True},
         }
+
+    def save(self, **kwargs):
+        # Получаем user из kwargs и подменяем user_id
+        user = kwargs.pop('user', None)
+        if user is not None:
+            self.validated_data['user_id'] = user
+        return super().save(**kwargs)
 
 
 class GetChatIdsSerializer(serializers.Serializer):

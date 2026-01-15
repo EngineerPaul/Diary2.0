@@ -25,6 +25,7 @@ from .serializers import (
     GetUserIdSerializer,
 )
 from .queries import create_root_folders
+from root.settings import TGAuthTimeout
 
 
 class Registration(APIView):
@@ -398,6 +399,71 @@ class TGAuthDate(APIView):
         )
 
 
+class TGAuthCheck(APIView):
+    """ Frontend check tg nickname """
+
+    def get(self, request):
+
+        access_token = request.COOKIES.get('access_token')
+        refresh_token = request.COOKIES.get('refresh_token')
+
+        if access_token:
+            try:
+                decoded_token = AccessToken(access_token)
+                payload = decoded_token.payload
+                user_id = int(payload['user_id'])
+            except TokenError:
+                return Response(
+                    {'success': False, 'is_valid': False, 'error': 'Invalid access token'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        elif refresh_token:
+            try:
+                refresh = RefreshToken(refresh_token)
+                new_access = str(refresh.access_token)
+                new_refresh = str(refresh.refresh_token)
+                decoded_token = AccessToken(new_access)
+                payload = decoded_token.payload
+
+                response = Response(status=status.HTTP_200_OK)
+                response.set_cookie(
+                    'access_token', new_access,
+                    max_age=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+                    httponly=True,
+                    samesite='Lax',
+                    path='/'
+                )
+                response.set_cookie(
+                    'refresh_token', new_refresh,
+                    max_age=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
+                    httponly=True,
+                    samesite='Lax',
+                    path='/'
+                )
+                user_id = int(payload['user_id'])
+            except TokenError:
+                return Response(
+                    {'success': False, 'is_valid': False,
+                     'error': 'Invalid refresh token'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+        else:  # Нет токенов
+            return Response(
+                {'success': False, 'is_valid': False,
+                 'error': 'No valid tokens provided'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        user = User.objects.select_related('userdetails').get(pk=user_id)
+
+        data = {
+            'user_id': user.pk,
+            'tg_nickname': user.userdetails.tg_username
+        }
+        return Response(data=data, status=status.HTTP_200_OK)
+
+
 class TGAuthDetails(APIView):
     """ Сохранение данных Telegram бота """
     permission_classes = [AllowAny]
@@ -410,6 +476,14 @@ class TGAuthDetails(APIView):
 
         user = User.objects.select_related('userdetails').get(id=user_id)
 
+        # Создаем сериализатор с instance для обновления существующего объекта
+        serializer = TelegramActivationSerializer(
+            instance=user.userdetails,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+
         try:
             if user.userdetails.tg_activation_date is None:
                 return Response(
@@ -419,7 +493,7 @@ class TGAuthDetails(APIView):
                 )
 
             if timezone.now() - user.userdetails.tg_activation_date > timedelta(
-                seconds=settings.TGAuthTimeout
+                seconds=TGAuthTimeout
             ):
                 return Response(
                     {'success': False, 'is_valid': False,
@@ -428,7 +502,7 @@ class TGAuthDetails(APIView):
                 )
 
             serializer.save(
-                instance=user.userdetails,
+                user=user,
                 tg_activation_date=None
             )
 

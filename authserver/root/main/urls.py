@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     Registration, VerifyToken, ObtainTokens, Logout, RefreshTokens,
     AuthCheck,
-    TGAuthDate, TGAuthDetails, GetChatIds, GetUserId,
+    TGAuthDate, TGAuthCheck, TGAuthDetails, GetChatIds, GetUserId,
     TestRequest,
 )
 
@@ -20,6 +20,7 @@ urlpatterns = [
     # ======== Telegram API ========
     path('api/tg-auth/date', TGAuthDate.as_view()),  # Начало активации Tg бота
     path('api/tg-auth/save', TGAuthDetails.as_view()),  # Завершение активации Tg бота
+    path('api/tg-auth/check', TGAuthCheck.as_view()),  # Получение nickname в front
     path('api/users/chat-ids', GetChatIds.as_view()),  # Получение chat_id по списку user_id
     path('api/users/user-id', GetUserId.as_view()),  # Получение user_id по chat_id
 
