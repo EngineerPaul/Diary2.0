@@ -39,7 +39,7 @@ async def send_create_notice(data: NewNoticeSchema, session):  # создани�
 
     async with session.post(url, json=data.dict()) as resp:
         res = await resp.text()
-        return res
+        return resp.status, res
 
 
 async def send_notice_shift(data: NoticeShiftSchema, session):  # сдвиг notice
@@ -49,7 +49,7 @@ async def send_notice_shift(data: NoticeShiftSchema, session):  # сдвиг not
 
     async with session.post(url, json=data.dict()) as resp:
         res = await resp.text()
-        return res
+        return resp.status, res
 
 
 async def send_userinfo(data: UserInfoSchema, session):  # сохранение инфы пользователя
@@ -59,7 +59,7 @@ async def send_userinfo(data: UserInfoSchema, session):  # сохранение 
 
     async with session.post(url, json=data.dict()) as resp:
         res = await resp.text()
-        return res
+        return resp.status, res
 
 
 async def send_mailing_list_report(data: dict, session):  # отправка отчета о рассылке напоминаний

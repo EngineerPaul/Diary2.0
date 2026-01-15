@@ -67,4 +67,4 @@ class NoticeListSchema(BaseModel):
     """ Схема для сохранения списка ближайших напоминаний """
 
     notice_list: list[_OneNoticeSchema]
-    next_date: datetime
+    next_date: str = datetime

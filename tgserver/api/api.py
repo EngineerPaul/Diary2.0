@@ -30,8 +30,10 @@ async def create_notice_api(  # создание нового уведомлен
     data: NewNoticeSchema,
     session: aiohttp.ClientSession = Depends(get_session)
 ):
-    server_response = await send_create_notice(data, session)  # отпправить HTTP запрос на сервер
-    if server_response:
+    status, server_response = await send_create_notice(
+        data, session
+    )  # отпправить HTTP запрос на сервер
+    if status == 201:
         response = JSONResponse(
             content={'success': True},
             status_code=201,
@@ -55,9 +57,10 @@ async def notice_shift_api(  # Смещение уведомления на ча
     data: NoticeShiftSchema,
     session: aiohttp.ClientSession = Depends(get_session)
 ):
-    server_response = await send_notice_shift(data, session)  # отпправить HTTP запрос на сервер
-    server_response = None
-    if server_response:
+    status, server_response = await send_notice_shift(
+        data, session
+    )  # отпправить HTTP запрос на сервер
+    if status == 200:
         response = JSONResponse(
             content={'success': True},
             status_code=200,
@@ -77,12 +80,14 @@ async def notice_shift_api(  # Смещение уведомления на ча
     tags=['From TG'],
     summary="Saving user info during registration"
 )
-async def userinfo_api(  # сохранение инфы о пользователе (хз, где)
+async def userinfo_api(
     data: UserInfoSchema,
     session: aiohttp.ClientSession = Depends(get_session)
 ):
-    auth_response = await send_userinfo(data, session)  # отпправить HTTP запрос на сервер
-    if auth_response:
+    status, auth_response = await send_userinfo(
+        data, session
+    )  # отпправить HTTP запрос на сервер
+    if status == 200:
         response = JSONResponse(
             content={'success': True},
             status_code=200,
