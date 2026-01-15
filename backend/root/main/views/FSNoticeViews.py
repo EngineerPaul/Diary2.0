@@ -1,3 +1,4 @@
+from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -273,7 +274,8 @@ class NoticesAPI(APIView):
             msg = f'Error: Ошибка создания напоминания - {str(e)}'
             return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
 
-        UpcomingNoticeList().main(new_date=next_date)  # отправка нового списка
+        combined_datetime = datetime.combine(notice.next_date, notice.time)
+        UpcomingNoticeList().main(new_date=combined_datetime)  # отправка нового списка
 
         resp = {
             'success': True,

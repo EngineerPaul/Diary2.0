@@ -72,7 +72,8 @@ class NoticeShiftAPI(APIView):
             notice.time = new_datetime.time()
             notice.save()
 
-            UpcomingNoticeList().main(new_date=notice.next_date)  # отправка нового списка
+            combined_datetime = datetime.combine(notice.next_date, notice.time)
+            UpcomingNoticeList().main(new_date=combined_datetime)  # отправка нового списка
 
             return Response(
                 {'success': True, 'message': 'Notice shifted successfully'},
