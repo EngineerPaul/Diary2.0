@@ -546,7 +546,7 @@ class GetUserId(APIView):
 
         chat_id = serializer.validated_data['chat_id']
         user = User.objects.select_related('userdetails').filter(
-            userdetails__chat_id=chat_id).first()
+            userdetails__chat_id=chat_id).last()
         if not user:
             return Response(
                 {'success': False, 'error': 'User not found'},
