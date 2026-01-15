@@ -1537,7 +1537,6 @@ let viewContent = {
         if (session.section == 'notes') {
             this.currentFolderId = content.notesRoot
         } else {
-            console.log('else')
             this.currentFolderId = content.noticesRoot
         }
         this.removeObjects()
