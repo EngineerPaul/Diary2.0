@@ -16,15 +16,6 @@ class AuthMiddleware(MiddlewareMixin):
             'refresh_token': request.COOKIES.get('refresh_token'),
         }
 
-        if True:
-            request.user_info = {
-                'id': 1,
-                'username': 'Тестовое имя',
-                'role': 'Anonymous',
-                'is_auth': True,  # для работы CustomPermission
-            }
-            return None
-
         if (tokens['access_token'] is None) and (tokens['refresh_token'] is None):
             request.user_info = {
                 'id': None,

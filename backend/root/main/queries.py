@@ -3,8 +3,10 @@ import requests
 from django.db.models.functions import Cast, Concat
 from django.db.models import DateTimeField, Value
 from django.utils import timezone
-from datetime import datetime
-from django.db.models import Min
+from datetime import datetime, timedelta
+from django.db.models import F, ExpressionWrapper, DateTimeField
+from django.utils import timezone
+from django.db import models
 
 from root.settings import PROJECT_HOSTS
 from .models import Notice
@@ -96,21 +98,32 @@ class UpcomingNoticeList:
     def get_next_notice_list(self) -> Tuple[List[Notice], Optional[datetime]]:
         """ Get next notice list from database """
 
-        now_date = datetime.now()
+        utc_time = timezone.now()  # Всегда UTC +0:00
+        # local_time = timezone.localtime(utc_time)  # Конвертирует в TIME_ZONE из настроек (+4:00)
+        now = utc_time + timedelta(seconds=60*60*4)  # +4:00 (часовой пояс)
 
-        # Получение списка напоминаний c datetime датой
-        notices = Notice.objects.annotate(
-            full_datetime=Cast(
-                Concat('next_date', Value(' '), 'time'),
+        closest_notice = Notice.objects.annotate(
+            combined_datetime=ExpressionWrapper(
+                Cast(
+                    Concat(
+                        Cast(F('next_date'), models.CharField()),
+                        Value(' '),
+                        Cast(F('time'), models.CharField()),
+                    ),
+                    models.DateTimeField()
+                ),
                 output_field=DateTimeField()
             )
-        ).filter(full_datetime__gte=timezone.make_aware(now_date))
-        # Получение минимального datetime (после now)
-        notices = notices.aggregate(
-            min_datetime=Min('full_datetime')
-        )
-        # Результат — словарь: {'min_datetime': datetime.datetime(...)}
-        min_datetime = notices['min_datetime']
+        ).filter(
+            combined_datetime__gt=now
+        ).order_by(
+            'combined_datetime'
+        ).first()
+
+        min_datetime = closest_notice.combined_datetime
+        # убираю инфу о часовом поясе для среванения в main!
+        min_datetime = min_datetime.replace(tzinfo=None)
+        print(min_datetime)
 
         next_notices = Notice.objects.filter(
             next_date=min_datetime.date(),
@@ -133,13 +146,14 @@ class UpcomingNoticeList:
             url, json=data, headers=headers, timeout=15
         )
 
-        chat_ids = response.json() if response.status_code == 200 else None
+        chat_ids = response.json()['data'] if response.status_code == 200 else None
         return chat_ids
 
     def mapping_notices_chat_ids(
         self, next_notices: List[Notice], chat_ids: List[Dict[str, int]]
     ) -> List[Dict[str, Any]]:
         """ Mapping notice info and chat ids """
+        print(chat_ids)
 
         # Создаем словарь user_id -> chat_id для быстрого доступа
         user_chat_map = {
@@ -177,7 +191,7 @@ class UpcomingNoticeList:
             #   'text': notice.title,
             #   'reminder_id': notice.id,
             #   'chat_id': chat_id}
-            'next_date': min_datetime
+            'next_date': min_datetime.isoformat()
         }
         respone = requests.post(
             url, json=data, headers=headers, timeout=15
@@ -191,7 +205,7 @@ def get_user_id(chat_id: int) -> int:
     """ Get user_id by tg chat_id from auth server """
 
     try:
-        url = PROJECT_HOSTS['auth_server'] + "api/users/user-id/"
+        url = PROJECT_HOSTS['auth_server'] + "api/users/user-id"
         headers = {
             'Content-Type': 'application/json'
         }
@@ -202,8 +216,12 @@ def get_user_id(chat_id: int) -> int:
         )
         if response.status_code != 200:
             return False
+        
+        user_id = response.json().get('user_id')
+        if not user_id:
+            return False
 
-        return response.json()
+        return user_id
 
     except (requests.exceptions.RequestException, Exception):
         return False

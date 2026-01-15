@@ -41,7 +41,8 @@ class CreateNoticeAPI(APIView):
             except transaction.TransactionManagementError:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            UpcomingNoticeList().main(new_date=notice.next_date)  # отправка нового списка
+            combined_datetime = datetime.combine(notice.next_date, notice.time)
+            UpcomingNoticeList().main(new_date=combined_datetime)  # отправка нового списка
 
             return Response(
                 {'success': True, 'message': 'Notice created successfully'},
