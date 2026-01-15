@@ -1331,7 +1331,6 @@ let content = {
 
     run: async function() {
         await this.getContent()
-        console.log(this.noteFolders)
     }
 }
 await content.run()
@@ -1535,7 +1534,12 @@ let viewContent = {
         window.location.href = `/${section}/${record_id}/`
     },
     run: function() {
-        this.currentFolderId = content.notesRoot
+        if (session.section == 'notes') {
+            this.currentFolderId = content.notesRoot
+        } else {
+            console.log('else')
+            this.currentFolderId = content.noticesRoot
+        }
         this.removeObjects()
         this.displayItems() // отображение должно подождать завершения ajax запроса контента!!!!!!!
         let ddArea = document.getElementById('objectsList')
