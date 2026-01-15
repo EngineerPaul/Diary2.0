@@ -48,7 +48,8 @@ export const Urls = {  // backend urls
     noticeImage: (notice_id, img_id) => `api/notices/${notice_id}/images/${img_id}/`,  // get/delete single image by id
 
     // TG Auth API
-    tgAuthDate: 'api/tg-auth/date',
+    tgAuthDate: 'api/tg-auth/date',  // set tg auth date
+    tgAuthCheck: 'api/tg-auth/check', // get tg nickname
 }
 
 export const TelegramBot = {

@@ -1,10 +1,55 @@
 import { Domains, Urls, AJAX, TelegramBot } from "./conf.js"
 
+async function checkTgNickname() {
+    // Check Telegram nickname in auth server (after tg activation)
+    
+    // Проверяем, есть ли nickname в localStorage
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    if (userInfo.tg_nickname && userInfo.tg_nickname.trim() !== '') {
+        console.log('TG nickname already exists in localStorage:', userInfo.tg_nickname)
+        return
+    }
+    
+    try {
+        const url = Domains['auth'] + Urls['tgAuthCheck']
+        const options = {
+            method: 'GET',
+            credentials: 'include'
+        }
+        
+        const response = await fetch(url, options)
+        
+        if (response.ok) {
+            const data = await response.json()
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+            userInfo.tg_nickname = data.tg_nickname
+            localStorage.setItem('userInfo', JSON.stringify(userInfo))
+            
+            // Обновляем отображение на странице
+            const tgNicknameElement = document.getElementById('tgNickname')
+            const enableBotSection = document.getElementById('enableBotSection')
+            
+            if (tgNicknameElement && enableBotSection) {
+                if (data.tg_nickname && data.tg_nickname.trim() !== '') {
+                    tgNicknameElement.textContent = data.tg_nickname
+                    enableBotSection.style.display = 'none'
+                } else {
+                    tgNicknameElement.textContent = 'Не указан'
+                    enableBotSection.style.display = 'block'
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error checking TG nickname:', error)
+    }
+}
+
 function loadUserProfile() {
     try {
         const userInfo = localStorage.getItem('userInfo');
         
         if (userInfo) {
+            console.log(userInfo)
             const user = JSON.parse(userInfo);
             
             // Отображаем логин
@@ -82,7 +127,10 @@ function botActivation() {
         });
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    loadUserProfile();  // Load user profile
+    checkTgNickname();  // Check TG nickname (after tg btn click)
+});
+
 const botActivationBtn = document.getElementById('enableBotBtn')
 botActivationBtn.addEventListener('click', botActivation)
-
-document.addEventListener('DOMContentLoaded', loadUserProfile);
