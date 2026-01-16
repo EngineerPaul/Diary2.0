@@ -124,10 +124,11 @@ def sitelink(bot, command):  # ссылка на сайт (тест)
     """отправка ссылки с гиперссылкой"""
     @bot.message_handler(commands=[command])
     def send_reminder(msg):
-        link = SITELINK
+        link = f'<a href="{SITELINK}">Ссылка на сайт</a>'
         bot.send_message(
             chat_id=msg.chat.id,
             text=link,
+            parse_mode='html'
         )
 
 
