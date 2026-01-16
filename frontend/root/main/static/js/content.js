@@ -246,8 +246,6 @@ const forms = {
         modals.resetMode()
     },
     createRecord: async function(event) {  // creation a new record (ajax and ui)
-        // console.log('Сброс режима')
-        // return
         const form = event.target
         const data = {
             folder_id: parseInt(viewContent.currentFolderId),
@@ -286,8 +284,6 @@ const forms = {
             modalBlock.style['display'] = 'none'
             modals.modal.style['display'] = 'none'
         }
-        // console.log('Сброс режима')
-        // modals.resetMode()
     },
     updateRecord: async function(event) {  // updating the record (ajax and ui)
         const form = event.target
