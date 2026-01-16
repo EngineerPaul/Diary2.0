@@ -211,6 +211,8 @@ let queries = {
 
             if (settings && settings.modalBlock) {
                 settings.modalBlock.style.display = 'none'
+                settings.modal.style.display = 'none'
+                settings.modal = null
             }
 
             textarea.value = ''
@@ -244,6 +246,8 @@ let queries = {
         if (response) {
             if (settings && settings.modalBlock) {
                 settings.modalBlock.style.display = 'none'
+                settings.modal.style.display = 'none'
+                settings.modal = null
             }
             
             fileInput.value = ''
@@ -515,7 +519,7 @@ let settings = {
             if (!modal || !settings.modalBlock) return
             settings.modal = modal
             modal.style['display'] = 'block'
-            settings.modalBlock.style['display'] = 'block'
+            this.modalBlock.style['display'] = 'block'
         },
         hideModal: function(event) { // hide any modal
             if (
@@ -631,11 +635,11 @@ let settings = {
 
             const editorBtn = document.querySelector('.menu-item.editor')  // record update pencil
             if (editorBtn) {
-                editorBtn.addEventListener('click', this.modals.openEditRecordModal.bind(this.modals))
+                editorBtn.addEventListener('click', this.modals.openEditRecordModal.bind(this))
             }
 
             const contentElement = document.getElementById('content')  // images update pencil
-            contentElement.addEventListener('click', this.modals.openEditImagesModal.bind(this.modals))
+            contentElement.addEventListener('click', this.modals.openEditImagesModal.bind(this))
 
             this.modals.setupFileInputButton.bind(this)()
 
