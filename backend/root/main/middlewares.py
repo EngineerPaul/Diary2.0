@@ -106,3 +106,4 @@ class AuthMiddleware(MiddlewareMixin):
         if response.status_code == 401:
             return None
         return response.json()
+
