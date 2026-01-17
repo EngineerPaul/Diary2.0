@@ -339,6 +339,9 @@ class NoticesAPI(APIView):
             # дата не меняется
             serializer.save()
 
+        combined_datetime = datetime.combine(validated_data['next_date'], validated_data['time'])
+        UpcomingNoticeList().main(new_date=combined_datetime)  # отправка нового списка
+
         resp = {
             'success': True,
             'msg': f'Напоминание {notice_id} успешно обновлено',
@@ -358,6 +361,9 @@ class NoticesAPI(APIView):
             msg = f'Error: напоминание {notice_id} не найдено'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
+        notice_date = notice.next_date
+        notice_time = notice.time
+
         try:
             with transaction.atomic():
                 notice.folder_id.del_object(notice.pk)
@@ -366,6 +372,9 @@ class NoticesAPI(APIView):
         except transaction.TransactionManagementError:
             msg = 'Error: ошибка удаления напоминания'
             return Response(data=msg, status=status.HTTP_400_BAD_REQUEST)
+
+        combined_datetime = datetime.combine(notice_date, notice_time)
+        UpcomingNoticeList().main(new_date=combined_datetime)  # отправка нового списка
 
         msg = 'Напоминание успешно удалено'
         return Response(data=msg, status=status.HTTP_200_OK)
