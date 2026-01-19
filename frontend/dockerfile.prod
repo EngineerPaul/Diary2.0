@@ -1,8 +1,8 @@
 # начальный образ (в конце удаляется)
-FROM python:3.12.11-alpine as builder
+FROM python:3.11.9-alpine as builder2
 
 # рабочая директория, которая будет создана в контенере
-WORKDIR /usr/src/bot
+WORKDIR /usr/src/frontendapp
 
 # запрет на создание .pyc файлов
 # запрет на буферизацию (включение незамедлительного вывода)
@@ -14,34 +14,43 @@ ENV PYTHONUNBUFFERED 1
 ENV PIP_ROOT_USER_ACTION=ignore
 RUN pip install --upgrade pip
 
+# установка linter для проверки итогового кода на ошибки (линтер укажет на все стилистические ошибки при создании образа)
+# исключаем папку venv и __pycache__ из проверки линтером (а также ошибки E501 - длинные строки, F401 - импорты, которые не используются)
+# используется при первой (тестовой) сборке образа
+# RUN pip install flake8
+# RUN flake8 --ignore=E501,F401 --exclude=venv,__pycache__ .
+
 # установка зависимостей через wheel
 COPY ./requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/bot/wheels -r requirements.txt
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/frontendapp/wheels -r requirements.txt
 
 # сборка конечного образа
-FROM python:3.12.11-alpine
+FROM python:3.11.9-alpine
 
 # создание новой директории
 # папки /home/.. - для пользователей, а /usr/src/... - для root (рекомендация)
-RUN mkdir -p /home/botapp
+RUN mkdir -p /home/frontendapp
 
 # создание нового (не root) пользователя и группы
-RUN addgroup -S bot_group && adduser -S bot_user -G bot_group
+RUN addgroup -S django_group && adduser -S django_user -G django_group
 
 # запоминаем пути до рабочих папок в окружение
-ENV HOME=/home/botapp
-ENV APP_HOME=/home/botapp/bot
+ENV HOME=/home/frontendapp
+ENV APP_HOME=/home/frontendapp/front
+# создаем папки staticfiles и mediafiles сами, иначе это сделает потом root пользователь и у нас (нового юзера django_user) не будет прав в этой папке
+RUN mkdir $APP_HOME $APP_HOME/staticfiles $APP_HOME/mediafiles
 WORKDIR $APP_HOME
 
 # добавляем путь к локальным бинарникам в PATH (optional)
-ENV PATH="/home/botapp/.local/bin:$PATH"
+ENV PATH="/home/frontendapp/.local/bin:$PATH"
 # игнорируем, что пакеты устаналиваются от root (мы позже меняем пользователя)
 # это безопасно, потому что пакеты устанавливаются в папку пользователя (--user)
 ENV PIP_ROOT_USER_ACTION=ignore
 # установка зависимостей из первого образа
 # --no-cache - не кэшируем зависимости, что уменьшает размер образа
-COPY --from=builder /usr/src/bot/wheels /wheels
-COPY --from=builder /usr/src/bot/requirements.txt .
+RUN apk add --no-cache libpq
+COPY --from=builder2 /usr/src/frontendapp/wheels /wheels
+COPY --from=builder2 /usr/src/frontendapp/requirements.txt .
 # --user - устанавливает пакеты в папку пользователя, а не в системную папку (безопасность)
 RUN pip install --no-cache --user /wheels/*
 
@@ -49,7 +58,7 @@ RUN pip install --no-cache --user /wheels/*
 COPY . $APP_HOME
 
 # устанавливаем нового владельца всех файлов проекта
-RUN chown -R bot_user:bot_group $APP_HOME
+RUN chown -R django_user:django_group $APP_HOME
 
 # активируем нового юзера в контейнере
-USER bot_user
+USER django_user

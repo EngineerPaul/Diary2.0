@@ -6,7 +6,7 @@ from api.server.queries import (
     send_new_reminder, send_info,
     send_django, send_notice_shift
 )
-from utils import get_date, get_now_format
+from utils.utils import get_date, get_now_format
 
 
 def get_info(bot, command):  # выводит ифнормацию из msg (для раработки)

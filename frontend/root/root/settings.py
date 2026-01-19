@@ -1,12 +1,9 @@
 import os
 import datetime
 from pathlib import Path
-from dotenv import load_dotenv
-import os
-import json
+from utils.secrets import get_secret, get_json_secret
 
 
-load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -15,10 +12,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = get_secret('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = json.loads(os.getenv('DEBUG'))
+DEBUG = get_json_secret('DEBUG', False)
+SINGLE_USER = get_json_secret('SINGLE_USER', False)
 
 ALLOWED_HOSTS = []
 
@@ -113,17 +111,21 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+# сразу для работы в докере (не нужен при DEBUG=TRUE)
+STATIC_ROOT = Path('/home/frontendapp/front/staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-PROJECT_HOSTS = json.loads(os.getenv('PROJECT_HOSTS'))
+PROJECT_HOSTS = get_json_secret('PROJECT_HOSTS', [])
 
 TOKENS_LIFETIME = {
-    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=int(os.getenv('ACCESS_TOKEN_LIFETIME'))),
-    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(minutes=int(os.getenv('REFRESH_TOKEN_LIFETIME'))),
-    # 'ACCESS_TOKEN_LIFETIME': datetime.timedelta(seconds=4),  # для тестов
-    # 'REFRESH_TOKEN_LIFETIME': datetime.timedelta(seconds=1),  # для тестов
+    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(
+        minutes=int(get_secret('ACCESS_TOKEN_LIFETIME', '60'))
+    ),
+    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(
+        minutes=int(get_secret('REFRESH_TOKEN_LIFETIME', '1440'))
+    ),
 }

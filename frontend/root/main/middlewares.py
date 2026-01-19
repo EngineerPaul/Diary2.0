@@ -3,7 +3,7 @@ import requests
 from django.utils.deprecation import MiddlewareMixin
 from django.http import HttpResponseRedirect
 
-from root.settings import PROJECT_HOSTS, TOKENS_LIFETIME
+from root.settings import PROJECT_HOSTS, TOKENS_LIFETIME, SINGLE_USER
 
 
 class AuthMiddleware(MiddlewareMixin):
@@ -14,6 +14,15 @@ class AuthMiddleware(MiddlewareMixin):
             'access_token': request.COOKIES.get('access_token'),
             'refresh_token': request.COOKIES.get('refresh_token'),
         }
+
+        if SINGLE_USER:
+            request.user = {
+                'id': 1,
+                'username': 'admin',
+                'role': 'admin',
+                'is_auth': True,
+            }
+            return None
 
         if (tokens['access_token'] is None) and (tokens['refresh_token'] is None):
             request.user = {

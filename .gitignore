@@ -1,4 +1,5 @@
 .env
+*-secrets.txt
 __pycache__/
 *.pyc
 django_cache/

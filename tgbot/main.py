@@ -2,7 +2,7 @@ from telebot import TeleBot
 
 from config import TOKEN, DEBUG, MY_ID
 from api.bot.routers import command_registry
-from utils import check_connection
+from utils.utils import check_connection
 
 
 check_connection()

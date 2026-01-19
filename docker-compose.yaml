@@ -1,21 +1,59 @@
 #version: '3.8'							# необязательная версия yml файла 
 
 services:							# словарь всех контенеров
-  bot:								# контейнер приложения Django
-    build: ./tgbot					# расположение dockerfile
-    command: python3 main.py 	# командна, запускаемая после запуска контенера
-    ports:							# мапинг (связывание) портов
-      - 8001:8000						# внешний порт:внутренний порт (на котором запущен runserver)
-    env_file:							# файлы с переменными окружения
-      - ./tgbot/.env					# расположение файла
+
+  front:
+    build:
+      context: ./frontend
+      dockerfile: dockerfile.prod
+    container_name: diary_frontend
+    working_dir: /home/frontendapp/front/root
+    command: >
+      sh -c "
+        python3 manage.py collectstatic --noinput &&
+        python3 manage.py runserver 0.0.0.0:8000
+      "
+    ports:
+      - 8000:8000
+    secrets:
+      - frontend_secrets
+    volumes:
+      - static_volume:/home/frontendapp/front/staticfiles
+    restart: unless-stopped # перезапуск контейнера при падении
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]  # --quiet - без вывода, --spider - проверка доступности без скачивания
+      interval: 60s
+      timeout: 30s
+      start_period: 10s
+      retries: 3
+
+  bot:
+    build:
+      context: ./tgbot
+      dockerfile: dockerfile
+    container_name: diary_bot
+    working_dir: /home/botapp/bot
+    command: python3 main.py
+    ports:
+      - 8001:8000
+    secrets:
+      - bot_secrets
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]
+      interval: 60s
+      timeout: 30s
+      start_period: 10s
+      retries: 3
 
   botapi:								# контейнер базы данных
     build: ./tgserver					# расположение dockerfile
     command: python3 main.py  # командна, запускаемая после запуска контенера
     ports:							# мапинг (связывание) портов
       - 8002:8000						# внешний порт:внутренний порт (на котором запущен runserver)
-    env_file:							# файлы с переменными окружения
-      - ./tgserver/.env					# расположение файла
+    secrets:
+      - tgserver_secrets
+      - redis_secrets
     depends_on:
       - redis
       - celery_worker
@@ -24,12 +62,10 @@ services:							# словарь всех контенеров
   redis:
     image: redis:8.2.2-alpine
     container_name: tgserver_redis
-    environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_USER=${REDIS_USER}
-      - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
+    secrets:
+      - redis_secrets
     volumes:
-      - ./_redis_data:/data
+      - ./_redis/data:/data
     deploy:
       resources:
         limits:
@@ -42,15 +78,15 @@ services:							# словарь всех контенеров
       sh -c '
         mkdir -p /usr/local/etc/redis &&
         echo "bind 0.0.0.0" > /usr/local/etc/redis/redis.conf &&
-        echo "requirepass $REDIS_PASSWORD" >> /usr/local/etc/redis/redis.conf &&
+        echo "requirepass $(cat /run/secrets/redis_secrets | grep REDIS_PASSWORD | cut -d= -f2)" >> /usr/local/etc/redis/redis.conf &&
         echo "appendonly yes" >> /usr/local/etc/redis/redis.conf &&
         echo "appendfsync everysec" >> /usr/local/etc/redis/redis.conf &&
         echo "user default on nopass ~* +@all" > /usr/local/etc/redis/users.acl &&
-        echo "user $REDIS_USER on >$REDIS_USER_PASSWORD ~* &* +@all" >> /usr/local/etc/redis/users.acl &&
+        echo "user $(cat /run/secrets/redis_secrets | grep REDIS_USER | cut -d= -f2) on >$(cat /run/secrets/redis_secrets | grep REDIS_USER_PASSWORD | cut -d= -f2) ~* &* +@all" >> /usr/local/etc/redis/users.acl &&
         redis-server /usr/local/etc/redis/redis.conf --aclfile /usr/local/etc/redis/users.acl
       '
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping"]
+      test: ["CMD", "sh", "-c", "redis-cli -a $(cat /run/secrets/redis_secrets | grep REDIS_PASSWORD | cut -d= -f2) ping"]
       interval: 300s
       timeout: 10s
       retries: 5
@@ -64,8 +100,9 @@ services:							# словарь всех контенеров
       context: ./tgserver
       dockerfile: dockerfile
     command: ["celery", '-A', 'celery_client', 'worker']
-    env_file:
-      - ./tgserver/.env
+    secrets:
+      - tgserver_secrets
+      - redis_secrets
     depends_on:
       - redis
 
@@ -75,7 +112,21 @@ services:							# словарь всех контенеров
       context: ./tgserver
       dockerfile: dockerfile
     command: ["celery", '-A', 'celery_client', 'beat']
-    env_file:
-      - ./tgserver/.env
+    secrets:
+      - tgserver_secrets
+      - redis_secrets
     depends_on:
       - redis
+
+volumes:
+  static_volume:
+
+secrets:
+  redis_secrets:
+    file: ./_redis/redis-secrets.txt
+  frontend_secrets:
+    file: ./frontend/frontend-secrets.txt
+  bot_secrets:
+    file: ./tgbot/bot-secrets.txt
+  tgserver_secrets:
+    file: ./tgserver/tgserver-secrets.txt

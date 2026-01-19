@@ -1,12 +1,10 @@
 import socket
 import time
-from typing import Dict
-
 from datetime import datetime, timedelta
 from config import MAX_YEAR
 
 
-def get_date(str_date: str) -> Dict:
+def get_date(str_date: str) -> dict:
     """ Check a date format. Format must be like ДД.ММ.ГГГГ ЧЧ:ММ.
     (like '30.01.2001 10.00') """
 
