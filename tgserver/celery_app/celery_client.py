@@ -20,7 +20,7 @@ celery_app = Celery(
     backend=CELERY_RESULT_BACKEND,
 )
 celery_app.conf.imports = (
-    'tasks',  # файл с тасками
+    'celery_app.tasks',  # файл с тасками (относительно места запуска консоли)
 )
 
 
@@ -50,11 +50,11 @@ celery_app.conf.update(
 # celery beat settings
 celery_app.conf.beat_schedule = {
     # 'my_test_beat': {  # опртавка принта каждые 5с
-    #     'task': 'tasks.celery_every_5s',
+    #     'task': 'celery_app.tasks.celery_every_5s',
     #     'schedule': timedelta(seconds=5)
     # },
     'check_dispatch_date': {  # проверка даты оправки каждые 10с
-        'task': 'tasks.celery_check_dispatch_date',
+        'task': 'celery_app.tasks.celery_check_dispatch_date',
         'schedule': timedelta(seconds=10)
     },
 }

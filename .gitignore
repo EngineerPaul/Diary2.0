@@ -13,3 +13,4 @@ server_test/
 migrations/
 media_files/
 test_imgs/
+_redis/data/*

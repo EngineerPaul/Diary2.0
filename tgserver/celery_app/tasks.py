@@ -1,7 +1,7 @@
 from datetime import datetime
 import asyncio
 
-from celery_client import celery_app
+from celery_app.celery_client import celery_app
 from services import RemindData
 from queries.to_tgbot import send_msg_bot
 from queries.to_server import send_mailing_list_report

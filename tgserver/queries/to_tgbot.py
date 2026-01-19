@@ -1,6 +1,6 @@
 from telebot import TeleBot
 from config import TG_TOKEN
-from utils import get_markup
+from utils.utils import get_markup
 
 
 BOT = TeleBot(TG_TOKEN)

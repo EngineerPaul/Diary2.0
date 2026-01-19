@@ -1,19 +1,57 @@
-FROM python:3.12.11-alpine
+# начальный образ (в конце удаляется)
+FROM python:3.12.11-alpine as builder
 
-WORKDIR /usr/src/botapi
+# рабочая директория, которая будет создана в контенере
+WORKDIR /usr/src/tgserver
+
+# запрет на создание .pyc файлов
+# запрет на буферизацию (включение незамедлительного вывода)
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-RUN apk update
+# игнорируем, что пакеты устаналиваются от root
+# это безопасно, потому что это билдер
+ENV PIP_ROOT_USER_ACTION=ignore
 RUN pip install --upgrade pip
+
+# установка зависимостей через wheel
 COPY ./requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/tgserver/wheels -r requirements.txt
 
-RUN addgroup -S app_user_group && adduser -S app_user -G app_user_group
-RUN mkdir beatdata
-# про beatdata смотреть в help.txt
-RUN chown -R app_user:app_user_group beatdata
+# сборка конечного образа
+FROM python:3.12.11-alpine
 
-USER app_user
+# создание новой директории
+# папки /home/.. - для пользователей, а /usr/src/... - для root (рекомендация)
+RUN mkdir -p /home/tgserverapp
 
-COPY . .
+# создание нового (не root) пользователя и группы
+RUN addgroup -S tgserver_group && adduser -S tgserver_user -G tgserver_group
+
+# запоминаем пути до рабочих папок в окружение
+ENV HOME=/home/tgserverapp
+ENV APP_HOME=/home/tgserverapp/tgserver
+# создаем папку beatdata сами, иначе это сделает потом root пользователь и у нас (нового юзера tgserver_user) не будет прав в этой папке
+RUN mkdir $APP_HOME $APP_HOME/beatdata
+WORKDIR $APP_HOME
+
+# добавляем путь к локальным бинарникам в PATH (optional)
+ENV PATH="/home/tgserverapp/.local/bin:$PATH"
+# игнорируем, что пакеты устаналиваются от root (мы позже меняем пользователя)
+# это безопасно, потому что пакеты устанавливаются в папку пользователя (--user)
+ENV PIP_ROOT_USER_ACTION=ignore
+# установка зависимостей из первого образа
+# --no-cache - не кэшируем зависимости, что уменьшает размер образа
+COPY --from=builder /usr/src/tgserver/wheels /wheels
+COPY --from=builder /usr/src/tgserver/requirements.txt .
+# --user - устанавливает пакеты в папку пользователя, а не в системную папку (безопасность)
+RUN pip install --no-cache --user /wheels/*
+
+# копируем файлы проекта
+COPY . $APP_HOME
+
+# устанавливаем нового владельца всех файлов проекта
+RUN chown -R tgserver_user:tgserver_group $APP_HOME
+
+# активируем нового юзера в контейнере
+USER tgserver_user

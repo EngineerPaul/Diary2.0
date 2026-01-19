@@ -1,7 +1,7 @@
 aiohttp==3.12.15
 asyncio==4.0.0
 celery==5.5.3
-dotenv==0.9.9
+python-dotenv==1.0.0
 fastapi==0.118.0
 redis==6.4.0
 telebot==0.0.5

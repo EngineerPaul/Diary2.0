@@ -13,9 +13,11 @@ from queries.to_server import (
     send_test_to_Django,
     send_create_notice, send_notice_shift, send_userinfo
 )
-from config import MY_TG_ID
+from config import MY_TG_ID, REDIS_WORKS
 from dependencies import get_session
-# from services import RemindData
+
+if REDIS_WORKS:
+    from services import RemindData
 
 
 router = APIRouter()
@@ -108,8 +110,9 @@ async def userinfo_api(
     summary="Set new reminder list"
 )
 async def get_notice_list_api(data: NoticeListSchema):  # получение списка уведомлений от сервера
-    # RemindData.set_reminders_list(data.notice_list)
-    # RemindData.set_date(data.next_date)
+    if REDIS_WORKS:
+        RemindData.set_reminders_list(data.notice_list)
+        RemindData.set_date(data.next_date)
 
     response = JSONResponse(
         content={'success': True},
@@ -196,25 +199,26 @@ async def test_dajngo_post(session: aiohttp.ClientSession = Depends(get_session)
     return {"detail": "success"}
 
 
-# рабочий запрос в чат (отключен на windows)
-# @router.post(
-#     "/test-celery-beat",
-#     tags=['test'],
-#     summary="Set a test reminder list. Send a msg in 30s"
-# )
-# async def test_celery():
-#     """ Quickly check the work of the reminders list """
+if REDIS_WORKS:
+    # рабочий запрос в чат (отключен на windows)
+    @router.post(
+        "/test-celery-beat",
+        tags=['test'],
+        summary="Set a test reminder list. Send a msg in 30s"
+    )
+    async def test_celery():
+        """ Quickly check the work of the reminders list """
 
-#     RemindData.set_reminders_list([
-#         {
-#             'user_id': 100,
-#             'reminder_id': 100,
-#             'message': 'Тестовое напоминание',
-#             'tg_id': MY_TG_ID,
-#         },
-#     ])
-#     RemindData.set_date(
-#         datetime.now() + timedelta(seconds=30)
-#     )
+        RemindData.set_reminders_list([
+            {
+                'user_id': 100,
+                'reminder_id': 100,
+                'message': 'Тестовое напоминание',
+                'tg_id': MY_TG_ID,
+            },
+        ])
+        RemindData.set_date(
+            datetime.now() + timedelta(seconds=30)
+        )
 
-#     return {"detail": "success"}
+        return {"detail": "success"}

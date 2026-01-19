@@ -103,7 +103,7 @@ services:							# словарь всех контенеров
     build:
       context: ./tgserver
       dockerfile: dockerfile
-    command: ["celery", '-A', 'celery_client', 'worker']
+    command: ["celery", '-A', 'celery_app.celery_client', 'worker']
     secrets:
       - tgserver_secrets
       - redis_secrets
@@ -115,7 +115,7 @@ services:							# словарь всех контенеров
     build:
       context: ./tgserver
       dockerfile: dockerfile
-    command: ["celery", '-A', 'celery_client', 'beat']
+    command: ["celery", '-A', 'celery_app.celery_client', 'beat']
     secrets:
       - tgserver_secrets
       - redis_secrets
