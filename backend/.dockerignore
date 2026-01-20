@@ -42,3 +42,9 @@ coverage.xml
 *.log
 local_settings.py
 db.sqlite3
+
+# Media files (usually large)
+mediafiles/
+
+# Static files (can be collected in container)
+staticfiles/

@@ -18,7 +18,7 @@ SECRET_KEY = get_secret('SECRET_KEY')
 DEBUG = get_json_secret('DEBUG', False)
 SINGLE_USER = get_json_secret('SINGLE_USER', False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = get_json_secret("DJANGO_ALLOWED_HOSTS", [])
 
 # Application definition
 

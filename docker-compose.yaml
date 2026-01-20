@@ -1,6 +1,6 @@
-#version: '3.8'							# необязательная версия yml файла 
+#version: '3.8'
 
-services:							# словарь всех контенеров
+services:
 
   front:
     build:
@@ -19,13 +19,56 @@ services:							# словарь всех контенеров
       - frontend_secrets
     volumes:
       - static_volume:/home/frontendapp/front/staticfiles
-    restart: unless-stopped # перезапуск контейнера при падении
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]  # --quiet - без вывода, --spider - проверка доступности без скачивания
       interval: 60s
       timeout: 30s
       start_period: 10s
       retries: 3
+
+  authserver:
+    build:
+      context: ./authserver
+      dockerfile: dockerfile.prod
+    container_name: diary_authserver
+    working_dir: /home/authserverapp/auth/root
+    command: python3 manage.py runserver 0.0.0.0:8000
+    ports:
+      - 8003:8000
+    secrets:
+      - authserver_secrets
+    restart: unless-stopped
+    depends_on:
+      - auth_db
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]
+      interval: 60s
+      timeout: 30s
+      start_period: 10s
+      retries: 3
+
+  auth_db:
+    image: postgres:16-alpine
+    container_name: diary_auth_db
+    secrets:
+      - auth_db_secrets
+    volumes:
+      - ./_auth_db/data:/var/lib/postgresql/data/
+    command: >
+      sh -c '
+        source /run/secrets/auth_db_secrets &&
+        export POSTGRES_DB=$$POSTGRES_DB &&
+        export POSTGRES_USER=$$POSTGRES_USER &&
+        export POSTGRES_PASSWORD=$$POSTGRES_PASSWORD &&
+        exec docker-entrypoint.sh postgres
+      '
+    healthcheck:
+      test: ["CMD-SHELL", "source /run/secrets/auth_db_secrets && pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
 
   bot:
     build:
@@ -46,11 +89,11 @@ services:							# словарь всех контенеров
       start_period: 10s
       retries: 3
 
-  botapi:								# контейнер базы данных
-    build: ./tgserver					# расположение dockerfile
-    command: python3 main.py  # командна, запускаемая после запуска контенера
-    ports:							# мапинг (связывание) портов
-      - 8002:8000						# внешний порт:внутренний порт (на котором запущен runserver)
+  botapi:
+    build: ./tgserver
+    command: python3 main.py
+    ports:
+      - 8002:8000
     secrets:
       - tgserver_secrets
       - redis_secrets
@@ -134,3 +177,7 @@ secrets:
     file: ./tgbot/bot-secrets.txt
   tgserver_secrets:
     file: ./tgserver/tgserver-secrets.txt
+  authserver_secrets:
+    file: ./authserver/authserver-secrets.txt
+  auth_db_secrets:
+    file: ./_auth_db/authdb-secrets.txt

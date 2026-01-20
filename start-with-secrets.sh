@@ -13,6 +13,12 @@ docker-compose down 2>/dev/null || true
 echo "Generating Redis secrets..."
 cd _redis && ./generate-secrets.sh && cd ..
 
+echo "Generating authserver database secrets..."
+cd _auth_db && ./generate-secrets.sh && cd ..
+
+echo "Generating authserver secrets..."
+cd authserver && ./generate-secrets.sh && cd ..
+
 echo "Generating frontend secrets..."
 cd frontend && ./generate-secrets.sh && cd ..
 

@@ -1,8 +1,8 @@
 # начальный образ (в конце удаляется)
-FROM python:3.11.9-alpine as builder
+FROM python:3.12.11-alpine as builder
 
 # рабочая директория, которая будет создана в контенере
-WORKDIR /usr/src/frontendapp
+WORKDIR /usr/src/authserverapp
 
 # запрет на создание .pyc файлов
 # запрет на буферизацию (включение незамедлительного вывода)
@@ -22,43 +22,49 @@ RUN pip install --upgrade pip
 
 # установка зависимостей через wheel
 COPY ./requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/frontendapp/wheels -r requirements.txt
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/authserverapp/wheels -r requirements.txt
 
 # сборка конечного образа
-FROM python:3.11.9-alpine
+FROM python:3.12.11-alpine
 
 # создание новой директории
 # папки /home/.. - для пользователей, а /usr/src/... - для root (рекомендация)
-RUN mkdir -p /home/frontendapp
+RUN mkdir -p /home/authserverapp
 
 # создание нового (не root) пользователя и группы
 RUN addgroup -S django_group && adduser -S django_user -G django_group
 
 # запоминаем пути до рабочих папок в окружение
-ENV HOME=/home/frontendapp
-ENV APP_HOME=/home/frontendapp/front
-# создаем папки staticfiles и mediafiles сами, иначе это сделает потом root пользователь и у нас (нового юзера django_user) не будет прав в этой папке
-RUN mkdir $APP_HOME $APP_HOME/staticfiles $APP_HOME/mediafiles
+ENV HOME=/home/authserverapp
+ENV APP_HOME=/home/authserverapp/auth
+# создаем рабочую папку
+RUN mkdir $APP_HOME
 WORKDIR $APP_HOME
 
 # добавляем путь к локальным бинарникам в PATH (optional)
-ENV PATH="/home/frontendapp/.local/bin:$PATH"
+ENV PATH="/home/authserverapp/.local/bin:$PATH"
 # игнорируем, что пакеты устаналиваются от root (мы позже меняем пользователя)
 # это безопасно, потому что пакеты устанавливаются в папку пользователя (--user)
 ENV PIP_ROOT_USER_ACTION=ignore
 # установка зависимостей из первого образа
 # --no-cache - не кэшируем зависимости, что уменьшает размер образа
 RUN apk add --no-cache libpq
-COPY --from=builder /usr/src/frontendapp/wheels /wheels
-COPY --from=builder /usr/src/frontendapp/requirements.txt .
+COPY --from=builder /usr/src/authserverapp/wheels /wheels
+COPY --from=builder /usr/src/authserverapp/requirements.txt .
 # --user - устанавливает пакеты в папку пользователя, а не в системную папку (безопасность)
 RUN pip install --no-cache --user /wheels/*
 
 # копируем файлы проекта
 COPY . $APP_HOME
 
-# устанавливаем нового владельца всех файлов проекта
-RUN chown -R django_user:django_group $APP_HOME
+# обработка скрипта ожидания БД и установка прав
+# удаление \r символов, сделать исполняемым, смена владельца
+RUN sed -i 's/\r$//g' $APP_HOME/entrypoint.sh && \
+    chmod +x $APP_HOME/entrypoint.sh && \
+    chown -R django_user:django_group $APP_HOME
 
 # активируем нового юзера в контейнере
 USER django_user
+
+# запускаем sh скрипт после запуска контейнера
+ENTRYPOINT ["/home/authserverapp/auth/entrypoint.sh"]

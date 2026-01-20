@@ -1,11 +1,9 @@
+import os
 import datetime
 from pathlib import Path
-from dotenv import load_dotenv
-import os
-import json
+from utils.secrets import get_secret, get_json_secret
 
 
-load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -14,15 +12,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = get_secret('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = json.loads(os.getenv('DEBUG'))
+DEBUG = get_json_secret('DEBUG', False)
 
-ALLOWED_HOSTS = []
-CORS_ALLOWED_ORIGINS = json.loads(os.getenv('CORS_ALLOWED_ORIGINS'))
-CORS_ALLOW_CREDENTIALS = json.loads(os.getenv('CORS_ALLOW_CREDENTIALS'))
-PROJECT_HOSTS = json.loads(os.getenv('PROJECT_HOSTS'))
+ALLOWED_HOSTS = get_json_secret("DJANGO_ALLOWED_HOSTS", [])
+CORS_ALLOWED_ORIGINS = get_json_secret('CORS_ALLOWED_ORIGINS', [])
+CORS_ALLOW_CREDENTIALS = get_json_secret('CORS_ALLOW_CREDENTIALS', False)
+PROJECT_HOSTS = get_json_secret('PROJECT_HOSTS', [])
 
 
 # Application definition
@@ -78,12 +76,24 @@ WSGI_APPLICATION = 'root.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': get_secret('SQL_ENGINE'),
+            "NAME": get_secret("SQL_DATABASE"),
+            "USER": get_secret("SQL_USER"),
+            "PASSWORD": get_secret("SQL_PASSWORD"),
+            "HOST": get_secret("SQL_HOST"),
+            "PORT": get_secret("SQL_PORT"),
+        },
+    }
 
 
 # Password validation
@@ -134,8 +144,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=int(os.getenv('ACCESS_TOKEN_LIFETIME'))),
-    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(minutes=int(os.getenv('REFRESH_TOKEN_LIFETIME'))),
+    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=int(get_secret('ACCESS_TOKEN_LIFETIME'))),
+    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(minutes=int(get_secret('REFRESH_TOKEN_LIFETIME'))),
     # 'ACCESS_TOKEN_LIFETIME': datetime.timedelta(seconds=4),  # для тестов
     # 'REFRESH_TOKEN_LIFETIME': datetime.timedelta(seconds=1),  # для тестов
     'ROTATE_REFRESH_TOKENS': True,  # refresh токен автоматически аннулируется после использования
@@ -161,4 +171,4 @@ SIMPLE_JWT = {
     # 'SLIDING_TOKEN_REFRESH_LIFETIME': datetime.timedelta(days=1),
 }
 
-TGAuthTimeout = 300  # 5 minutes
+TGAuthTimeout = 300  # 5 minutes for activation tg bot
