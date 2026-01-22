@@ -53,6 +53,12 @@ class Registration(APIView):
 
         try:
             user = serializer.save()
+            UserDetails.objects.create(
+                user_id=user,
+                tg_user_id=None,
+                chat_id=None,
+                tg_activation_date=timezone.now()
+            )
 
             # Create root folders on backend server
             create_root_folders(user.id)
