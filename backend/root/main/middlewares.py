@@ -7,9 +7,10 @@ from root.settings import PROJECT_HOSTS, TOKENS_LIFETIME
 
 
 class AuthMiddleware(MiddlewareMixin):
+    """ Чтение токенов и определение прав пользователя """
 
     def process_request(self, request):
-        """ Чтение токенов и определение прав пользователя """
+        """ Обработка запроса перед view и изменение request.user """
 
         tokens = {
             'access_token': request.COOKIES.get('access_token'),
@@ -70,6 +71,8 @@ class AuthMiddleware(MiddlewareMixin):
     #     запускается после process_request (выше). но перед view
 
     def process_response(self, request, response):
+        """ Обработка ответа запроса после view """
+
         if hasattr(request, 'tokens'):
             response.set_cookie(
                 key='access_token',
@@ -92,18 +95,21 @@ class AuthMiddleware(MiddlewareMixin):
         return response
 
     def verify(self, access_token):
+        """ Проверка Access токена """
+
         url = PROJECT_HOSTS['auth_server'] + 'verify'
         data = {'token': access_token}
-        response = requests.post(url, data)
+        response = requests.post(url, json=data)
         if response.status_code == 400:
             return None
         return response.json()
 
     def refresh(self, refresh_token):
+        """ Проверка Refresh токена """
+
         url = PROJECT_HOSTS['auth_server'] + 'refresh'
         data = {'refresh': refresh_token}
-        response = requests.post(url, data)
-        if response.status_code == 401:
+        response = requests.post(url, json=data)
+        if response.status_code in [400, 401]:
             return None
         return response.json()
-

@@ -4,11 +4,11 @@
 # Генерируем только SECRET_KEY, остальное копируем из .env
 # Читаем существующие значения из .env в той же последовательности
 if [ -f ".env" ]; then
-    # Читаем пароль из сгенерированного файла базы данных
-    if [ -f "../_auth_db/authdb-secrets.txt" ]; then
-        DB_PASSWORD=$(grep "^POSTGRES_PASSWORD=" ../_auth_db/authdb-secrets.txt | cut -d= -f2-)
+    # Читаем пароль из .env файла базы данных
+    if [ -f "../_auth_db/.env" ]; then
+        DB_PASSWORD=$(grep "^POSTGRES_PASSWORD=" ../_auth_db/.env | cut -d= -f2-)
     else
-        echo "ERROR: Database secrets not found. Run _auth_db/generate-secrets.sh first"
+        echo "ERROR: Database .env file not found. Check ../_auth_db/.env"
         exit 1
     fi
     

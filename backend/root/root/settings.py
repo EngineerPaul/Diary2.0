@@ -33,7 +33,7 @@ DEBUG = json.loads(os.getenv('DEBUG'))
 ALLOWED_HOSTS = []
 CORS_ALLOWED_ORIGINS = json.loads(os.getenv('CORS_ALLOWED_ORIGINS'))
 CORS_ALLOW_CREDENTIALS = json.loads(os.getenv('CORS_ALLOW_CREDENTIALS'))
-
+PROJECT_HOSTS = json.loads(os.getenv('PROJECT_HOSTS'))
 
 # Application definition
 
@@ -52,6 +52,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "corsheaders.middleware.CorsMiddleware",  # должен стоять после SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -59,7 +60,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    "corsheaders.middleware.CorsMiddleware",
     'main.middlewares.AuthMiddleware',
 ]
 
@@ -150,8 +150,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media_files")
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-PROJECT_HOSTS = json.loads(os.getenv('PROJECT_HOSTS'))
 
 TOKENS_LIFETIME = {
     'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=int(os.getenv('ACCESS_TOKEN_LIFETIME'))),

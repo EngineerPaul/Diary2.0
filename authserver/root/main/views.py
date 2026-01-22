@@ -3,6 +3,7 @@ from datetime import timedelta
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.permissions import AllowAny
@@ -106,7 +107,7 @@ class ObtainTokens(TokenObtainPairView):
         try:
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
-            raise InvalidToken(e.args[0]) from e
+            return Response(e, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user = User.objects.select_related('userdetails').get(
@@ -166,12 +167,17 @@ class RefreshTokens(TokenRefreshView):
         serializer = self.get_serializer(
             data=request.data
         )
-        # print(request.COOKIES.get('refresh_token'))
 
         try:
             serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            return Response(
+                {'is_valid': False, 'error': f'Ошибка валидации: {e}',
+                 'details': e.detail},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         except TokenError as e:
-            raise InvalidToken(e.args[0]) from e
+            return Response(e,status=status.HTTP_400_BAD_REQUEST)
 
         # response = Response(serializer.validated_data, status=status.HTTP_200_OK)
         # response = Response(data={'success': True}, status=status.HTTP_200_OK)
@@ -218,7 +224,15 @@ class VerifyToken(APIView):
     def post(self, request, *args, **kwargs):
 
         serializer = VerifySerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            return Response(
+                {'is_valid': False, 'error': f'Ошибка валидации: {e}',
+                 'details': e.detail},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         # print(request.COOKIES.get('refresh_token'))
         # print(request.data)

@@ -33,9 +33,9 @@ services:
       dockerfile: dockerfile.prod
     container_name: diary_authserver
     working_dir: /home/authserverapp/auth/root
-    command: python3 manage.py runserver 0.0.0.0:8000
+    entrypoint: ["/home/authserverapp/auth/entrypoint.sh", "python3", "manage.py", "runserver", "0.0.0.0:8000"]
     ports:
-      - 8003:8000
+      - 8001:8000
     secrets:
       - authserver_secrets
     restart: unless-stopped
@@ -77,8 +77,6 @@ services:
     container_name: diary_bot
     working_dir: /home/botapp/bot
     command: python3 main.py
-    ports:
-      - 8001:8000
     secrets:
       - bot_secrets
     restart: unless-stopped
@@ -93,7 +91,7 @@ services:
     build: ./tgserver
     command: python3 main.py
     ports:
-      - 8002:8000
+      - 8003:8000
     secrets:
       - tgserver_secrets
       - redis_secrets
