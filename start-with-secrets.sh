@@ -16,8 +16,14 @@ cd _redis && ./generate-secrets.sh && cd ..
 echo "Generating authserver database secrets..."
 cd _auth_db && ./generate-secrets.sh && cd ..
 
+echo "Generating backend database secrets..."
+cd _back_db && ./generate-secrets.sh && cd ..
+
 echo "Generating authserver secrets..."
 cd authserver && ./generate-secrets.sh && cd ..
+
+echo "Generating backend secrets..."
+cd backend && ./generate-secrets.sh && cd ..
 
 echo "Generating frontend secrets..."
 cd frontend && ./generate-secrets.sh && cd ..

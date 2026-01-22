@@ -22,9 +22,7 @@ CORS_ALLOWED_ORIGINS = get_json_secret('CORS_ALLOWED_ORIGINS', [])
 CORS_ALLOW_CREDENTIALS = get_json_secret('CORS_ALLOW_CREDENTIALS', False)
 PROJECT_HOSTS = get_json_secret('PROJECT_HOSTS', [])
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

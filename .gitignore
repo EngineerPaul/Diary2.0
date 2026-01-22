@@ -8,6 +8,7 @@ media/
 venv/
 _redis_data/
 _auth_db/data/
+_back_db/data/
 req_freeze.txt
 .vscode/
 server_test/
