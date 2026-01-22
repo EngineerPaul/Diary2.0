@@ -13,10 +13,14 @@ else {
 }
 
 
-const exit = async function() {
-    await sendLogOut()
-    logOut() // индикаторы
-    console.log('Выход из профиля')
+const exit = async function(event) {
+    event.preventDefault()
+    const result = await sendLogOut()
+    if (result) {
+        logOut() // индикаторы
+        window.location.href = '/login'
+        console.log('Выход из профиля')
+    }
 }
 const sendLogOut = async function() {
     const url = conf.Domains['auth'] + conf.Urls['logoutUrl']
@@ -31,8 +35,10 @@ const sendLogOut = async function() {
 
     if (response === undefined) {
         console.log(`Error: неопознанная ошибка`)
+        return false
     } else if (response.success) {
         console.log(`Выход завершен`)
+        return true
     }
 }
 const logOut = async function() { // выключение индикаторов авторизации
@@ -41,7 +47,7 @@ const logOut = async function() { // выключение индикаторов
     localStorage.setItem('IsLoggedIn', false)
     localStorage.removeItem('userInfo')
 
-    const loginBTN = document.getElementById('loginBtn')
+    const loginBTN = document.getElementById('loginBTN')
     const logoutBTN = document.getElementById('logoutBTN')
 
     loginBTN.style['display'] = 'inline-block'
