@@ -1458,7 +1458,7 @@ let viewContent = {
         titleBlock.className = 'title'
         titleP.textContent = title
         labels.className = 'labels'
-        labels.textContent = 'labels'
+        // labels.textContent = 'labels'
 
         objectsList.append(noteBlock)
         noteBlock.append(blockRow)
@@ -1471,7 +1471,7 @@ let viewContent = {
         }
         coll2.append(titleBlock)
         titleBlock.append(titleP)
-        coll3.append(labels)
+        // coll3.append(labels)
 
         this.createSVG(  // type
             coll1,  // parent
