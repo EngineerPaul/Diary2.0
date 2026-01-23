@@ -126,7 +126,7 @@ class ObtainTokens(TokenObtainPairView):
             )
 
         try:
-            tg_nickname = user.userdetails.tg_nickname
+            tg_nickname = user.userdetails.tg_username
         except UserDetails.DoesNotExist:
             tg_nickname = None
 
