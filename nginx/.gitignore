@@ -1,0 +1,11 @@
+# SSL сертификаты
+ssl/*
+ssl/*.pem
+ssl/*.key
+ssl/*.crt
+ssl/certs/
+ssl/private/
+
+# Временные файлы
+*.tmp
+*.swp

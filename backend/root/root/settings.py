@@ -143,3 +143,29 @@ TOKENS_LIFETIME = {
     # 'ACCESS_TOKEN_LIFETIME': datetime.timedelta(seconds=4),  # для тестов
     # 'REFRESH_TOKEN_LIFETIME': datetime.timedelta(seconds=1),  # для тестов
 }
+
+# Настройки для работы SSL (создаю до хостинга по совету windsurf)
+if not DEBUG:
+    # необходимо для нормальной работы в проде с SSL
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Django доверяет HTTPS заголовку от nginx
+    USE_X_FORWARDED_HOST = True  # Использовать Host из X-Forwarded-Host (для правильных URL)
+    USE_X_FORWARDED_PORT = True  # Использовать порт из X-Forwarded-Port (для правильных URL)
+
+    # Защита cookies - работают только по HTTPS
+    SESSION_COOKIE_SECURE = True  # Cookies передаются только по HTTPS
+    CSRF_COOKIE_SECURE = True  # CSRF токен только по HTTPS
+    SESSION_COOKIE_HTTPONLY = True  # Cookies недоступны для JavaScript (защита от XSS)
+    CSRF_COOKIE_HTTPONLY = True  # CSRF токен недоступен для JavaScript
+
+    # Принудительный HTTPS (отключено для разработки)
+    # SECURE_SSL_REDIRECT = True  # Автоматический редирект HTTP → HTTPS
+
+    # HSTS - заставляет браузер использовать только HTTPS (отключено для разработки)
+    # SECURE_HSTS_SECONDS = 31536000  # 1 год браузер помнит что нужно только HTTPS
+    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # HSTS применяется ко всем поддоменам
+    # SECURE_HSTS_PRELOAD = True  # Сайт можно добавить в preload список браузеров
+
+    # Дополнительные security headers
+    SECURE_CONTENT_TYPE_NOSNIFF = True  # Защита от MIME-тип атак
+    SECURE_BROWSER_XSS_FILTER = True  # Включить XSS фильтр браузера
+    X_FRAME_OPTIONS = 'DENY'  # Запретить embedding сайта в iframe (защита от clickjacking)

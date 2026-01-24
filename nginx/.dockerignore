@@ -1,0 +1,14 @@
+# SSL сертификаты (не нужны в образе при сборке)
+ssl/*.pem
+ssl/*.key
+ssl/*.crt
+ssl/certs/
+ssl/private/
+
+# Git файлы
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
