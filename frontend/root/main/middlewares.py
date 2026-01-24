@@ -62,7 +62,32 @@ class AuthMiddleware(MiddlewareMixin):
                 }
                 return None
 
-        response = HttpResponseRedirect(PROJECT_HOSTS['frontend'] + 'login')
+        # Для правильно порта в redirect используем порт, передаваемый nginx
+        # Определяем базовый URL для редиректа из заголовков nginx
+        # Используем Host заголовок для получения полного хоста с портом
+        forwarded_port = request.META.get('HTTP_X_FORWARDED_PORT')
+        forwarded_host = request.META.get('HTTP_X_FORWARDED_HOST')
+        host_header = request.META.get('HTTP_HOST')  # Содержит хост с портом
+        forwarded_proto = request.META.get('HTTP_X_FORWARDED_PROTO')
+
+        if forwarded_port and host_header:
+            # Запрос идет через nginx - используем Host с портом из заголовка
+            redirect_url = f"{forwarded_proto or 'http'}://{host_header}/"
+        elif forwarded_host and forwarded_port:
+            # Fallback если Host не доступен
+            redirect_url = (
+                f"{forwarded_proto or 'http'}://{forwarded_host}:"
+                f"{forwarded_port}/"
+            )
+        else:
+            # Прямой доступ (для разработки) - используем Host если доступен
+            host_header = request.META.get('HTTP_HOST')
+            if host_header:
+                redirect_url = f"http://{host_header}/"
+            else:
+                redirect_url = PROJECT_HOSTS['frontend']
+
+        response = HttpResponseRedirect(redirect_url + 'login')
         response.delete_cookie(
             key='access_token',
             samesite='Lax',

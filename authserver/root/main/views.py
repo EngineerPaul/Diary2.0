@@ -183,7 +183,15 @@ class RefreshTokens(TokenRefreshView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except TokenError as e:
-            return Response(e,status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'is_valid': False, 'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'is_valid': False, 'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         # response = Response(serializer.validated_data, status=status.HTTP_200_OK)
         # response = Response(data={'success': True}, status=status.HTTP_200_OK)
