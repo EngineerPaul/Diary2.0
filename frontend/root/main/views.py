@@ -8,7 +8,7 @@ class LoginRequiredMixin:
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.get('is_auth', False):
-            return HttpResponseRedirect(PROJECT_HOSTS['frontend'] + 'login')
+            return HttpResponseRedirect('/login')
         return super().dispatch(request, *args, **kwargs)
 
 

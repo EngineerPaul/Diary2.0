@@ -136,7 +136,7 @@ class UpcomingNoticeList:
     ) -> Optional[List[Dict[str, int]]]:
         """ Get chat ids from database """
 
-        url = PROJECT_HOSTS['auth_server'] + "api/users/chat-ids"
+        url = PROJECT_HOSTS['auth_server'] + "auth/users/chat-ids"
         headers = {
             'Content-Type': 'application/json'
         }
@@ -205,7 +205,7 @@ def get_user_id(chat_id: int) -> int:
     """ Get user_id by tg chat_id from auth server """
 
     try:
-        url = PROJECT_HOSTS['auth_server'] + "api/users/user-id"
+        url = PROJECT_HOSTS['auth_server'] + "auth/users/user-id"
         headers = {
             'Content-Type': 'application/json'
         }

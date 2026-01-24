@@ -38,7 +38,7 @@ RUN addgroup -S django_group && adduser -S django_user -G django_group
 ENV HOME=/home/frontendapp
 ENV APP_HOME=/home/frontendapp/front
 # создаем папки staticfiles и mediafiles сами, иначе это сделает потом root пользователь и у нас (нового юзера django_user) не будет прав в этой папке
-RUN mkdir $APP_HOME $APP_HOME/staticfiles $APP_HOME/mediafiles
+RUN mkdir $APP_HOME $APP_HOME/root $APP_HOME/root/staticfiles
 WORKDIR $APP_HOME
 
 # добавляем путь к локальным бинарникам в PATH (optional)

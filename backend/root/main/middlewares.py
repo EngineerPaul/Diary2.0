@@ -97,7 +97,7 @@ class AuthMiddleware(MiddlewareMixin):
     def verify(self, access_token):
         """ Проверка Access токена """
 
-        url = PROJECT_HOSTS['auth_server'] + 'verify'
+        url = PROJECT_HOSTS['auth_server'] + 'auth/verify'
         data = {'token': access_token}
         response = requests.post(url, json=data)
         if response.status_code == 400:
@@ -107,7 +107,7 @@ class AuthMiddleware(MiddlewareMixin):
     def refresh(self, refresh_token):
         """ Проверка Refresh токена """
 
-        url = PROJECT_HOSTS['auth_server'] + 'refresh'
+        url = PROJECT_HOSTS['auth_server'] + 'auth/refresh'
         data = {'refresh': refresh_token}
         response = requests.post(url, json=data)
         if response.status_code in [400, 401]:

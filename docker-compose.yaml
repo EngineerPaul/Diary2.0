@@ -18,7 +18,7 @@ services:
     secrets:
       - frontend_secrets
     volumes:
-      - static_volume:/home/frontendapp/front/staticfiles
+      - static_volume:/home/frontendapp/front/root/staticfiles
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]  # --quiet - без вывода, --spider - проверка доступности без скачивания
@@ -59,6 +59,8 @@ services:
       - 8002:8000
     secrets:
       - backend_secrets
+    volumes:
+      - media_volume:/home/backendapp/back/root/mediafiles
     restart: unless-stopped
     depends_on:
       - back_db
@@ -205,9 +207,28 @@ services:
       - redis_secrets
     depends_on:
       - redis
+  
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: dockerfile
+    container_name: nginx
+    ports:
+      - 1338:80
+    volumes:
+      - static_volume:/var/www/static
+      - media_volume:/var/www/media
+    depends_on:
+      - front
+      - authserver
+      - back
+    # bot и botapi nginx никак не проксирует, они общаются внутри сети docker
+    # botapi делает запросы к back и authserver, но без участия браузера (а внутри сети docker)
+    restart: unless-stopped
 
 volumes:
   static_volume:
+  media_volume:
 
 secrets:
   redis_secrets:

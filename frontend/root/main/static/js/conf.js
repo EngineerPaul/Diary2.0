@@ -1,15 +1,24 @@
 export const Domains = {  // servers domains including ports
-    'auth': 'http://127.0.0.1:8001/',
-    'server': 'http://127.0.0.1:8002/',
-    'frontend': 'http://127.0.0.1:8000/',
+    // for local and docker
+    // 'auth': 'http://127.0.0.1:8001/',
+    // 'server': 'http://127.0.0.1:8002/',
+    // 'frontend': 'http://127.0.0.1:8000/',
+
+    // for Nginx
+    'auth': '/',
+    'server': '/',
+    'frontend': '/',
 }
 
 export const Urls = {  // backend urls
     // authentication
-    'registrationUrl': 'registration',
-    'loginUrl': 'obtain',
-    'logoutUrl': 'logout',
-    'authStatusCheck': 'auth-check',
+    'registrationUrl': 'auth/registration',
+    'loginUrl': 'auth/obtain',
+    'logoutUrl': 'auth/logout',
+    'authStatusCheck': 'auth/auth-check',
+    // TG Auth API
+    tgAuthDate: 'auth/tg-auth/date',  // set tg auth date
+    tgAuthCheck: 'auth/tg-auth/check', // get tg nickname
 
     // test
     'publickUrl': 'api/publick/',
@@ -46,10 +55,6 @@ export const Urls = {  // backend urls
     // Notice API
     noticeImages: (notice_id) => `api/notices/${notice_id}/images/`,  // get/post/delete images by notice
     noticeImage: (notice_id, img_id) => `api/notices/${notice_id}/images/${img_id}/`,  // get/delete single image by id
-
-    // TG Auth API
-    tgAuthDate: 'api/tg-auth/date',  // set tg auth date
-    tgAuthCheck: 'api/tg-auth/check', // get tg nickname
 }
 
 export const TelegramBot = {

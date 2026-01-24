@@ -1,0 +1,18 @@
+FROM nginx:1.27-alpine
+
+# Удаляем стандартную конфигурацию
+RUN rm /etc/nginx/conf.d/default.conf
+# Создаем директорию для логов
+RUN mkdir -p /var/log/nginx
+
+# Копируем файлы конфигурации и статики
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY mime.types /etc/nginx/mime.types
+# COPY nginx.html /usr/share/nginx/html/index.html  # только для тестов в начале разработки
+
+# порт внутри контейнера (compose его переписывает, но лишним не будет)
+EXPOSE 80
+
+# Запускаем nginx в foreground 
+# (запрещаем nginx выходить в фоновый режим и удерживаем внутри контейнера)
+CMD ["nginx", "-g", "daemon off;"]
