@@ -11,7 +11,8 @@ services:
     command: >
       sh -c "
         python3 manage.py collectstatic --noinput &&
-        python3 manage.py runserver 0.0.0.0:8000
+        # python3 manage.py runserver 0.0.0.0:8000
+        python3 -m gunicorn --config /home/frontendapp/front/gunicorn.conf.py root.wsgi:application
       "
     ports:
       - 8000:8000
@@ -33,7 +34,8 @@ services:
       dockerfile: dockerfile.prod
     container_name: diary_authserver
     working_dir: /home/authserverapp/auth/root
-    entrypoint: ["/home/authserverapp/auth/entrypoint.sh", "python3", "manage.py", "runserver", "0.0.0.0:8000"]
+    # entrypoint: ["/home/authserverapp/auth/entrypoint.sh", "python3", "manage.py", "runserver", "0.0.0.0:8000"]
+    entrypoint: ["/home/authserverapp/auth/entrypoint.sh", "python3", "-m", "gunicorn", "--config", "/home/authserverapp/auth/gunicorn.conf.py", "root.wsgi:application"]
     ports:
       - 8001:8000
     secrets:
@@ -54,7 +56,8 @@ services:
       dockerfile: dockerfile.prod
     container_name: diary_backend
     working_dir: /home/backendapp/back/root
-    entrypoint: ["/home/backendapp/back/entrypoint.sh", "python3", "manage.py", "runserver", "0.0.0.0:8000"]
+    # entrypoint: ["/home/backendapp/back/entrypoint.sh", "python3", "manage.py", "runserver", "0.0.0.0:8000"]
+    entrypoint: ["/home/backendapp/back/entrypoint.sh", "python3", "-m", "gunicorn", "--config", "/home/backendapp/back/gunicorn.conf.py", "root.wsgi:application"]
     ports:
       - 8002:8000
     secrets:

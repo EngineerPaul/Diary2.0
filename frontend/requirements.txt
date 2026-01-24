@@ -1,3 +1,4 @@
 Django==5.2.7
 requests==2.32.5
 python-dotenv==1.2.1
+gunicorn==23.0.0
