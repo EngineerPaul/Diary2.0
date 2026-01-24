@@ -60,7 +60,7 @@ services:
     secrets:
       - backend_secrets
     volumes:
-      - media_volume:/home/backendapp/back/root/mediafiles
+      - ./_media/data:/home/backendapp/back/root/mediafiles
     restart: unless-stopped
     depends_on:
       - back_db
@@ -219,7 +219,7 @@ services:
       # - 443:443  # занят прилокальной разработке
     volumes:
       - static_volume:/var/www/static
-      - media_volume:/var/www/media
+      - ./_media/data:/var/www/media
       # Для разработки (отключить в проде)
       - ./nginx/conf.d/local.conf:/etc/nginx/conf.d/default.conf
       # Для production (оба включить в проде)
@@ -235,7 +235,6 @@ services:
 
 volumes:
   static_volume:
-  media_volume:
 
 secrets:
   redis_secrets:

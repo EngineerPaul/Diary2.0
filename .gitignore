@@ -6,13 +6,13 @@ django_cache/
 db.sqlite3
 media/
 venv/
-_redis_data/
+_redis/data/
 _auth_db/data/
 _back_db/data/
+_media/data/
 req_freeze.txt
 .vscode/
 server_test/
 migrations/
 media_files/
 test_imgs/
-_redis/data/*
