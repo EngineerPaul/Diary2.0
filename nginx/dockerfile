@@ -9,6 +9,9 @@ RUN rm /etc/nginx/conf.d/default.conf && \
 # Копируем основные файлы конфигурации (2 шт.)
 COPY nginx.conf mime.types /etc/nginx/
 
+# Копируем status страницу для проверки работы
+COPY nginx.html /usr/share/nginx/html/
+
 # Порт внутри контейнера
 EXPOSE 80
 
