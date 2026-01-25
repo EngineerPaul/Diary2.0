@@ -86,7 +86,7 @@ class Registration(APIView):
             key='access_token',      # имя cookie
             value=str(refresh.access_token),  # значение (токен)
             httponly=True,           # недоступно из JS
-            secure=True,             # только по HTTPS (рекомендуется)
+            # secure=True,             # только по HTTPS (рекомендуется)
             samesite='Lax',          # защита от CSRF
             max_age=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds(),
             path='/'                 # путь
@@ -95,7 +95,7 @@ class Registration(APIView):
             key='refresh_token',
             value=str(refresh),
             httponly=True,
-            secure=True,
+            # secure=True,
             samesite='Lax',
             max_age=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds(),
             path='/'
@@ -146,7 +146,7 @@ class ObtainTokens(TokenObtainPairView):
             key='access_token',      # имя cookie
             value=str(access),       # значение (токен)
             httponly=True,           # недоступно из JS
-            secure=True,             # только по HTTPS (рекомендуется)
+            # secure=True,             # только по HTTPS (рекомендуется)
             samesite='Lax',          # защита от CSRF
             max_age=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds(),
             path='/'                 # путь
@@ -155,7 +155,7 @@ class ObtainTokens(TokenObtainPairView):
             key='refresh_token',
             value=str(refresh),
             httponly=True,
-            secure=True,
+            # secure=True,
             samesite='Lax',
             max_age=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds(),
             path='/'
