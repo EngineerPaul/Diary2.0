@@ -1,0 +1,40 @@
+# SSL Factory - Временная инфраструктура для получения SSL сертификатов
+# Этот compose файл запускается только для операций с сертификатами
+# НЕ используется для основного продакшн проекта
+
+services:
+  # Временный nginx для HTTP верификации домена Let's Encrypt
+  nginx-temp:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: ssl-factory-nginx
+    ports:
+      - "80:80"  # Занимает порт 80 после остановки основного nginx
+    volumes:
+      # Папка для временных токенов верификации
+      - ./_temp_token:/var/www/certbot
+      # Папка для готовых сертификатов (выход)
+      - ../nginx/ssl:/etc/nginx/ssl-output
+    command: nginx -g "daemon off;"  # Запуск nginx в foreground
+    restart: unless-stopped
+    
+  # Certbot - получение и обновление SSL сертификатов
+  certbot:
+    build:
+      context: ./certbot
+      dockerfile: Dockerfile
+    container_name: ssl-factory-certbot
+    volumes:
+      # Постоянное хранилище сертификатов Let's Encrypt
+      - ./letsencrypt:/etc/letsencrypt
+      # Рабочие сертификаты для nginx (выход)
+      - ../nginx/ssl:/etc/nginx/ssl-output
+      # Папка для HTTP верификации
+      - ./_temp_token:/var/www/certbot
+    env_file:
+      - ./certbot/.env  # DOMAIN, EMAIL, CERTBOT_MODE
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    depends_on:
+      - nginx-temp  # Запускать после nginx-temp
+    restart: "no"  # Контейнер удаляется после выполнения

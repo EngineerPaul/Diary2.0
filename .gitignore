@@ -1,5 +1,6 @@
 *.env
 *-secrets.txt
+certbot/.env
 __pycache__/
 *.pyc
 django_cache/
@@ -16,3 +17,4 @@ server_test/
 migrations/
 media_files/
 test_imgs/
+others/
