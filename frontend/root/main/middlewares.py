@@ -3,7 +3,7 @@ import requests
 from django.utils.deprecation import MiddlewareMixin
 from django.http import HttpResponseRedirect
 
-from root.settings import PROJECT_HOSTS, TOKENS_LIFETIME, SINGLE_USER
+from root.settings import PROJECT_HOSTS, TOKENS_LIFETIME, SINGLE_USER, SSL
 
 
 class AuthMiddleware(MiddlewareMixin):
@@ -112,7 +112,7 @@ class AuthMiddleware(MiddlewareMixin):
                 key='access_token',
                 value=str(request.tokens['access_token']),
                 httponly=True,
-                # secure=True,
+                secure=SSL,
                 samesite='Lax',
                 max_age=TOKENS_LIFETIME['ACCESS_TOKEN_LIFETIME'].total_seconds(),
                 path='/'
@@ -121,7 +121,7 @@ class AuthMiddleware(MiddlewareMixin):
                 key='refresh_token',
                 value=str(request.tokens['refresh_token']),
                 httponly=True,
-                # secure=True,
+                secure=SSL,
                 samesite='Lax',
                 max_age=TOKENS_LIFETIME['REFRESH_TOKEN_LIFETIME'].total_seconds(),
                 path='/'

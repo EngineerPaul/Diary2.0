@@ -13,6 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = get_secret('SECRET_KEY')
+SSL = get_json_secret('SSL', False)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = get_json_secret('DEBUG', False)
@@ -147,15 +148,17 @@ if not DEBUG:
     SESSION_COOKIE_HTTPONLY = True  # Cookies недоступны для JavaScript (защита от XSS)
     CSRF_COOKIE_HTTPONLY = True  # CSRF токен недоступен для JavaScript
 
-    # Принудительный HTTPS (отключено для разработки)
-    # SECURE_SSL_REDIRECT = True  # Автоматический редирект HTTP → HTTPS
-
-    # HSTS - заставляет браузер использовать только HTTPS (отключено для разработки)
-    # SECURE_HSTS_SECONDS = 31536000  # 1 год браузер помнит что нужно только HTTPS
-    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # HSTS применяется ко всем поддоменам
-    # SECURE_HSTS_PRELOAD = True  # Сайт можно добавить в preload список браузеров
-
     # Дополнительные security headers
     SECURE_CONTENT_TYPE_NOSNIFF = True  # Защита от MIME-тип атак
     SECURE_BROWSER_XSS_FILTER = True  # Включить XSS фильтр браузера
     X_FRAME_OPTIONS = 'DENY'  # Запретить embedding сайта в iframe (защита от clickjacking)
+
+# обязательно отключить без SSL!
+if SSL:
+    # Принудительный HTTPS (отключено для разработки)
+    SECURE_SSL_REDIRECT = True  # Автоматический редирект HTTP → HTTPS
+
+    # HSTS - заставляет браузер использовать только HTTPS (отключено для разработки)
+    SECURE_HSTS_SECONDS = 31536000  # 1 год браузер помнит что нужно только HTTPS
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # HSTS применяется ко всем поддоменам
+    SECURE_HSTS_PRELOAD = True  # Сайт можно добавить в preload список браузеров

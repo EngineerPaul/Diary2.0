@@ -26,7 +26,7 @@ from .serializers import (
     GetUserIdSerializer,
 )
 from .queries import create_root_folders
-from root.settings import TGAuthTimeout
+from root.settings import TGAuthTimeout, SSL
 
 
 class Registration(APIView):
@@ -86,7 +86,7 @@ class Registration(APIView):
             key='access_token',      # имя cookie
             value=str(refresh.access_token),  # значение (токен)
             httponly=True,           # недоступно из JS
-            # secure=True,             # только по HTTPS (рекомендуется)
+            secure=SSL,              # только по HTTPS (рекомендуется)
             samesite='Lax',          # защита от CSRF
             max_age=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds(),
             path='/'                 # путь
@@ -95,7 +95,7 @@ class Registration(APIView):
             key='refresh_token',
             value=str(refresh),
             httponly=True,
-            # secure=True,
+            secure=SSL,
             samesite='Lax',
             max_age=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds(),
             path='/'
@@ -146,7 +146,7 @@ class ObtainTokens(TokenObtainPairView):
             key='access_token',      # имя cookie
             value=str(access),       # значение (токен)
             httponly=True,           # недоступно из JS
-            # secure=True,             # только по HTTPS (рекомендуется)
+            secure=SSL,              # только по HTTPS (рекомендуется)
             samesite='Lax',          # защита от CSRF
             max_age=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds(),
             path='/'                 # путь
@@ -155,7 +155,7 @@ class ObtainTokens(TokenObtainPairView):
             key='refresh_token',
             value=str(refresh),
             httponly=True,
-            # secure=True,
+            secure=SSL,
             samesite='Lax',
             max_age=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds(),
             path='/'
@@ -202,7 +202,7 @@ class RefreshTokens(TokenRefreshView):
         #     key='access_token',      # имя cookie
         #     value=str(access),       # значение (токен)
         #     httponly=True,           # недоступно из JS
-        #     secure=True,             # только по HTTPS (рекомендуется)
+        #     secure=SSL,              # только по HTTPS (рекомендуется)
         #     samesite='Lax',          # защита от CSRF
         #     max_age=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds(),
         #     path='/'                 # путь
@@ -211,7 +211,7 @@ class RefreshTokens(TokenRefreshView):
         #     key='refresh_token',
         #     value=str(refresh),
         #     httponly=True,
-        #     secure=True,
+        #     secure=SSL,
         #     samesite='Lax',
         #     max_age=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds(),
         #     path='/'

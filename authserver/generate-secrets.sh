@@ -15,6 +15,7 @@ if [ -f ".env" ]; then
     # Читаем переменные в той же последовательности что в .env
     SECRET_KEY=$(openssl rand -base64 64 | tr -d '\n\r' | dd bs=50 count=1 2>/dev/null)
     DEBUG=$(grep "^DEBUG=" .env | cut -d= -f2-)
+    SSL=$(grep "^SSL=" .env | cut -d= -f2-)
     CORS_ALLOWED_ORIGINS=$(grep "^CORS_ALLOWED_ORIGINS=" .env | cut -d= -f2-)
     CORS_ALLOW_CREDENTIALS=$(grep "^CORS_ALLOW_CREDENTIALS=" .env | cut -d= -f2-)
     ACCESS_TOKEN_LIFETIME=$(grep "^ACCESS_TOKEN_LIFETIME=" .env | cut -d= -f2-)
@@ -37,6 +38,7 @@ fi
 cat > authserver-secrets.txt << EOF
 SECRET_KEY=${SECRET_KEY}
 DEBUG=${DEBUG}
+SSL=${SSL}
 CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
 CORS_ALLOW_CREDENTIALS=${CORS_ALLOW_CREDENTIALS}
 ACCESS_TOKEN_LIFETIME=${ACCESS_TOKEN_LIFETIME}

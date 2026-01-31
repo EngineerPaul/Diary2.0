@@ -10,13 +10,14 @@ if [ -f ".env" ]; then
     REFRESH_TOKEN_LIFETIME=$(grep "^REFRESH_TOKEN_LIFETIME=" .env | cut -d= -f2-)
     PROJECT_HOSTS=$(grep "^PROJECT_HOSTS=" .env | cut -d= -f2-)
     DEBUG=$(grep "^DEBUG=" .env | cut -d= -f2-)
+    SSL=$(grep "^SSL=" .env | cut -d= -f2-)
     SINGLE_USER=$(grep "^SINGLE_USER=" .env | cut -d= -f2-)
     DJANGO_ALLOWED_HOSTS=$(grep "^DJANGO_ALLOWED_HOSTS=" .env | cut -d= -f2-)
     
     # Проверяем что все переменные найдены
-    if [ -z "$ACCESS_TOKEN_LIFETIME" ] || [ -z "$REFRESH_TOKEN_LIFETIME" ] || [ -z "$PROJECT_HOSTS" ] || [ -z "$DEBUG" ] || [ -z "$SINGLE_USER" ] || [ -z "$DJANGO_ALLOWED_HOSTS" ]; then
+    if [ -z "$ACCESS_TOKEN_LIFETIME" ] || [ -z "$REFRESH_TOKEN_LIFETIME" ] || [ -z "$PROJECT_HOSTS" ] || [ -z "$DEBUG" ] || [ -z "$SSL" ] || [ -z "$SINGLE_USER" ] || [ -z "$DJANGO_ALLOWED_HOSTS" ]; then
         echo "ERROR: Required variables not found in .env file"
-        echo "Missing: ACCESS_TOKEN_LIFETIME, REFRESH_TOKEN_LIFETIME, PROJECT_HOSTS, DEBUG, SINGLE_USER, or DJANGO_ALLOWED_HOSTS"
+        echo "Missing: ACCESS_TOKEN_LIFETIME, REFRESH_TOKEN_LIFETIME, PROJECT_HOSTS, DEBUG, SSL, SINGLE_USER, or DJANGO_ALLOWED_HOSTS"
         exit 1
     fi
 else
@@ -28,6 +29,7 @@ fi
 cat > frontend-secrets.txt << EOF
 SECRET_KEY=${SECRET_KEY}
 DEBUG=${DEBUG}
+SSL=${SSL}
 ACCESS_TOKEN_LIFETIME=${ACCESS_TOKEN_LIFETIME}
 REFRESH_TOKEN_LIFETIME=${REFRESH_TOKEN_LIFETIME}
 PROJECT_HOSTS=${PROJECT_HOSTS}
