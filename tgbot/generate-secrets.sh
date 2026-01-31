@@ -11,13 +11,12 @@ fi
 TOKEN=$(grep "^TOKEN=" .env | cut -d= -f2-)
 ID=$(grep "^ID=" .env | cut -d= -f2-)
 SITELINK=$(grep "^SITELINK=" .env | cut -d= -f2-)
-TGSERVERHOST=$(grep "^TGSERVERHOST=" .env | cut -d= -f2-)
 PROJECT_HOSTS=$(grep "^PROJECT_HOSTS=" .env | cut -d= -f2-)
 DEBUG=$(grep "^DEBUG=" .env | cut -d= -f2-)
 
-if [ -z "$TOKEN" ] || [ -z "$ID" ] || [ -z "$SITELINK" ] || [ -z "$TGSERVERHOST" ] || [ -z "$PROJECT_HOSTS" ] || [ -z "$DEBUG" ]; then
+if [ -z "$TOKEN" ] || [ -z "$ID" ] || [ -z "$SITELINK" ] || [ -z "$PROJECT_HOSTS" ] || [ -z "$DEBUG" ]; then
     echo "ERROR: Required variables not found in .env file"
-    echo "Missing: TOKEN, ID, SITELINK, TGSERVERHOST, PROJECT_HOSTS, or DEBUG"
+    echo "Missing: TOKEN, ID, SITELINK, PROJECT_HOSTS, or DEBUG"
     exit 1
 fi
 
