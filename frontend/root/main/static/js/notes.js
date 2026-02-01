@@ -193,8 +193,19 @@ let queries = {
         const response = await conf.AJAX.send(url, options)
         return response
     },
-    delRecord: function() { // delete whole record with all notes and images
-
+    delRecord: async function() { // delete whole record with all notes and images
+        const url = conf.Domains['server'] + conf.Urls.FSRecord(this.recordId)
+        const options = {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        }
+        const response = await conf.AJAX.send(url, options)
+        if (response) {
+            window.location.href = '/'
+        }
     },
     handleAddNoteSubmit: async function(event) {
         event.preventDefault()
@@ -266,9 +277,11 @@ let queries = {
         const addNoteForm = document.getElementById('addNoteForm')
         const addImagesForm = document.getElementById('addImagesForm')
         const updateRecordForm = document.getElementById('crtRecordForm')
+        const delRecordBtn = document.querySelector('.menu-item.cross')
         addNoteForm.addEventListener('submit', this.handleAddNoteSubmit.bind(this))
         addImagesForm.addEventListener('submit', this.handleAddImagesSubmit.bind(this))
         updateRecordForm.addEventListener('submit', this.handleUpdateRecordSubmit.bind(this))
+        delRecordBtn.addEventListener('click', this.delRecord.bind(this))
     }
 }
 queries.run()
@@ -573,7 +586,7 @@ let settings = {
                 }
             }
             
-            this.viewModal('modalRecord')
+            this.modals.viewModal.bind(this)('modalRecord')
         },
         openEditImagesModal: async function(event) {  // open modal for editing images group
             // Редактирование группы изображений - открываем модалку для добавления картинок
@@ -589,7 +602,7 @@ let settings = {
                         form.dataset.editMsgId = imagesBlock.id
                     }
                     // Открываем модалку для добавления картинок (та же, что при создании)
-                    this.viewModal('modalAddImages')
+                    this.modals.viewModal.bind(this)('modalAddImages')
                 }
             }
         },
