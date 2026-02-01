@@ -156,7 +156,7 @@ if not DEBUG:
 # обязательно отключить без SSL!
 if SSL:
     # Принудительный HTTPS (отключено для разработки)
-    SECURE_SSL_REDIRECT = True  # Автоматический редирект HTTP → HTTPS
+    # SECURE_SSL_REDIRECT = True  # Автоматический редирект HTTP → HTTPS
 
     # HSTS - заставляет браузер использовать только HTTPS (отключено для разработки)
     SECURE_HSTS_SECONDS = 31536000  # 1 год браузер помнит что нужно только HTTPS
