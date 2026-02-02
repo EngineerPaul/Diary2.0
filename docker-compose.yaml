@@ -23,7 +23,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 70M
+          memory: 100M
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]  # --quiet - без вывода, --spider - проверка доступности без скачивания
       interval: 60s
@@ -75,7 +75,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 70M
+          memory: 100M
     depends_on:
       - back_db
     healthcheck:
