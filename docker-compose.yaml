@@ -47,7 +47,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 70M
+          memory: 100M
     depends_on:
       - auth_db
     healthcheck:
