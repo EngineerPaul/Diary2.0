@@ -32,7 +32,12 @@ FROM python:3.12.11-alpine
 RUN mkdir -p /home/backendapp
 
 # создание нового (не root) пользователя и группы
-RUN addgroup -S back_user_group && adduser -S back_user -G back_user_group
+# RUN addgroup -S back_user_group && adduser -S back_user -G back_user_group
+# вручную устанавливает uid и gid, чтобы передать права папке mediafiles в start-with-secrets.sh
+# uid может выбраться автоматически, но тогда он может совпадать с uid пользователя снаружи контейнера
+# без этих прав сохранять файлы в наружной папке нельзя
+RUN addgroup -S -g 1001 back_user_group && \
+    adduser -S -u 1001 -G back_user_group back_user
 
 # запоминаем пути до рабочих папок в окружение
 ENV HOME=/home/backendapp

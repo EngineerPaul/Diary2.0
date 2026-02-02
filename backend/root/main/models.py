@@ -111,7 +111,7 @@ def get_unique_path(instance, filename, subfolder):
 class Image(models.Model):
     msg_id = models.ForeignKey(
         Message, on_delete=models.CASCADE, related_name='images')
-    name = models.CharField()
+    name = models.CharField(max_length=63)
     file = models.ImageField(
         upload_to=partial(get_unique_path, subfolder="records")
     )
@@ -139,7 +139,7 @@ class Notice(models.Model):
 class NoticeImage(models.Model):
     notice = models.ForeignKey(Notice, on_delete=models.CASCADE,
                                related_name='images')
-    name = models.CharField()
+    name = models.CharField(max_length=63)
     file = models.ImageField(
         upload_to=partial(get_unique_path, subfolder="notices")
     )
