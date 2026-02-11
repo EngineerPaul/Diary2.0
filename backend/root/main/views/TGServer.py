@@ -86,7 +86,7 @@ class UpcomingNoticeListAPI(APIView):
     """ Получение отчета об отправленных уведомлениях """
 
     def post(self, request):
-        serializer = UpcomingNoticeListSerializer(data=request.data)
+        serializer = UpcomingNoticeListSerializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
 
         UpcomingNoticeList().main()  # отправка нового списка

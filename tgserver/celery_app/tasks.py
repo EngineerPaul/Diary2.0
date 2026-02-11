@@ -28,8 +28,8 @@ def celery_check_dispatch_date():
         print('Сообщений для отправки нет')
         return
     now = datetime.now()
-    # if now > dispatch_date:
-    if True:
+    if now > dispatch_date:
+    # if True:
         # отправка списка сообщений
         print('dispatched')
         send_all_reminders.delay()
