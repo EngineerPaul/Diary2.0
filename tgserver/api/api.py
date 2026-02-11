@@ -111,7 +111,8 @@ async def userinfo_api(
 )
 async def get_notice_list_api(data: NoticeListSchema):  # получение списка уведомлений от сервера
     if REDIS_WORKS:
-        RemindData.set_reminders_list(data.notice_list)
+        notice_list_dicts = [notice.model_dump() for notice in data.notice_list]  # to dicts
+        RemindData.set_reminders_list(notice_list_dicts)
         RemindData.set_date(data.next_date)
 
     response = JSONResponse(

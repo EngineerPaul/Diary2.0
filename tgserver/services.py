@@ -48,5 +48,5 @@ class RemindData():
             redis_set('reminders_list', json_rem_list)
 
 
-RemindData.set_reminders_list(None)  # default
-RemindData.set_date(None)  # default
+# RemindData.set_reminders_list(None)  # default
+# RemindData.set_date(None)  # default

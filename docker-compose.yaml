@@ -201,6 +201,8 @@ services:
       context: ./tgserver
       dockerfile: dockerfile
     command: ["celery", '-A', 'celery_app.celery_client', 'worker']
+    environment:
+      - PYTHONUNBUFFERED=1
     secrets:
       - tgserver_secrets
       - redis_secrets
@@ -213,6 +215,8 @@ services:
       context: ./tgserver
       dockerfile: dockerfile
     command: ["celery", '-A', 'celery_app.celery_client', 'beat']
+    environment:
+      - PYTHONUNBUFFERED=1
     secrets:
       - tgserver_secrets
       - redis_secrets

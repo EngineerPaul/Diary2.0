@@ -30,10 +30,8 @@ def redis_get(key):
     """ Getting variable from the redis """
 
     var = redis_client.get(key)
-    if var is None:
-        return f"The {key} key doens't exist"
-    var = json.loads(var)
-    return var
+    response = None if var is None else json.loads(var)
+    return response
 
 
 def redis_del(key):

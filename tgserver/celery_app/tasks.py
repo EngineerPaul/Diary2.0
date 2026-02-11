@@ -1,6 +1,8 @@
 from datetime import datetime
 import asyncio
 
+import aiohttp
+
 from celery_app.celery_client import celery_app
 from services import RemindData
 from queries.to_tgbot import send_msg_bot
@@ -26,10 +28,14 @@ def celery_check_dispatch_date():
         print('Сообщений для отправки нет')
         return
     now = datetime.now()
-    if now > dispatch_date:
+    # if now > dispatch_date:
+    if True:
         # отправка списка сообщений
+        print('dispatched')
         send_all_reminders.delay()
     else:
+        print('dispatch_date = ', dispatch_date)
+        print('now = ', now)
         print(f'Отправка через {dispatch_date - now} секунд')
 
 
@@ -45,8 +51,8 @@ def send_all_reminders():
     for rem in rem_list:
         asyncio.run(
             send_msg_bot(
-                chat_id=rem['tg_id'],
-                text=rem['message'],
+                chat_id=rem['chat_id'],
+                text=rem['text'],
                 user_id=rem['user_id'],
                 reminder_id=rem['reminder_id'],
             )
@@ -55,5 +61,9 @@ def send_all_reminders():
     RemindData.set_reminders_list(None)
     RemindData.set_date(None)
 
-    # отправка отчета серверу
-    send_mailing_list_report(rem_list)
+    # отправка отчета серверу (иначе только через requests)
+    async def _send_report():
+        async with aiohttp.ClientSession() as session:
+            await send_mailing_list_report(rem_list, session)
+
+    asyncio.run(_send_report())
