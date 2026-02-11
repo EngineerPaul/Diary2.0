@@ -7,6 +7,8 @@ services:
       dockerfile: dockerfile.prod
     container_name: diary_frontend
     working_dir: /home/frontendapp/front/root
+    environment:
+      - PYTHONUNBUFFERED=1
     command: >
       sh -c "
         python3 manage.py collectstatic --noinput &&
@@ -20,16 +22,12 @@ services:
     volumes:
       - static_volume:/home/frontendapp/front/root/staticfiles
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 100M
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]  # --quiet - без вывода, --spider - проверка доступности без скачивания
-      interval: 60s
-      timeout: 30s
-      start_period: 10s
-      retries: 3
+    # healthcheck:
+    #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]  # --quiet - без вывода, --spider - проверка доступности без скачивания
+    #   interval: 60s
+    #   timeout: 30s
+    #   start_period: 10s
+    #   retries: 3
 
   authserver:
     build:
@@ -37,6 +35,8 @@ services:
       dockerfile: dockerfile.prod
     container_name: diary_authserver
     working_dir: /home/authserverapp/auth/root
+    environment:
+      - PYTHONUNBUFFERED=1
     # entrypoint: ["/home/authserverapp/auth/entrypoint.sh", "python3", "manage.py", "runserver", "0.0.0.0:8000"]
     entrypoint: ["/home/authserverapp/auth/entrypoint.sh", "python3", "-m", "gunicorn", "--config", "/home/authserverapp/auth/gunicorn.conf.py", "root.wsgi:application"]
     ports:
@@ -44,18 +44,14 @@ services:
     secrets:
       - authserver_secrets
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 100M
     depends_on:
       - auth_db
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]
-      interval: 60s
-      timeout: 30s
-      start_period: 10s
-      retries: 3
+    # healthcheck:
+    #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]
+    #   interval: 60s
+    #   timeout: 30s
+    #   start_period: 10s
+    #   retries: 3
 
   back:
     build:
@@ -63,6 +59,8 @@ services:
       dockerfile: dockerfile.prod
     container_name: diary_backend
     working_dir: /home/backendapp/back/root
+    environment:
+      - PYTHONUNBUFFERED=1
     # entrypoint: ["/home/backendapp/back/entrypoint.sh", "python3", "manage.py", "runserver", "0.0.0.0:8000"]
     entrypoint: ["/home/backendapp/back/entrypoint.sh", "python3", "-m", "gunicorn", "--config", "/home/backendapp/back/gunicorn.conf.py", "root.wsgi:application"]
     ports:
@@ -72,18 +70,14 @@ services:
     volumes:
       - ./_media/data:/home/backendapp/back/root/mediafiles
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 100M
     depends_on:
       - back_db
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]
-      interval: 60s
-      timeout: 30s
-      start_period: 10s
-      retries: 3
+    # healthcheck:
+    #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]
+    #   interval: 60s
+    #   timeout: 30s
+    #   start_period: 10s
+    #   retries: 3
 
   auth_db:
     image: postgres:16-alpine
@@ -100,16 +94,12 @@ services:
         export POSTGRES_PASSWORD=$$POSTGRES_PASSWORD &&
         exec docker-entrypoint.sh postgres
       '
-    healthcheck:
-      test: ["CMD-SHELL", "source /run/secrets/auth_db_secrets && pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+    # healthcheck:
+    #   test: ["CMD-SHELL", "source /run/secrets/auth_db_secrets && pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 40M
 
   back_db:
     image: postgres:16-alpine
@@ -126,40 +116,35 @@ services:
         export POSTGRES_PASSWORD=$$POSTGRES_PASSWORD &&
         exec docker-entrypoint.sh postgres
       '
-    healthcheck:
-      test: ["CMD-SHELL", "source /run/secrets/back_db_secrets && pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+    # healthcheck:
+    #   test: ["CMD-SHELL", "source /run/secrets/back_db_secrets && pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 40M
-
   bot:
     build:
       context: ./tgbot
       dockerfile: dockerfile
     container_name: diary_bot
     working_dir: /home/botapp/bot
+    environment:
+      - PYTHONUNBUFFERED=1
     command: python3 main.py
     secrets:
       - bot_secrets
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 35M
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]
-      interval: 60s
-      timeout: 30s
-      start_period: 10s
-      retries: 3
+    # healthcheck:
+    #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]
+    #   interval: 60s
+    #   timeout: 30s
+    #   start_period: 10s
+    #   retries: 3
 
   botapi:
     build: ./tgserver
+    environment:
+      - PYTHONUNBUFFERED=1
     command: python3 main.py
     ports:
       - 8003:8000
@@ -170,10 +155,6 @@ services:
       - redis
       - celery_worker
       - celery_beat
-    deploy:
-      resources:
-        limits:
-          memory: 35M
 
   redis:
     image: redis:8.2.2-alpine
@@ -205,11 +186,11 @@ services:
         fi &&
         redis-server /usr/local/etc/redis/redis.conf --aclfile /usr/local/etc/redis/users.acl
       '
-    healthcheck:
-      test: ["CMD", "sh", "-c", "source /run/secrets/redis_secrets && redis-cli -a $$REDIS_PASSWORD ping"]
-      interval: 300s
-      timeout: 10s
-      retries: 5
+    # healthcheck:
+    #   test: ["CMD", "sh", "-c", "source /run/secrets/redis_secrets && redis-cli -a $$REDIS_PASSWORD ping"]
+    #   interval: 300s
+    #   timeout: 10s
+    #   retries: 5
     restart: unless-stopped
     tty: true
     stdin_open: true
@@ -225,10 +206,6 @@ services:
       - redis_secrets
     depends_on:
       - redis
-    deploy:
-      resources:
-        limits:
-          memory: 35M
 
   celery_beat:
     container_name: tgserver_celery_beat
@@ -241,10 +218,6 @@ services:
       - redis_secrets
     depends_on:
       - redis
-    deploy:
-      resources:
-        limits:
-          memory: 35M
   
   nginx:
     build:
@@ -270,10 +243,6 @@ services:
     # bot и botapi nginx никак не проксирует, они общаются внутри сети docker
     # botapi делает запросы к back и authserver, но без участия браузера (а внутри сети docker)
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 20M
 
 volumes:
   static_volume:

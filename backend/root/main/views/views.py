@@ -114,6 +114,5 @@ class TestAPI(APIView):
     """ Апи для проверки конкретного функционала """
 
     def get(self, request):
-        from main.queries import send_notice_list
-        send_notice_list()
-        return Response()
+        print('TestAPI works')
+        return Response('test data', status=status.HTTP_200_OK)
