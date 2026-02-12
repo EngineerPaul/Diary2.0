@@ -23,6 +23,7 @@ class AuthMiddleware(MiddlewareMixin):
                 'username': None,
                 'role': 'Anonymous',
                 'is_auth': False,
+                'timezone': None,
             }
             return None
 
@@ -35,6 +36,7 @@ class AuthMiddleware(MiddlewareMixin):
                     'username': access_info['username'],
                     'role': access_info['role'],
                     'is_auth': True,
+                    'timezone': access_info['timezone'],
                 }
                 return None
 
@@ -46,6 +48,7 @@ class AuthMiddleware(MiddlewareMixin):
                     'username': refresh_info['username'],
                     'role': refresh_info['role'],
                     'is_auth': True,
+                    'timezone': access_info['timezone'],
                 }
                 request.tokens = {
                     'access_token': refresh_info['access'],

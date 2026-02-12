@@ -19,9 +19,11 @@ const sendRegistration = async function(event) {
     event.preventDefault()
 
     const regForm = document.getElementById('formRegistration')
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
     let data = {
         'username': regForm.username.value,
-        'password': regForm.password.value
+        'password': regForm.password.value,
+        'timezone': userTimezone,
     }
     const url = conf.Domains['auth'] + conf.Urls['registrationUrl']
     const options = {

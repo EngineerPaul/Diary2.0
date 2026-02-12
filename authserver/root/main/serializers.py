@@ -36,16 +36,18 @@ class CredentialSerializer(serializers.Serializer):
 
 
 class RegSerializer(CredentialSerializer):
+    timezone = serializers.CharField(max_length=35, required=True, allow_blank=False)
 
     def create(self, validated_data):
+        timezone_value = validated_data['timezone']
+
         user = User(
             username=validated_data['username']
         )
         user.set_password(validated_data['password'])
         user.save()
 
-        # добавить UserDetail
-        return user
+        return user, timezone_value
 
 
 class VerifySerializer(serializers.Serializer):
@@ -61,6 +63,7 @@ class ObtainSerializer(CredentialSerializer, TokenObtainPairSerializer):
         token['id'] = user.pk
         token['username'] = user.username
         token['role'] = 'user-role'
+        token['timezone'] = user.userdetails.timezone
         return token
 
 

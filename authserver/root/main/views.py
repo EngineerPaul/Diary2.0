@@ -52,12 +52,13 @@ class Registration(APIView):
             )
 
         try:
-            user = serializer.save()
-            UserDetails.objects.create(
+            user, timezone_value = serializer.save()
+            user_details = UserDetails.objects.create(
                 user_id=user,
                 tg_user_id=None,
                 chat_id=None,
-                tg_activation_date=timezone.now()
+                tg_activation_date=timezone.now(),
+                timezone=timezone_value
             )
 
             # Create root folders on backend server
@@ -67,14 +68,16 @@ class Registration(APIView):
             refresh.payload.update({  # Полезная информация в самом токене
                 'id': user.id,
                 'username': user.username,
-                'role': 'user-role'  # from UserDetails
+                'role': 'user-role',  # from UserDetails
+                'timezone': user_details.timezone
             })
             data = {
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),  # Отправка на клиент
                 'id': user.id,
                 'username': user.username,
-                'role': 'user-role'  # from UserDetails
+                'role': 'user-role',  # from UserDetails
+                'timezone': user_details.timezone
             }
             status_code = status.HTTP_201_CREATED
         except Exception as e:
@@ -129,6 +132,7 @@ class ObtainTokens(TokenObtainPairView):
             tg_nickname = user.userdetails.tg_username
         except UserDetails.DoesNotExist:
             tg_nickname = None
+        user_timezone = user.userdetails.timezone
 
         data = {
             'success': True,
@@ -136,6 +140,7 @@ class ObtainTokens(TokenObtainPairView):
             'role': 'user-role',
             'id': user.pk,
             'tg_nickname': tg_nickname,
+            'timezone': user_timezone,
         }
         response = Response(data=data, status=status.HTTP_200_OK)
         # response = Response(serializer.validated_data, status=status.HTTP_200_OK)
@@ -224,6 +229,7 @@ class RefreshTokens(TokenRefreshView):
             'id': payload['id'],
             'username': payload['username'],
             'role': payload['role'],
+            'timezone': payload['timezone'],
             'access': serializer.validated_data['access'],
             'refresh': serializer.validated_data['refresh'],
         }
@@ -262,6 +268,7 @@ class VerifyToken(APIView):
                 'id': payload['id'],
                 'username': payload['username'],
                 'role': payload['role'],
+                'timezone': payload['timezone'],
             }
             status_code = status.HTTP_200_OK
         except TokenError:
@@ -419,7 +426,8 @@ class TGAuthDate(APIView):
                 user_id=user,
                 tg_user_id=None,
                 chat_id=None,
-                tg_activation_date=timezone.now()
+                tg_activation_date=timezone.now(),
+                timezone='UTC'
             )
         return Response(
             {'success': True},
