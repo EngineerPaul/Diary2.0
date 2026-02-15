@@ -8,7 +8,11 @@ from ..serializers.TGServerSerializer import (
     NewNoticeSerializer, NoticeShiftSerializer, UpcomingNoticeListSerializer
 )
 from ..models import Notice, NoticeFolder
-from main.queries import UpcomingNoticeList, get_user_id
+from main.queries import UpcomingNoticeList, get_user_info
+from main.utils.timezone_utils import (
+    convert_user_datetime_to_utc,
+    get_user_now_datetime
+)
 
 
 class CreateNoticeAPI(APIView):
@@ -19,9 +23,32 @@ class CreateNoticeAPI(APIView):
         if serializer.is_valid():
 
             chat_id = serializer.validated_data['chat_id']
-            user_id = get_user_id(chat_id)  # получаем от authserver
-            if not user_id:
+            user_data = get_user_info(chat_id)  # получаем от authserver (user_id, timezone)
+            if not user_data:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+            user_id, user_timezone = user_data
+            
+            # Пользователь указывает время в своем часовом поясе,
+            # но информация о часовом поясе не передается в запросе, а приобретается в serializer
+            # поэтому уберем tz из user_datetime и определим now пользователя
+            user_datetime = serializer.validated_data['date']
+            if user_datetime.tzinfo:
+                user_datetime = user_datetime.replace(tzinfo=None)
+            user_now = get_user_now_datetime(user_timezone)
+            if user_datetime <= user_now:
+                return Response(
+                    {'error': 'Дата и время должны быть в будущем'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            user_date = user_datetime.date()
+            user_time = user_datetime.time()
+            
+            # Конвертируем из часового пояса пользователя в UTC для сохранения
+            utc_date, utc_time = convert_user_datetime_to_utc(
+                user_date, user_time, user_timezone
+            )
 
             folder = NoticeFolder.objects.get(user_id=user_id, title='root')
             try:
@@ -32,8 +59,8 @@ class CreateNoticeAPI(APIView):
                         title=serializer.validated_data['title'],
                         # description=serializer.validated_data['description'],
                         # color=serializer.validated_data['color'],
-                        next_date=serializer.validated_data['date'].date(),
-                        time=serializer.validated_data['date'].time(),
+                        next_date=utc_date,  # Сохраняем в UTC
+                        time=utc_time,  # Сохраняем в UTC
                         # period=serializer.validated_data['period'],
                     )
                     folder.add_object(notice.pk)

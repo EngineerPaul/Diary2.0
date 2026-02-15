@@ -572,7 +572,7 @@ class GetChatIds(APIView):
         )
 
 
-class GetUserId(APIView):
+class GetUserInfo(APIView):
     """ Возвращает user_id (pk) по chat_id """
     permission_classes = [AllowAny]
 
@@ -589,7 +589,7 @@ class GetUserId(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         return Response(
-            {'success': True, 'user_id': user.id},
+            {'success': True, 'user_id': user.id, 'timezone': user.userdetails.timezone},
             status=status.HTTP_200_OK
         )
 

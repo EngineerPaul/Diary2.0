@@ -201,11 +201,17 @@ class UpcomingNoticeList:
         return respone
 
 
-def get_user_id(chat_id: int) -> int:
-    """ Get user_id by tg chat_id from auth server """
+def get_user_info(chat_id: int) -> tuple[int, str | None] | bool:
+    """
+    Get user_id and timezone by tg chat_id from auth server.
+    
+    Returns:
+        tuple[int, str | None]: (user_id, timezone) if successful
+        False: if request failed or user not found
+    """
 
     try:
-        url = PROJECT_HOSTS['auth_server'] + "auth/users/user-id"
+        url = PROJECT_HOSTS['auth_server'] + "auth/users/user-info"
         headers = {
             'Content-Type': 'application/json'
         }
@@ -217,11 +223,19 @@ def get_user_id(chat_id: int) -> int:
         if response.status_code != 200:
             return False
         
-        user_id = response.json().get('user_id')
+        response_data = response.json()
+        
+        # Проверяем success и получаем данные
+        if not response_data.get('success'):
+            return False
+        
+        user_id = response_data.get('user_id')
+        timezone = response_data.get('timezone')
+        
         if not user_id:
             return False
 
-        return user_id
+        return (user_id, timezone)
 
     except (requests.exceptions.RequestException, Exception):
         return False

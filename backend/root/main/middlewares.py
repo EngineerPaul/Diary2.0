@@ -48,7 +48,7 @@ class AuthMiddleware(MiddlewareMixin):
                     'username': refresh_info['username'],
                     'role': refresh_info['role'],
                     'is_auth': True,
-                    'timezone': access_info['timezone'],
+                    'timezone': refresh_info['timezone'],
                 }
                 request.tokens = {
                     'access_token': refresh_info['access'],

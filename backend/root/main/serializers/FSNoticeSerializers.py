@@ -4,6 +4,10 @@ from rest_framework import serializers
 
 from main.models import NoticeFolder, Notice
 from .utils import ChildrenMixin
+from main.utils.timezone_utils import (
+    convert_utc_datetime_to_user,
+    get_user_now_datetime
+)
 
 
 # ===== NoticesFSAPI =====
@@ -29,6 +33,22 @@ class NoticeFSSerializer(serializers.ModelSerializer):
             'changed_at', 'next_date', 'time', 'period'
         ]
 
+    def to_representation(self, instance):
+        """Конвертирует дату и время из UTC в часовой пояс пользователя"""
+        # срабатывает в serializer.data
+        data = super().to_representation(instance)
+        
+        user_timezone = self.context.get('timezone')
+        utc_date = instance.next_date
+        utc_time = instance.time
+        user_date, user_time = convert_utc_datetime_to_user(
+            utc_date, utc_time, user_timezone
+        )
+
+        data['next_date'] = user_date
+        data['time'] = user_time
+        return data
+
 
 # ===== NoticesAPI =====
 class NoticeGetSerializer(serializers.ModelSerializer):
@@ -40,6 +60,22 @@ class NoticeGetSerializer(serializers.ModelSerializer):
             'pk', 'folder_id', 'title', 'description', 'color',
             'changed_at', 'next_date', 'time', 'period'
         ]
+
+    def to_representation(self, instance):
+        """Конвертирует дату и время из UTC в часовой пояс пользователя"""
+        # срабатывает в serializer.data
+        data = super().to_representation(instance)
+        
+        user_timezone = self.context.get('timezone')
+        utc_date = instance.next_date
+        utc_time = instance.time
+        user_date, user_time = convert_utc_datetime_to_user(
+            utc_date, utc_time, user_timezone
+        )
+
+        data['next_date'] = user_date
+        data['time'] = user_time
+        return data
 
 
 # ===== NoticesAPI =====
@@ -72,9 +108,11 @@ class NoticeCreateSerializer(serializers.ModelSerializer):
         # validation of initial_date & time
         initial_date = attrs.get('initial_date')
         time_value = attrs.get('time')
+        user_timezone = self.context.get('timezone')
         if initial_date and time_value:
             initial_datetime = datetime.combine(initial_date, time_value)
-            now = datetime.now()
+            # Получаем текущее время в часовом поясе пользователя
+            now = get_user_now_datetime(user_timezone)
             if initial_datetime <= now:
                 msg = ('Validate error: initial_date and time together must '
                        'be greater than current datetime')
@@ -119,9 +157,11 @@ class NoticeUpdateSerializer(serializers.ModelSerializer):
         # validation of initial_date & time
         initial_date = attrs.get('initial_date')
         time_value = attrs.get('time')
+        user_timezone = self.context.get('timezone')
         if initial_date and time_value:
             initial_datetime = datetime.combine(initial_date, time_value)
-            now = datetime.now()
+            # Получаем текущее время в часовом поясе пользователя
+            now = get_user_now_datetime(user_timezone)
             if initial_datetime <= now:
                 msg = ('Validate error: initial_date and time together must '
                        'be greater than current datetime')
@@ -184,9 +224,11 @@ class PeriodicDateSerializer(serializers.Serializer):
         # validation of initial_date & time
         initial_date = attrs.get('initial_date')
         time_value = attrs.get('time')
+        user_timezone = self.context.get('timezone')
         if initial_date and time_value:
             initial_datetime = datetime.combine(initial_date, time_value)
-            now = datetime.now()
+            # Получаем текущее время в часовом поясе пользователя
+            now = get_user_now_datetime(user_timezone)
             if initial_datetime <= now:
                 msg = ('Validate error: initial_date and time together must '
                        'be greater than current datetime')

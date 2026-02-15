@@ -17,6 +17,10 @@ from main.serializers.FSNoticeSerializers import (
 )
 from main.serializers.utils import PeriodicDate
 from main.queries import UpcomingNoticeList
+from main.utils.timezone_utils import (
+    convert_user_datetime_to_utc,
+    convert_utc_datetime_to_user
+)
 
 
 class BlankFileSystemAPI2(APIView):
@@ -199,13 +203,18 @@ class NoticesFSAPI(APIView):
         """ Getting filesystem content """
 
         user_id = request.user_info['id']
+        user_timezone = request.user_info.get('timezone')
 
         folders = NoticeFolder.objects.filter(user_id=user_id)
         notices = Notice.objects.filter(user_id=user_id)
 
         response = {
-            "folders": NoticeFolderFSSerializer(folders, many=True).data,
-            "notices": NoticeFSSerializer(notices, many=True).data
+            "folders": NoticeFolderFSSerializer(
+                folders, many=True
+            ).data,
+            "notices": NoticeFSSerializer(
+                notices, many=True, context={'timezone': user_timezone}
+            ).data
         }
         return Response(response, status=status.HTTP_200_OK)
 
@@ -219,34 +228,44 @@ class NoticesAPI(APIView):
         """Getting the notice by id"""
 
         user_id = request.user_info['id']
+        user_timezone = request.user_info.get('timezone')
 
         try:
             notice = Notice.objects.get(pk=notice_id, user_id=user_id)
         except Notice.DoesNotExist:
             msg = 'Error: напоминание не найдено'
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
-        return Response(NoticeGetSerializer(notice).data, status.HTTP_200_OK)
+        response = NoticeGetSerializer(notice, context={'timezone': user_timezone}).data
+        return Response(response, status.HTTP_200_OK)
 
     def post(self, request):
         """ Creating the new notices """
 
         user_id = request.user_info['id']
+        user_timezone = request.user_info.get('timezone')
 
-        serializer = NoticeCreateSerializer(data=request.data)
+        serializer = NoticeCreateSerializer(
+            data=request.data,
+            context={'timezone': user_timezone}
+        )
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         validated_data = serializer.validated_data
 
+        # Получаем дату и время в часовом поясе пользователя
+        user_initial_date = validated_data['initial_date']
+        user_time = validated_data['time']
+
         if validated_data.get('period'):
             pd = PeriodicDate(
                 period=validated_data['period'],
-                initial_date=validated_data['initial_date'],
-                time=validated_data['time']
+                initial_date=user_initial_date,
+                time=user_time
             )
-            next_date = pd.get_next_date()
+            user_next_date = pd.get_next_date()
 
-            if next_date is None:
+            if user_next_date is None:
                 resp = {
                     'success': False,
                     'msg': 'Error: Дата не найдена',
@@ -254,7 +273,12 @@ class NoticesAPI(APIView):
                 return Response(resp, status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            next_date = validated_data['initial_date']
+            user_next_date = user_initial_date
+
+        # Конвертируем дату и время из часового пояса пользователя в UTC для сохранения
+        utc_next_date, utc_time = convert_user_datetime_to_utc(
+            user_next_date, user_time, user_timezone
+        )
 
         try:
             folder = NoticeFolder.objects.get(
@@ -266,7 +290,11 @@ class NoticesAPI(APIView):
 
         try:
             with transaction.atomic():
-                notice = serializer.save(user_id=user_id, next_date=next_date)
+                notice = serializer.save(
+                    user_id=user_id,
+                    next_date=utc_next_date,  # Сохраняем в UTC
+                    time=utc_time  # Сохраняем в UTC
+                )
                 folder.add_object(notice.pk)
                 # initial_date автоматически удаляется в сериализаторе
                 folder.save()
@@ -277,6 +305,9 @@ class NoticesAPI(APIView):
         combined_datetime = datetime.combine(notice.next_date, notice.time)
         UpcomingNoticeList().main(new_date=combined_datetime)  # отправка нового списка
 
+        # Для ответа клиенту обрабно переводим время в часовой пояс пользователя
+        serializer = NoticeGetSerializer(notice, context={'timezone': user_timezone})
+        
         resp = {
             'success': True,
             'msg': f'Напоминание {notice.pk} успешно создано',
@@ -288,6 +319,7 @@ class NoticesAPI(APIView):
         """ Update notice fields """
 
         user_id = request.user_info['id']
+        user_timezone = request.user_info.get('timezone')
 
         try:
             notice = Notice.objects.get(pk=notice_id, user_id=user_id)
@@ -300,30 +332,41 @@ class NoticesAPI(APIView):
         # если есть хотя бы одно временное поле, то недостающие берем из БД
         if serializer_data.get('time') or serializer_data.get('period') or serializer_data.get('initial_date'):
             update_needed = True
-            serializer_data.setdefault('time', notice.time)
-            if notice.period:
-                serializer_data.setdefault('period', notice.period)
-            serializer_data.setdefault('initial_date', notice.next_date)
+            # Данные из БД в UTC, конвертируем в часовой пояс пользователя
+            user_notice_date, user_notice_time = convert_utc_datetime_to_user(
+                notice.next_date, notice.time, user_timezone
+            )
+            serializer_data.setdefault('time', user_notice_time)
+            serializer_data.setdefault('initial_date', user_notice_date)
         else:
             update_needed = False
 
-        serializer = NoticeUpdateSerializer(notice, data=serializer_data, partial=True)
+        serializer = NoticeUpdateSerializer(
+            instance=notice,
+            data=serializer_data,
+            partial=True,
+            context={'timezone': user_timezone}
+        )
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         validated_data = serializer.validated_data
 
-        # если менеятся дата
+        # если меняется дата
         if update_needed:
-            if request.data.get('period'):
+            # Получаем дату и время в часовом поясе пользователя
+            user_initial_date = validated_data['initial_date']
+            user_time = validated_data['time']
+
+            if validated_data.get('period'):
                 pd = PeriodicDate(
                     period=validated_data['period'],
-                    initial_date=validated_data['initial_date'],
-                    time=validated_data['time']
+                    initial_date=user_initial_date,
+                    time=user_time
                 )
-                next_date = pd.get_next_date()
+                user_next_date = pd.get_next_date()
 
-                if next_date is None:
+                if user_next_date is None:
                     resp = {
                         'success': False,
                         'msg': 'Error: Дата не найдена',
@@ -331,16 +374,27 @@ class NoticesAPI(APIView):
                     return Response(resp, status=status.HTTP_400_BAD_REQUEST)
 
             else:
-                next_date = validated_data['initial_date']
+                user_next_date = user_initial_date
                 validated_data['period'] = None
 
-            serializer.save(next_date=next_date)
+            # Конвертируем дату и время из часового пояса пользователя в UTC для сохранения
+            utc_next_date, utc_time = convert_user_datetime_to_utc(
+                user_next_date, user_time, user_timezone
+            )
+            serializer.save(next_date=utc_next_date, time=utc_time)
         else:
             # дата не меняется
             serializer.save()
 
-        combined_datetime = datetime.combine(validated_data['next_date'], validated_data['time'])
+        # обновим состояние notice после serializer.save()
+        # он понадобится ниже, чтобы вернуть клиенту время в его часовом поясе
+        # это можно оптимизировать и убрать запрос к БД, но так код понятнее
+        notice.refresh_from_db()
+        combined_datetime = datetime.combine(notice.next_date, notice.time)
         UpcomingNoticeList().main(new_date=combined_datetime)  # отправка нового списка
+
+        # Обновляем serializer.data с учетом часового пояса
+        serializer = NoticeGetSerializer(notice, context={'timezone': user_timezone})
 
         resp = {
             'success': True,
@@ -494,7 +548,8 @@ class DisplayPeriodicDate(APIView):
     permission_classes = [CustomPermission]
 
     def post(self, request):
-        serializer = PeriodicDateSerializer(data=request.data)
+        user_timezone = request.user_info.get('timezone')
+        serializer = PeriodicDateSerializer(data=request.data, context={'timezone': user_timezone})
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
