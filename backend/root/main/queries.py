@@ -98,9 +98,10 @@ class UpcomingNoticeList:
     def get_next_notice_list(self) -> Tuple[List[Notice], Optional[datetime]]:
         """ Get next notice list from database """
 
-        utc_time = timezone.now()  # Всегда UTC +0:00
-        # local_time = timezone.localtime(utc_time)  # Конвертирует в TIME_ZONE из настроек (+4:00)
-        now = utc_time + timedelta(seconds=60*60*4)  # +4:00 (часовой пояс)
+        utc_now = timezone.now()  # Всегда UTC +0:00
+        # старые настрйоки, когда не было tz
+        # local_time = timezone.localtime(utc_now)  # Конвертирует в TIME_ZONE из настроек (+4:00)
+        # now = utc_now + timedelta(seconds=60*60*4)  # +4:00 (часовой пояс)
 
         closest_notice = Notice.objects.annotate(
             combined_datetime=ExpressionWrapper(
@@ -115,13 +116,13 @@ class UpcomingNoticeList:
                 output_field=DateTimeField()
             )
         ).filter(
-            combined_datetime__gt=now
+            combined_datetime__gt=utc_now
         ).order_by(
             'combined_datetime'
         ).first()
 
         min_datetime = closest_notice.combined_datetime
-        # убираю инфу о часовом поясе для среванения в main!
+        # убираю инфу о часовом поясе для сравнения в main!
         min_datetime = min_datetime.replace(tzinfo=None)
         print(min_datetime)
 
