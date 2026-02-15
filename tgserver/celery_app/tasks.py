@@ -34,9 +34,10 @@ def celery_check_dispatch_date():
         print('dispatched')
         send_all_reminders.delay()
     else:
-        print('dispatch_date = ', dispatch_date)
-        print('now = ', now)
-        print(f'Отправка через {dispatch_date - now} секунд')
+        print(f'-----------------------------------')
+        print(f'dispatch_date = {dispatch_date}')
+        print(f'now =           {now.replace(microsecond=0)}')
+        print(f'Отправка через  {dispatch_date - now.replace(microsecond=0)} ч:мм:сс')
 
 
 @celery_app.task  # worker
