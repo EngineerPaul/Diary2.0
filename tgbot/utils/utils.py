@@ -1,7 +1,10 @@
 import socket
 import time
 from datetime import datetime, timedelta
+import pytz
+
 from config import MAX_YEAR
+from api.server.queries import get_userinfo
 
 
 def get_date(str_date: str) -> dict:
@@ -45,13 +48,25 @@ def get_date(str_date: str) -> dict:
         }
 
 
-def get_now_format() -> str:
+def get_now_format(chat_id: int) -> str:
     """ Get now date like 'ДД.ММ.ГГГГ ЧЧ:ММ' format """
 
-    now = datetime.now()
-    now = (f'{now.day:0>{2}}.{now.month:0>{2}}.{now.year} '
-           f'{now.hour:0>{2}}.{now.minute:0>{2}}')
-    return now
+    user_info = get_userinfo(chat_id)  # from authserver
+    timezone = user_info['timezone']
+    if timezone:
+        # Создаем datetime без указания часового пояса
+        utc_datetime = datetime.now()
+        # Соединяем datetime и UTC
+        utc_datetime = pytz.UTC.localize(utc_datetime)
+        # Конвертируем в часовой пояс пользователя
+        user_datetime = utc_datetime.astimezone(pytz.timezone(timezone))
+        now = user_datetime
+    else:
+        now = datetime.now()
+
+    formated_now = (f'{now.day:0>{2}}.{now.month:0>{2}}.{now.year} '
+                    f'{now.hour:0>{2}}.{now.minute:0>{2}}')
+    return formated_now
 
 
 def check_connection(tries: int = 5):

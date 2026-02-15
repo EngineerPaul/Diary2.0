@@ -153,7 +153,7 @@ def create_reminder_title(msg, bot):  # создание нового уведо
         msg.chat.id,  # находим чат
         ('Укажите дату формата ДД.ММ.ГГГГ ЧЧ:ММ\n'
          '(или отмена)\n'
-         f'Сейчас {get_now_format()}'),  # вставляем сообщение
+         f'Сейчас {get_now_format(msg.chat.id)}'),  # вставляем сообщение
     )
     bot.register_next_step_handler(msg, create_reminder_date, bot, msg.text)
 

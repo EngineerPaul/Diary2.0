@@ -121,3 +121,17 @@ def send_django(data: dict) -> bool:  # тестовая отправка http �
     }
     response = api_tg_client.post(url, body)
     return response
+
+
+def get_userinfo(chat_id: int) -> str:
+    """ Запрос timezone от auth для определения now """
+    url = 'tgapi/bot/get-user-info/'
+    body = {
+        'chat_id': chat_id,
+    }
+    response = api_tg_client.post(url, body)
+    response_data = json.loads(response)
+    if not response_data.get('success'):
+        return None
+    user_info = response_data.get('user_info')
+    return user_info

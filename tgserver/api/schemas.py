@@ -68,3 +68,9 @@ class NoticeListSchema(BaseModel):
 
     notice_list: list[_OneNoticeSchema]
     next_date: datetime  # iso str instantly transorm to the datetime
+
+
+class DispatchUserInfoSchema(BaseModel):
+    """ Схема передачи user info от auth в ТГ бота """
+
+    chat_id: int

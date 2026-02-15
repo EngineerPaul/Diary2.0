@@ -1,17 +1,19 @@
 from datetime import datetime, timedelta
 import aiohttp
+import json
 
 from fastapi import APIRouter, Response, Depends
 from fastapi.responses import JSONResponse
 
 from api.schemas import (
     ReminderCreater, TestDjango,
-    NewNoticeSchema, NoticeShiftSchema, UserInfoSchema, NoticeListSchema
+    NewNoticeSchema, NoticeShiftSchema, UserInfoSchema, NoticeListSchema,
+    DispatchUserInfoSchema,
 )
 from queries.to_tgbot import send_msg_bot
 from queries.to_server import (
     send_test_to_Django,
-    send_create_notice, send_notice_shift, send_userinfo
+    send_create_notice, send_notice_shift, send_userinfo, get_userinfo
 )
 from config import MY_TG_ID, REDIS_WORKS
 from dependencies import get_session
@@ -39,6 +41,33 @@ async def create_notice_api(  # создание нового уведомлен
         response = JSONResponse(
             content={'success': True},
             status_code=201,
+            media_type="application/json"
+        )
+    else:
+        response = JSONResponse(
+            content={'success': False},
+            status_code=400,
+            media_type="application/json"
+        )
+    return response
+
+
+@router.post(
+    "/bot/get-user-info/",
+    tags=['From TG'],
+    summary="dispatch user info fron auth to tgbot by chat_id"
+)
+async def dispatch_user_info_api(  # передача timezone в бота
+    data: DispatchUserInfoSchema,
+    session: aiohttp.ClientSession = Depends(get_session)
+):
+    status, server_response = await get_userinfo(
+        data, session
+    )  # отпправить HTTP запрос на сервер
+    if status == 200:
+        response = JSONResponse(
+            content={'success': True, 'user_info': json.loads(server_response)},
+            status_code=200,
             media_type="application/json"
         )
     else:

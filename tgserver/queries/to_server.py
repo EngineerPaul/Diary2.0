@@ -71,3 +71,13 @@ async def send_mailing_list_report(data: dict, session):  # отправка о�
         if resp.status != 200:
             print("Error: send_mailing_list_report doesn't work")
         return
+
+
+async def get_userinfo(data: dict, session):  # отправка отчета о рассылке напоминаний
+    """ Getting the uzer timezone fron auth """
+
+    url = PROJECT_HOSTS['auth_server'] + 'auth/users/user-info'
+
+    async with session.post(url, json=data.dict()) as resp:
+        res = await resp.text()
+        return resp.status, res
