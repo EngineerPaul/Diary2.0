@@ -211,7 +211,7 @@ def call_repeat_hour(bot, function_call, data, chat_id):  # перенос на�
     user_id = int(data['user_id'])
     reminder_id = int(data['reminder_id'])
     # response = send_hour_repeat(user_id, reminder_id)
-    response = send_notice_shift(user_id, reminder_id, 'day', chat_id)
+    response = send_notice_shift(user_id, reminder_id, 'hour', chat_id)
 
     if response:
         bot.send_message(
@@ -230,7 +230,7 @@ def call_repeat_day(bot, function_call, data, chat_id):  # перенос нап
     user_id = int(data['user_id'])
     reminder_id = int(data['reminder_id'])
     # response = send_day_repeat(user_id, reminder_id)
-    response = send_notice_shift(user_id, reminder_id, 'hour', chat_id)
+    response = send_notice_shift(user_id, reminder_id, 'day', chat_id)
 
     if response:
         bot.send_message(
