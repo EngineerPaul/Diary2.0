@@ -41,8 +41,8 @@ services:
       - PYTHONDONTWRITEBYTECODE=1
     # entrypoint: ["/home/authserverapp/auth/entrypoint.sh", "python3", "manage.py", "runserver", "0.0.0.0:8000"]
     entrypoint: ["/home/authserverapp/auth/entrypoint.sh", "python3", "-m", "gunicorn", "--config", "/home/authserverapp/auth/gunicorn.conf.py", "root.wsgi:application"]
-    # ports:
-    #   - 8001:8000
+    ports:
+      - 8001:8000
     secrets:
       - authserver_secrets
     restart: unless-stopped
@@ -66,8 +66,8 @@ services:
       - PYTHONDONTWRITEBYTECODE=1
     # entrypoint: ["/home/backendapp/back/entrypoint.sh", "python3", "manage.py", "runserver", "0.0.0.0:8000"]
     entrypoint: ["/home/backendapp/back/entrypoint.sh", "python3", "-m", "gunicorn", "--config", "/home/backendapp/back/gunicorn.conf.py", "root.wsgi:application"]
-    # ports:
-    #   - 8002:8000
+    ports:
+      - 8002:8000
     secrets:
       - backend_secrets
     volumes:
@@ -151,8 +151,8 @@ services:
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
     command: python3 main.py
-    # ports:
-    #   - 8003:8000
+    ports:
+      - 8003:8000
     secrets:
       - tgserver_secrets
       - redis_secrets
