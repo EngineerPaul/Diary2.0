@@ -1136,8 +1136,8 @@ let content = {
         this.notices = noticesDict
         this.noticeFolders = noticeFoldersDict
 
-        this.notesRoot = noteFoldersList[0].folder_id
-        this.noticesRoot = noticeFoldersList[0].folder_id
+        this.notesRoot = noteFoldersList.find(f => f.parent_id === null).folder_id
+        this.noticesRoot = noticeFoldersList.find(f => f.parent_id === null).folder_id
     },
 
     change: {  // changes existing objects (using and without AJAX)
@@ -2414,10 +2414,18 @@ const settingsGear = {
     delEvent: async function(event) {  // delete event of the menu btn (immediately using content.change.del***)
         const id = parseInt(this.elId)
         
-        if (this.elType === 'record') {
-            await content.change.delNote(id)
-        } else {
-            await content.change.delNoteFolder(id)
+        if (session.section === 'notes') {
+            if (this.elType === 'record') {
+                await content.change.delNote(id)
+            } else {
+                await content.change.delNoteFolder(id)
+            }
+        } else if (session.section === 'notices') {
+            if (this.elType === 'record') {  // по историческим причинам в notices тоже record
+                await content.change.delNotice(id)
+            } else {
+                await content.change.delNoticeFolder(id)
+            }
         }
         
         this.hideGearMenu()
