@@ -1440,6 +1440,15 @@ let viewContent = {
         noteBlock.classList.add('draggableObject')
         if (isRecord) {
             noteBlock.classList.add(DADSettings.recordClass)
+
+            // highlight expired notice
+            if (isNotices) {
+                let date = new Date(datetime.replace(' ', 'T'))
+                let now = new Date()
+                if (date < now) {
+                    noteBlock.classList.add('expired')
+                }
+            }
         } else {
             noteBlock.classList.add(DADSettings.folderClass)
         }

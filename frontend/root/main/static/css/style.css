@@ -257,6 +257,10 @@ body {
                     width: 15px
                 }
             }
+
+            &.expired {
+                background-color: #b8d4d2;
+            }
         }
         .folder-back {
             display: flex;
