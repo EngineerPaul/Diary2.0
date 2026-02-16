@@ -1473,14 +1473,28 @@ let viewContent = {
         titleBlock.append(titleP)
         // coll3.append(labels)
 
-        this.createSVG(  // type
-            coll1,  // parent
-            'content-svg',  // className
-            '2 0 20 24',  // viewBox
-            [  // pathLst
-                'm7 12h10v2h-10zm0 6h7v-2h-7zm15-10.414v16.414h-20v-21a3 3 0 0 1 3-3h9.414zm-7-.586h3.586l-3.586-3.586zm5 15v-13h-7v-7h-8a1 1 0 0 0 -1 1v19z',
-            ]
-        )
+        if (isRecord) {
+            this.createSVG(  // type
+                coll1,  // parent
+                'content-svg',  // className
+                '2 0 20 24',  // viewBox
+                [  // pathLst
+                    'm7 12h10v2h-10zm0 6h7v-2h-7zm15-10.414v16.414h-20v-21a3 3 0 0 1 3-3h9.414zm-7-.586h3.586l-3.586-3.586zm5 15v-13h-7v-7h-8a1 1 0 0 0 -1 1v19z',
+                ]
+            )
+        }
+
+        if (!isRecord) {
+            this.createSVG(  // type
+                coll1,  // parent
+                'content-svg',  // className
+                '0 0 24 24',  // viewBox
+                [  // pathLst
+                    'M21,3H12.236l-4-2H3A3,3,0,0,0,0,4V23H24V6A3,3,0,0,0,21,3ZM3,3H7.764l4,2H21a1,1,0,0,1,1,1v.881L2,6.994V4A1,1,0,0,1,3,3ZM2,21V8.994l20-.113V21Z',
+                ]
+            )
+        }
+        
         this.createSVG(  // settings
             coll3,  // parent
             'content-svg',  // className
