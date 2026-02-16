@@ -22,7 +22,7 @@ from .serializers import (
     VerifySerializer,
     ObtainSerializer,
     TelegramActivationSerializer,
-    GetChatIdsSerializer,
+    GetInfoByChatIdSerializer,
     GetUserIdSerializer,
 )
 from .queries import create_root_folders
@@ -552,22 +552,23 @@ class TGAuthDetails(APIView):
         return Response({'success': True}, status=status.HTTP_200_OK)
 
 
-class GetChatIds(APIView):
+class GetInfoByChatId(APIView):
     """ Получение chat_id по списку user_id (pk) """
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = GetChatIdsSerializer(data=request.data)
+        serializer = GetInfoByChatIdSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user_ids = serializer.validated_data['user_ids']
-        users = User.objects.select_related('userdetails').filter(
-            id__in=user_ids).annotate(
-            user_id=F('id'),
-            chat_id=F('userdetails__chat_id')
-        ).values('user_id', 'chat_id')
+        users_data = User.objects.select_related('userdetails').filter(
+            id__in=user_ids).annotate(  # like AS
+            user_id=F('id'),  # на лету создаю поле user_id и связываю его с id
+            chat_id=F('userdetails__chat_id'),  # аналогично
+            timezone=F('userdetails__timezone')  # аналогично
+        ).values('user_id', 'chat_id', 'timezone')
         return Response(
-            {'success': True, 'data': users},
+            {'success': True, 'data': users_data},
             status=status.HTTP_200_OK
         )
 

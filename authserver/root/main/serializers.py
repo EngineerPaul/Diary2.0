@@ -87,7 +87,7 @@ class TelegramActivationSerializer(serializers.ModelSerializer):
         return super().save(**kwargs)
 
 
-class GetChatIdsSerializer(serializers.Serializer):
+class GetInfoByChatIdSerializer(serializers.Serializer):
     user_ids = serializers.ListField(child=serializers.IntegerField())
 
 

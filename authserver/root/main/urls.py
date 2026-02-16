@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     Registration, VerifyToken, ObtainTokens, Logout, RefreshTokens,
     AuthCheck,
-    TGAuthDate, TGAuthCheck, TGAuthDetails, GetChatIds, GetUserInfo,
+    TGAuthDate, TGAuthCheck, TGAuthDetails, GetInfoByChatId, GetUserInfo,
     TestRequest,
 )
 
@@ -21,7 +21,7 @@ urlpatterns = [
     path('tg-auth/date', TGAuthDate.as_view()),  # Начало активации Tg бота
     path('tg-auth/save', TGAuthDetails.as_view()),  # Завершение активации Tg бота
     path('tg-auth/check', TGAuthCheck.as_view()),  # Получение nickname в front
-    path('users/chat-ids', GetChatIds.as_view()),  # Получение chat_id по списку user_id
+    path('users/info-by-ids', GetInfoByChatId.as_view()),  # Получение info по списку user_id
     path('users/user-info', GetUserInfo.as_view()),  # Получение user_id и timezone по chat_id
 
     path('test', TestRequest.as_view()),

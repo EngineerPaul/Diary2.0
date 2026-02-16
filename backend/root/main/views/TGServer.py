@@ -1,3 +1,4 @@
+from typing import List, Dict, Any
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,9 +9,13 @@ from ..serializers.TGServerSerializer import (
     NewNoticeSerializer, NoticeShiftSerializer, UpcomingNoticeListSerializer
 )
 from ..models import Notice, NoticeFolder
-from main.queries import UpcomingNoticeList, get_user_info
+from main.queries import (
+    UpcomingNoticeList, get_user_info, get_usersinfo_by_user_ids
+)
+from main.serializers.utils import PeriodicDate
 from main.utils.timezone_utils import (
     convert_user_datetime_to_utc,
+    convert_utc_datetime_to_user,
     get_user_now_datetime
 )
 
@@ -113,8 +118,77 @@ class UpcomingNoticeListAPI(APIView):
     """ Получение отчета об отправленных уведомлениях """
 
     def post(self, request):
-        serializer = UpcomingNoticeListSerializer(data=request.data, many=True)
-        serializer.is_valid(raise_exception=True)
 
+        serializer = UpcomingNoticeListSerializer(data=request.data, many=True)
+        if not serializer.is_valid():
+            return Response(
+                data={'success': False, 'message': 'UpcomingNoticeListAPI validate error'},
+                status=status.HTTP_400_OK
+            )
+
+        validated_data = serializer.validated_data
+
+        if not self.periodic_notices_update(validated_data):
+            resp = {
+                'success': False,
+                'msg': 'Error: Дата не найдена',
+            }
+            return Response(resp, status=status.HTTP_400_BAD_REQUEST)
+        
         UpcomingNoticeList().main()  # отправка нового списка
         return Response(status=status.HTTP_200_OK)
+
+    def periodic_notices_update(self, validated_data: List[Dict[str, Any]]) -> bool:
+        """ Updating mail datetime periodic notices """
+
+        # получаем info с authserver по списку user_id
+        user_ids = [notice['user_id'] for notice in validated_data]
+        usersinfo = get_usersinfo_by_user_ids(user_ids)
+        usersinfoDict = {userinfo['user_id']: userinfo for userinfo in usersinfo}
+
+        # Создаем словарь notice.pk (reminder_id) -> timezone
+        notices_timezone = {}
+        for notice in validated_data:
+            notices_timezone[notice['reminder_id']] = usersinfoDict[notice['user_id']]['timezone']
+
+        # Получаем notice, которые нужно обновить
+        reminder_ids = [notice['reminder_id'] for notice in validated_data]
+        notices = Notice.objects.filter(id__in=reminder_ids, period__isnull=False).exclude(period='')
+        
+        # Обновляем даты для периодических напоминаний
+        notices_to_update = []
+        for notice in notices:
+            
+            # Данные из БД в UTC, конвертируем в часовой пояс пользователя
+            user_notice_date, user_notice_time = convert_utc_datetime_to_user(
+                notice.next_date, notice.time, notices_timezone[notice.pk]
+            )
+            
+            # Используем истекшую дату напоминания как initial_date для вычисления следующей
+            pd = PeriodicDate(
+                period=notice.period,
+                initial_date=user_notice_date,
+                time=user_notice_time
+            )
+            user_next_date = pd.get_next_date()
+            
+            if user_next_date is None:
+                resp = {
+                    'success': False,
+                    'msg': 'Error: Дата не найдена',
+                }
+                return False
+            
+            # Конвертируем следующую дату из часового пояса пользователя в UTC для сохранения
+            utc_next_date, utc_time = convert_user_datetime_to_utc(
+                user_next_date, user_notice_time, notices_timezone[notice.pk]
+            )
+            notice.next_date = utc_next_date
+            notice.time = utc_time
+            notices_to_update.append(notice)
+        
+        # Массовое обновление всех измененных напоминаний
+        if notices_to_update:
+            Notice.objects.bulk_update(notices_to_update, fields=['next_date', 'time'])
+
+        return True

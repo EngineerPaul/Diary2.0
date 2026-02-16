@@ -75,6 +75,22 @@ def test_post():
         return False
 
 
+def get_usersinfo_by_user_ids(user_ids: List[int]) -> Optional[List[Dict[str, Any]]]:
+    """ Getting timezone using user_id list """
+
+    url = PROJECT_HOSTS['auth_server'] + "auth/users/info-by-ids"
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    data = {'user_ids': user_ids}
+    response = requests.post(
+        url, json=data, headers=headers, timeout=15
+    )
+
+    usersinfo = response.json()['data'] if response.status_code == 200 else None
+    return usersinfo
+
+
 class UpcomingNoticeList:
     """ Send next notice list to telegram server """
 
@@ -137,7 +153,7 @@ class UpcomingNoticeList:
     ) -> Optional[List[Dict[str, int]]]:
         """ Get chat ids from database """
 
-        url = PROJECT_HOSTS['auth_server'] + "auth/users/chat-ids"
+        url = PROJECT_HOSTS['auth_server'] + "auth/users/info-by-ids"
         headers = {
             'Content-Type': 'application/json'
         }
