@@ -1664,6 +1664,9 @@ let DragAndDrop = {
     // Mouse PRESS events
     //////////////////////////////////////////////////////////////////////
     pointerDownEvent: function(event) {  // click the draggable object
+        let gear = event.target.closest('.content-svg')  // settings btn
+        if (gear) return
+
         if (mobileSettings.device === 'mobile' && mobileSettings.DAD === false) return // DAD must be true using mobile
         let isFolder = document.elementFromPoint(event.clientX, event.clientY).closest(`.${DADSettings.folderClass}`)
         let isRecord = document.elementFromPoint(event.clientX, event.clientY).closest(`.${DADSettings.recordClass}`)
