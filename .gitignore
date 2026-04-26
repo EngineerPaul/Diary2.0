@@ -18,3 +18,7 @@ migrations/
 media_files/
 test_imgs/
 others/
+credentials.txt
+_auth_db/
+_back_db/
+_redis/
