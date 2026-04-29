@@ -22,3 +22,5 @@ credentials.txt
 _auth_db/
 _back_db/
 _redis/
+github_actions_ed25519
+github_actions_ed25519.pub
