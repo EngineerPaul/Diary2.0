@@ -74,4 +74,7 @@ jobs:
             if [ -z "$DEPLOY_PATH" ]; then export DEPLOY_PATH="/var/www/Diary-project/Diary2.0"; fi
             export DEPLOY_BRANCH='${{ secrets.DEPLOY_BRANCH }}'
             if [ -z "$DEPLOY_BRANCH" ]; then export DEPLOY_BRANCH="master"; fi
-            bash "$DEPLOY_PATH/.github/deploy_ssh.sh"
+            cd "$DEPLOY_PATH"
+            git fetch --prune origin
+            git reset --hard "origin/${DEPLOY_BRANCH}"
+            bash ".github/deploy_ssh.sh"
