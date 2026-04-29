@@ -2,13 +2,13 @@ from django.test import Client, TestCase
 
 
 class TestOfTestDateAPI(TestCase):
-    path = '/api/periodic-date/'
+    path = '/api/tests/periodic-date/'
 
     def setUp(self) -> None:
         self.client = Client()
 
     def test_test(self):
-        response = self.client.get('/api/public/')
+        response = self.client.get('/api/tests/public/')
         self.assertEqual(response.status_code, 200)
 
     def test_D_1(self):
