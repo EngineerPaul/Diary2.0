@@ -61,29 +61,17 @@ jobs:
     needs: [ci]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
-      - name: Add SSH key
-        uses: webfactory/ssh-agent@v0.9.0
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Add server to known_hosts
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p ~/.ssh
-          PORT="${{ secrets.SSH_PORT }}"
-          if [[ -z "$PORT" ]]; then PORT="22"; fi
-          ssh-keyscan -p "$PORT" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
-
-      - name: Run remote deploy script
-        shell: bash
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-          DEPLOY_BRANCH: ${{ secrets.DEPLOY_BRANCH }}
-        run: |
-          set -euo pipefail
-          PORT="${SSH_PORT:-22}"
-          ssh -p "$PORT" "${SSH_USER}@${SSH_HOST}" "export DEPLOY_PATH='${DEPLOY_PATH}'; export DEPLOY_BRANCH='${DEPLOY_BRANCH}'; bash '${DEPLOY_PATH}/.github/deploy_ssh.sh'"
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            export DEPLOY_PATH='${{ secrets.DEPLOY_PATH }}'
+            if [ -z "$DEPLOY_PATH" ]; then export DEPLOY_PATH="/var/www/Diary-project/Diary2.0"; fi
+            export DEPLOY_BRANCH='${{ secrets.DEPLOY_BRANCH }}'
+            if [ -z "$DEPLOY_BRANCH" ]; then export DEPLOY_BRANCH="master"; fi
+            bash "$DEPLOY_PATH/.github/deploy_ssh.sh"
