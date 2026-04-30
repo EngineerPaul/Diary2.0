@@ -49,10 +49,6 @@ celery_app.conf.update(
 
 # celery beat settings
 celery_app.conf.beat_schedule = {
-    # 'my_test_beat': {  # опртавка принта каждые 5с
-    #     'task': 'celery_app.tasks.celery_every_5s',
-    #     'schedule': timedelta(seconds=5)
-    # },
     'check_dispatch_date': {  # проверка даты оправки каждые 10с
         'task': 'celery_app.tasks.celery_check_dispatch_date',
         'schedule': timedelta(seconds=10)

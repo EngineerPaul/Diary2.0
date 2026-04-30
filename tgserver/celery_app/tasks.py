@@ -9,16 +9,6 @@ from queries.to_tgbot import send_msg_bot
 from queries.to_server import send_mailing_list_report
 
 
-# @celery_app.task  # worker test
-# def celery_test():
-#     print('------------------------Celery работает')
-
-
-# @celery_app.task  # beat test
-# def celery_every_5s():
-#     print('------------------------Celery работает каждые 5 секунд')
-
-
 @celery_app.task  # beat
 def celery_check_dispatch_date():
     """ Проверка даты отправки сообщений (10 сек) """
@@ -34,9 +24,6 @@ def celery_check_dispatch_date():
         print('dispatched')
         send_all_reminders.delay()
     else:
-        print(f'-----------------------------------')
-        print(f'dispatch_date = {dispatch_date}')
-        print(f'now =           {now.replace(microsecond=0)}')
         print(f'Отправка через  {dispatch_date - now.replace(microsecond=0)} ч:мм:сс')
 
 
