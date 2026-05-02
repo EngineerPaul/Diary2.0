@@ -17,8 +17,8 @@ fi
 BACKUP_DIR="../nginx/ssl/backup/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
-# Копируем все файлы из ssl директории
-cp ../nginx/ssl/* "$BACKUP_DIR/"
+# Копируем сертификаты (не трогаем подкаталог backup/ — cp без -r не копирует каталоги)
+cp ../nginx/ssl/cert.pem ../nginx/ssl/key.pem "$BACKUP_DIR/"
 
 echo "✅ Сертификаты забэкаплены в: $BACKUP_DIR"
 

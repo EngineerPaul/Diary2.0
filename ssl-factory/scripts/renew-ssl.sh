@@ -62,7 +62,8 @@ echo ""
 echo "💾 Создаем резервную копию..."
 BACKUP_DIR="../nginx/ssl/backup/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
-cp ../nginx/ssl/* "$BACKUP_DIR/"
+# Только PEM-файлы: glob * захватывает подкаталог backup/, cp без -r падает
+cp ../nginx/ssl/cert.pem ../nginx/ssl/key.pem "$BACKUP_DIR/"
 echo "✅ Бэкап создан: $BACKUP_DIR"
 echo ""
 
