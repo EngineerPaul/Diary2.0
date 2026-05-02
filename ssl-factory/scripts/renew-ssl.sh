@@ -179,6 +179,7 @@ if [ "../nginx/ssl/cert.pem" -nt "$BACKUP_DIR/cert.pem" ]; then
     cd ssl-factory
     
     # Логируем успешное обновление
+    mkdir -p ./logs
     echo "$(date '+%Y-%m-%d %H:%M:%S') - SSL сертификаты для $DOMAIN успешно обновлены" >> ./logs/renewal.log
     
     echo ""
