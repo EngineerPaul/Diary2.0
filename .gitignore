@@ -24,3 +24,4 @@ _back_db/
 _redis/
 github_actions_ed25519
 github_actions_ed25519.pub
+github-actions-link.url
