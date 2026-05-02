@@ -23,12 +23,6 @@ services:
     volumes:
       - static_volume:/home/frontendapp/front/root/staticfiles
     restart: unless-stopped
-    # healthcheck:
-    #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]  # --quiet - без вывода, --spider - проверка доступности без скачивания
-    #   interval: 60s
-    #   timeout: 30s
-    #   start_period: 10s
-    #   retries: 3
 
   authserver:
     build:
@@ -48,12 +42,6 @@ services:
     restart: unless-stopped
     depends_on:
       - auth_db
-    # healthcheck:
-    #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]
-    #   interval: 60s
-    #   timeout: 30s
-    #   start_period: 10s
-    #   retries: 3
 
   back:
     build:
@@ -75,12 +63,6 @@ services:
     restart: unless-stopped
     depends_on:
       - back_db
-    # healthcheck:
-    #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]
-    #   interval: 60s
-    #   timeout: 30s
-    #   start_period: 10s
-    #   retries: 3
 
   auth_db:
     image: postgres:16-alpine
@@ -97,11 +79,6 @@ services:
         export POSTGRES_PASSWORD=$$POSTGRES_PASSWORD &&
         exec docker-entrypoint.sh postgres
       '
-    # healthcheck:
-    #   test: ["CMD-SHELL", "source /run/secrets/auth_db_secrets && pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 5
     restart: unless-stopped
 
   back_db:
@@ -119,11 +96,6 @@ services:
         export POSTGRES_PASSWORD=$$POSTGRES_PASSWORD &&
         exec docker-entrypoint.sh postgres
       '
-    # healthcheck:
-    #   test: ["CMD-SHELL", "source /run/secrets/back_db_secrets && pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 5
     restart: unless-stopped
   bot:
     build:
@@ -138,12 +110,6 @@ services:
     secrets:
       - bot_secrets
     restart: unless-stopped
-    # healthcheck:
-    #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/"]
-    #   interval: 60s
-    #   timeout: 30s
-    #   start_period: 10s
-    #   retries: 3
 
   botapi:
     build: ./tgserver
@@ -191,11 +157,6 @@ services:
         fi &&
         redis-server /usr/local/etc/redis/redis.conf --aclfile /usr/local/etc/redis/users.acl
       '
-    # healthcheck:
-    #   test: ["CMD", "sh", "-c", "source /run/secrets/redis_secrets && redis-cli -a $$REDIS_PASSWORD ping"]
-    #   interval: 300s
-    #   timeout: 10s
-    #   retries: 5
     restart: unless-stopped
     tty: true
     stdin_open: true
