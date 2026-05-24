@@ -1,6 +1,14 @@
+import sys
+
 from django.urls import path, include
 from django.conf import settings
 from rest_framework import routers
+
+
+def _debug_routes_enabled() -> bool:
+    """Test/dev-only routes: enabled in DEBUG or during manage.py test.
+    CI/CD need it"""
+    return settings.DEBUG or 'test' in sys.argv
 
 from .views.views import (
     PublicAPI, SecretAPI, TestDateAPI, TestTGAPI, TestFromTGAPI,
@@ -63,7 +71,7 @@ test_urls = [
         name='any_test'
     ),
 ]
-if settings.DEBUG:
+if _debug_routes_enabled():
     urlpatterns += [path("tests/", include(test_urls))]
 
     test_router = routers.DefaultRouter()
@@ -107,7 +115,7 @@ file_system_record_urls = [
         name='change_folder'
     ),
 ]
-if settings.DEBUG:
+if _debug_routes_enabled():
     file_system_record_urls.insert(
         0,
         path(
@@ -150,7 +158,7 @@ file_system_notice_urls = [
         name='get_nextdate'
     )
 ]
-if settings.DEBUG:
+if _debug_routes_enabled():
     file_system_notice_urls.insert(
         0,
         path(
@@ -213,7 +221,7 @@ records_urls = [
         name='get_image_group'
     ),
 ]
-if settings.DEBUG:
+if _debug_routes_enabled():
     records_urls.insert(
         0,
         path(
