@@ -96,6 +96,8 @@ backend     ──►  back_db   (PostgreSQL)
 
 Через Nginx в браузере всё доступно с одного origin: `/` — UI, `/auth/` — auth API, `/api/` — backend API. Сервисы `bot` и `botapi` работают во внутренней сети Docker и напрямую не проксируются Nginx.
 
+Внутренние вызовы между `back`, `authserver` и `botapi` защищены общим секретом `INTERNAL_SERVICE_TOKEN` (заголовок `X-Service-Token`). Публичный JWT для браузера с этим не связан.
+
 ### Сервисы
 
 - **nginx**
@@ -188,6 +190,15 @@ backend     ──►  back_db   (PostgreSQL)
 | `tgbot/` | `tgbot/bot-secrets.txt` |
 | `tgserver/` | `tgserver/tgserver-secrets.txt` |
 
+**Общий секрет для микросервисов** — в `.env` трёх сервисов должен быть **один и тот же** `INTERNAL_SERVICE_TOKEN` (длинная случайная строка; для dev и prod — разные значения):
+
+| Сервис | Нужен `INTERNAL_SERVICE_TOKEN` | Нужен `DEBUG` |
+|--------|-------------------------------|---------------|
+| `authserver/` | да | да |
+| `backend/` | да | да |
+| `tgserver/` | да | да |
+| `frontend/`, `tgbot/` | нет | по необходимости |
+
 ### 2. Примеры `.env` для локальной разработки
 
 **`_auth_db/.env`**
@@ -211,6 +222,7 @@ REDIS_USER=diary_redis
 ```env
 DEBUG=true
 SSL=false
+INTERNAL_SERVICE_TOKEN=change_me_same_in_backend_and_tgserver
 DATABASE=postgres
 DJANGO_ALLOWED_HOSTS=["localhost","127.0.0.1"]
 CORS_ALLOWED_ORIGINS=["http://localhost","http://127.0.0.1"]
@@ -225,7 +237,7 @@ SQL_HOST=auth_db
 SQL_PORT=5432
 ```
 
-**`backend/.env`** — те же `DEBUG`, `SSL`, `CORS_*`, `PROJECT_HOSTS`, токены; `SQL_*` указывают на `back_db` и свою БД.
+**`backend/.env`** — те же `DEBUG`, `SSL`, `INTERNAL_SERVICE_TOKEN` (как в authserver), `CORS_*`, `PROJECT_HOSTS`, токены; `SQL_*` указывают на `back_db` и свою БД.
 
 **`frontend/.env`**
 
@@ -252,6 +264,8 @@ DEBUG=true
 **`tgserver/.env`**
 
 ```env
+DEBUG=true
+INTERNAL_SERVICE_TOKEN=change_me_same_in_authserver_and_backend
 PROJECT_HOSTS={"backend":"http://back:8000/","auth_server":"http://authserver:8000/","tg_server":"http://botapi:8000/"}
 TGTOKEN=your_telegram_bot_token
 MY_TG_ID=your_telegram_user_id
@@ -338,7 +352,7 @@ cd backend/root
 python manage.py test main.tests.TestOfTestDateAPI
 ```
 
-Для запуска нужны зависимости из `backend/requirements.txt` и настроенное окружение (или выполнение внутри контейнера `back`).
+Для запуска нужны зависимости из `backend/requirements.txt` и переменные окружения (как минимум `SECRET_KEY`, `DEBUG=true`, `INTERNAL_SERVICE_TOKEN`, `PROJECT_HOSTS`, lifetimes токенов). В GitHub Actions те же переменные заданы в `.github/workflows/ci-cd.yml`. Тестовые URL `/api/tests/` доступны при `DEBUG=true` или при `manage.py test`.
 
 ---
 
@@ -346,7 +360,7 @@ python manage.py test main.tests.TestOfTestDateAPI
 
 1. Настроить `prod.conf`: заменить `server_name` на нужный домен.  
 2. Получить сертификаты через [`ssl-factory`](ssl-factory/README.md) и положить `cert.pem` / `key.pem` в `nginx/ssl/`.  
-3. В `.env` сервисов: `DEBUG=false`, `SSL=true`, актуальные `DJANGO_ALLOWED_HOSTS` и `CORS_ALLOWED_ORIGINS`.  
+3. В `.env` сервисов: `DEBUG=false`, `SSL=true`, актуальные `DJANGO_ALLOWED_HOSTS` и `CORS_ALLOWED_ORIGINS`; **один prod-`INTERNAL_SERVICE_TOKEN`** в `authserver`, `backend`, `tgserver`.  
 4. Перегенерировать секреты и перезапустить стек.
 
 Подробности обновления сертификатов без простоя — в `ssl-factory/README.md`.
@@ -356,8 +370,9 @@ python manage.py test main.tests.TestOfTestDateAPI
 ## Безопасность
 
 - Не коммитим `*.env`, `*-secrets.txt`, `credentials.txt`, токены бота и пароли БД.  
-- Файлы `*-secrets.txt` уже в `.gitignore`.  
-- В production отключаем `DEBUG`, включаем `SSL`.
+- Файлы `*-secrets.txt` и `credentials.txt` в `.gitignore`.  
+- В production: `DEBUG=false`, `SSL=true` — тестовые API (`/api/tests/`, `set-test/`, тестовые маршруты tgserver) не регистрируются.  
+- Внутренние эндпоинты (`api/tg-server/*`, `api/auth/create-roots/`, часть `auth/users/*`, `tgapi/set-notice-list/`) требуют заголовок `X-Service-Token` с `INTERNAL_SERVICE_TOKEN`.  
 
 ---
 
