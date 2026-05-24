@@ -14,7 +14,6 @@ _media/data/
 req_freeze.txt
 .vscode/
 server_test/
-migrations/
 media_files/
 test_imgs/
 others/
