@@ -1,4 +1,5 @@
 from django.urls import path, include
+from django.conf import settings
 from rest_framework import routers
 
 from .views.views import (
@@ -62,11 +63,11 @@ test_urls = [
         name='any_test'
     ),
 ]
-urlpatterns += [path("tests/", include(test_urls))]
+if settings.DEBUG:
+    urlpatterns += [path("tests/", include(test_urls))]
 
-test_router = routers.DefaultRouter()  # test file upload
-
-urlpatterns += [path("", include(test_router.urls))]
+    test_router = routers.DefaultRouter()
+    urlpatterns += [path("", include(test_router.urls))]
 
 # ===== Common API =====
 auth_requests_urls = [
@@ -80,11 +81,6 @@ urlpatterns += [path("auth/", include(auth_requests_urls))]
 
 # ===== File system API =====
 file_system_record_urls = [
-    path(  # create test filesystem content
-        route='set-test/',
-        view=BlankFileSystemAPI.as_view(),
-        name='create_test_fs_content'
-    ),
     path(  # get all records and folders
         route='',
         view=RecordsFSAPI.as_view(),
@@ -111,14 +107,18 @@ file_system_record_urls = [
         name='change_folder'
     ),
 ]
+if settings.DEBUG:
+    file_system_record_urls.insert(
+        0,
+        path(
+            route='set-test/',
+            view=BlankFileSystemAPI.as_view(),
+            name='create_test_fs_content'
+        ),
+    )
 urlpatterns += [path("file-system/record-content/", include(file_system_record_urls))]
 
 file_system_notice_urls = [
-    path(  # create test filesystem content
-        route='set-test/',
-        view=BlankFileSystemAPI2.as_view(),
-        name='create_test_fs_notice_content'
-    ),
     path(  # get all notices and folders
         route='',
         view=NoticesFSAPI.as_view(),
@@ -150,6 +150,15 @@ file_system_notice_urls = [
         name='get_nextdate'
     )
 ]
+if settings.DEBUG:
+    file_system_notice_urls.insert(
+        0,
+        path(
+            route='set-test/',
+            view=BlankFileSystemAPI2.as_view(),
+            name='create_test_fs_notice_content'
+        ),
+    )
 urlpatterns += [path("file-system/notice-content/", include(file_system_notice_urls))]
 
 file_system_move_urls = [
@@ -168,11 +177,6 @@ urlpatterns += [path("file-system/move/", include(file_system_move_urls))]
 
 # ===== Content (record/notice) API =====
 records_urls = [
-    path(  # create test messages
-        route='set-content/',
-        view=BlankDataAPI.as_view(),
-        name='create_test_record_content'
-    ),
     path(  # get details and messages
         route='<int:record_id>/',
         view=RecordContentAPI.as_view(),
@@ -209,6 +213,15 @@ records_urls = [
         name='get_image_group'
     ),
 ]
+if settings.DEBUG:
+    records_urls.insert(
+        0,
+        path(
+            route='set-content/',
+            view=BlankDataAPI.as_view(),
+            name='create_test_record_content'
+        ),
+    )
 urlpatterns += [path("records/", include(records_urls))]
 
 # ===== Notice API =====

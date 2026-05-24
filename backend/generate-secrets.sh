@@ -20,6 +20,7 @@ if [ -f ".env" ]; then
     SQL_PASSWORD=$(grep "^SQL_PASSWORD=" .env | cut -d= -f2-)
     SQL_HOST=$(grep "^SQL_HOST=" .env | cut -d= -f2-)
     SQL_PORT=$(grep "^SQL_PORT=" .env | cut -d= -f2-)
+    INTERNAL_SERVICE_TOKEN=$(grep "^INTERNAL_SERVICE_TOKEN=" .env | cut -d= -f2-)
 else
     echo "ERROR: .env file not found"
     exit 1
@@ -42,6 +43,7 @@ SQL_USER=${SQL_USER}
 SQL_PASSWORD=${SQL_PASSWORD}
 SQL_HOST=${SQL_HOST}
 SQL_PORT=${SQL_PORT}
+INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN}
 EOF
 
 echo "Backend secrets generated"

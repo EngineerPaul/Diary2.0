@@ -1,6 +1,7 @@
 import requests
 
 from root.settings import PROJECT_HOSTS
+from utils.service_auth import service_auth_headers
 
 
 def create_root_folders(user_id):
@@ -9,7 +10,8 @@ def create_root_folders(user_id):
     try:
         url = PROJECT_HOSTS['backend'] + "api/auth/create-roots/"
         headers = {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            **service_auth_headers(),
         }
 
         data = {'user_id': user_id}

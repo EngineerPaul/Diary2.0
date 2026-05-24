@@ -3,10 +3,13 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from main.models import RecordFolder, NoticeFolder
+from main.permissions import ServiceTokenPermission
 
 
 class FirstSetUp(APIView):
     """Creating root directories after registration"""
+
+    permission_classes = [ServiceTokenPermission]
 
     def post(self, request):
 

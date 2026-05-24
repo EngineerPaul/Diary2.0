@@ -2,6 +2,7 @@ from api.schemas import (
     NewNoticeSchema, NoticeShiftSchema, UserInfoSchema
 )
 from config import PROJECT_HOSTS
+from utils.service_auth import service_auth_headers
 
 
 # async def send_test_to_Django(data):
@@ -25,8 +26,9 @@ async def send_test_to_Django(data, session):
     body = {
         'msg': 'Works! from fastapi'
     }
+    headers = service_auth_headers()
 
-    async with session.post(url, json=body) as resp:
+    async with session.post(url, json=body, headers=headers) as resp:
         res = await resp.text()
         # print(f'Закончил выполнение: {res}')
         return res
@@ -36,8 +38,9 @@ async def send_create_notice(data: NewNoticeSchema, session):  # создани�
     """ Creating the new notice using tg bot """
 
     url = PROJECT_HOSTS['backend'] + 'api/tg-server/new-notice/'
+    headers = service_auth_headers()
 
-    async with session.post(url, json=data.dict()) as resp:
+    async with session.post(url, json=data.dict(), headers=headers) as resp:
         res = await resp.text()
         return resp.status, res
 
@@ -46,8 +49,9 @@ async def send_notice_shift(data: NoticeShiftSchema, session):  # сдвиг not
     """ Shifting the notice to the next hour/day using tg bot """
 
     url = PROJECT_HOSTS['backend'] + 'api/tg-server/notice-shift/'
+    headers = service_auth_headers()
 
-    async with session.post(url, json=data.dict()) as resp:
+    async with session.post(url, json=data.dict(), headers=headers) as resp:
         res = await resp.text()
         return resp.status, res
 
@@ -56,8 +60,9 @@ async def send_userinfo(data: UserInfoSchema, session):  # сохранение 
     """ Saving user info into auth server using tg bot """
 
     url = PROJECT_HOSTS['auth_server'] + 'auth/tg-auth/save'
+    headers = service_auth_headers()
 
-    async with session.post(url, json=data.dict()) as resp:
+    async with session.post(url, json=data.dict(), headers=headers) as resp:
         res = await resp.text()
         return resp.status, res
 
@@ -66,8 +71,9 @@ async def send_mailing_list_report(data: dict, session):  # отправка о�
     """ Sending the mailing list report to the backend """
 
     url = PROJECT_HOSTS['backend'] + 'api/tg-server/mailing-list-report/'
+    headers = service_auth_headers()
 
-    async with session.post(url, json=data) as resp:
+    async with session.post(url, json=data, headers=headers) as resp:
         if resp.status != 200:
             print("Error: send_mailing_list_report doesn't work")
         return
@@ -77,7 +83,8 @@ async def get_userinfo(data: dict, session):  # отправка отчета о
     """ Getting the uzer timezone fron auth """
 
     url = PROJECT_HOSTS['auth_server'] + 'auth/users/user-info'
+    headers = service_auth_headers()
 
-    async with session.post(url, json=data.dict()) as resp:
+    async with session.post(url, json=data.dict(), headers=headers) as resp:
         res = await resp.text()
         return resp.status, res

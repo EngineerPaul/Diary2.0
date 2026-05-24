@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.db import models
 
 from root.settings import PROJECT_HOSTS
+from utils.service_auth import service_auth_headers
 from .models import Notice
 
 
@@ -18,7 +19,8 @@ def test_get():
     try:
         url = PROJECT_HOSTS['tg_server'] + "tgapi/test-django/"
         headers = {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            **service_auth_headers(),
         }
 
         response = requests.get(
@@ -49,7 +51,8 @@ def test_post():
     try:
         url = PROJECT_HOSTS['tg_server'] + "tgapi/test-django/"
         headers = {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            **service_auth_headers(),
         }
 
         data = {'msg': 'WORKS!!! Test msg'}
@@ -80,7 +83,8 @@ def get_usersinfo_by_user_ids(user_ids: List[int]) -> Optional[List[Dict[str, An
 
     url = PROJECT_HOSTS['auth_server'] + "auth/users/info-by-ids"
     headers = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        **service_auth_headers(),
     }
     data = {'user_ids': user_ids}
     response = requests.post(
@@ -155,7 +159,8 @@ class UpcomingNoticeList:
 
         url = PROJECT_HOSTS['auth_server'] + "auth/users/info-by-ids"
         headers = {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            **service_auth_headers(),
         }
 
         data = {'user_ids': list(next_notices.values_list('user_id', flat=True))}
@@ -200,7 +205,8 @@ class UpcomingNoticeList:
 
         url = PROJECT_HOSTS['tg_server'] + "tgapi/set-notice-list/"
         headers = {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            **service_auth_headers(),
         }
         data = {
             'notice_list': notices_with_chat,
@@ -230,7 +236,8 @@ def get_user_info(chat_id: int) -> tuple[int, str | None] | bool:
     try:
         url = PROJECT_HOSTS['auth_server'] + "auth/users/user-info"
         headers = {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            **service_auth_headers(),
         }
 
         data = {'chat_id': chat_id}

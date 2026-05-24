@@ -1,4 +1,5 @@
 from django.urls import path
+from django.conf import settings
 
 from .views import (
     Registration, VerifyToken, ObtainTokens, Logout, RefreshTokens,
@@ -23,6 +24,9 @@ urlpatterns = [
     path('tg-auth/check', TGAuthCheck.as_view()),  # Получение nickname в front
     path('users/info-by-ids', GetInfoByChatId.as_view()),  # Получение info по списку user_id
     path('users/user-info', GetUserInfo.as_view()),  # Получение user_id и timezone по chat_id
-
-    path('test', TestRequest.as_view()),
 ]
+
+if settings.DEBUG:
+    urlpatterns += [
+        path('test', TestRequest.as_view()),
+    ]

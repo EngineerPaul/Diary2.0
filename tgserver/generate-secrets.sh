@@ -14,10 +14,12 @@ MY_TG_ID=$(grep "^MY_TG_ID=" .env | cut -d= -f2-)
 REDIS_WORKS=$(grep "^REDIS_WORKS=" .env | cut -d= -f2-)
 REDIS_HOST=$(grep "^REDIS_HOST=" .env | cut -d= -f2-)
 REDIS_PORT=$(grep "^REDIS_PORT=" .env | cut -d= -f2-)
+INTERNAL_SERVICE_TOKEN=$(grep "^INTERNAL_SERVICE_TOKEN=" .env | head -n1 | cut -d= -f2-)
+DEBUG=$(grep "^DEBUG=" .env | head -n1 | cut -d= -f2-)
 
-if [ -z "$PROJECT_HOSTS" ] || [ -z "$TGTOKEN" ] || [ -z "$MY_TG_ID" ] || [ -z "$REDIS_WORKS" ] || [ -z "$REDIS_HOST" ] || [ -z "$REDIS_PORT" ]; then
+if [ -z "$PROJECT_HOSTS" ] || [ -z "$TGTOKEN" ] || [ -z "$MY_TG_ID" ] || [ -z "$REDIS_WORKS" ] || [ -z "$REDIS_HOST" ] || [ -z "$REDIS_PORT" ] || [ -z "$INTERNAL_SERVICE_TOKEN" ] || [ -z "$DEBUG" ]; then
     echo "ERROR: Required variables not found in .env file"
-    echo "Missing: PROJECT_HOSTS, TGTOKEN, MY_TG_ID, REDIS_WORKS, REDIS_HOST, REDIS_PORT"
+    echo "Missing: PROJECT_HOSTS, TGTOKEN, MY_TG_ID, REDIS_WORKS, REDIS_HOST, REDIS_PORT, INTERNAL_SERVICE_TOKEN, DEBUG"
     exit 1
 fi
 

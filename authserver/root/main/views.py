@@ -27,6 +27,7 @@ from .serializers import (
 )
 from .queries import create_root_folders
 from root.settings import TGAuthTimeout, SSL
+from .permissions import ServiceTokenPermission
 
 
 class Registration(APIView):
@@ -502,7 +503,7 @@ class TGAuthCheck(APIView):
 
 class TGAuthDetails(APIView):
     """ Сохранение данных Telegram бота """
-    permission_classes = [AllowAny]
+    permission_classes = [ServiceTokenPermission]
 
     def post(self, request):
         serializer = TelegramActivationSerializer(data=request.data)
@@ -554,7 +555,7 @@ class TGAuthDetails(APIView):
 
 class GetInfoByChatId(APIView):
     """ Получение chat_id по списку user_id (pk) """
-    permission_classes = [AllowAny]
+    permission_classes = [ServiceTokenPermission]
 
     def post(self, request):
         serializer = GetInfoByChatIdSerializer(data=request.data)
@@ -575,7 +576,7 @@ class GetInfoByChatId(APIView):
 
 class GetUserInfo(APIView):
     """ Возвращает user_id (pk) по chat_id """
-    permission_classes = [AllowAny]
+    permission_classes = [ServiceTokenPermission]
 
     def post(self, request):
         serializer = GetUserIdSerializer(data=request.data)

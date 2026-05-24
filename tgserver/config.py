@@ -10,3 +10,5 @@ redis_username = get_secret("REDIS_USER")
 redis_user_password = get_secret("REDIS_USER_PASSWORD")
 
 PROJECT_HOSTS = get_json_secret('PROJECT_HOSTS', [])
+INTERNAL_SERVICE_TOKEN = get_secret('INTERNAL_SERVICE_TOKEN')
+DEBUG = get_json_secret('DEBUG', False)

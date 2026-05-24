@@ -12,12 +12,3 @@ class ServiceTokenPermission(permissions.BasePermission):
         if not expected:
             return False
         return request.headers.get(SERVICE_TOKEN_HEADER) == expected
-
-
-class CustomPermission(permissions.BasePermission):
-    """ Authorized only """
-
-    def has_permission(self, request, view):
-        if request.user_info['is_auth'] is True:
-            return True
-        return False

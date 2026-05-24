@@ -5,6 +5,7 @@ from rest_framework import status
 from django.db import transaction
 from datetime import datetime, timedelta
 
+from main.permissions import ServiceTokenPermission
 from ..serializers.TGServerSerializer import (
     NewNoticeSerializer, NoticeShiftSerializer, UpcomingNoticeListSerializer
 )
@@ -22,6 +23,8 @@ from main.utils.timezone_utils import (
 
 class CreateNoticeAPI(APIView):
     """ Создание нового напоминания через бота """
+
+    permission_classes = [ServiceTokenPermission]
 
     def post(self, request):
         serializer = NewNoticeSerializer(data=request.data)
@@ -86,6 +89,8 @@ class CreateNoticeAPI(APIView):
 class NoticeShiftAPI(APIView):
     """ Смещение напоминания на час/день через бота """
 
+    permission_classes = [ServiceTokenPermission]
+
     def post(self, request):
         serializer = NoticeShiftSerializer(data=request.data)
         if serializer.is_valid():
@@ -116,6 +121,8 @@ class NoticeShiftAPI(APIView):
 
 class UpcomingNoticeListAPI(APIView):
     """ Получение отчета об отправленных уведомлениях """
+
+    permission_classes = [ServiceTokenPermission]
 
     def post(self, request):
 

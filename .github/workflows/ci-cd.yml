@@ -44,6 +44,7 @@ jobs:
         working-directory: backend/root
         env:
           SECRET_KEY: ci-not-a-secret
+          INTERNAL_SERVICE_TOKEN: ci-internal-service-token
           DEBUG: "true"
           DJANGO_ALLOWED_HOSTS: "[]"
           CORS_ALLOWED_ORIGINS: "[]"

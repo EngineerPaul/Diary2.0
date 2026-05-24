@@ -1,8 +1,18 @@
 import aiohttp
-from fastapi import Depends
+from fastapi import Depends, Header, HTTPException
+
+from config import INTERNAL_SERVICE_TOKEN
+from utils.service_auth import SERVICE_TOKEN_HEADER
 
 
 _session: aiohttp.ClientSession | None = None
+
+
+async def verify_service_token(
+    x_service_token: str | None = Header(default=None, alias=SERVICE_TOKEN_HEADER),
+) -> None:
+    if not INTERNAL_SERVICE_TOKEN or x_service_token != INTERNAL_SERVICE_TOKEN:
+        raise HTTPException(status_code=403, detail='Forbidden')
 
 
 async def get_session() -> aiohttp.ClientSession:

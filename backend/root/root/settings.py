@@ -13,6 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = get_secret('SECRET_KEY')
+INTERNAL_SERVICE_TOKEN = get_secret('INTERNAL_SERVICE_TOKEN')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = get_json_secret('DEBUG', False)
