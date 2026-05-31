@@ -39,6 +39,12 @@ jobs:
           set -euo pipefail
           python -m pip install -r backend/requirements.txt
 
+      - name: Install authserver dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -r authserver/requirements.txt
+
       - name: Run backend tests
         shell: bash
         working-directory: backend/root
@@ -55,6 +61,24 @@ jobs:
         run: |
           set -euo pipefail
           python manage.py test
+
+      - name: Run authserver tests
+        shell: bash
+        working-directory: authserver
+        env:
+          SECRET_KEY: ci-not-a-secret
+          INTERNAL_SERVICE_TOKEN: ci-internal-service-token
+          DEBUG: "true"
+          SSL: "false"
+          DJANGO_ALLOWED_HOSTS: "[]"
+          CORS_ALLOWED_ORIGINS: "[]"
+          CORS_ALLOW_CREDENTIALS: "false"
+          PROJECT_HOSTS: "[]"
+          ACCESS_TOKEN_LIFETIME: "5"
+          REFRESH_TOKEN_LIFETIME: "60"
+        run: |
+          set -euo pipefail
+          pytest
 
   deploy:
     name: Deploy (SSH -> docker compose)
