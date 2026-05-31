@@ -51,6 +51,12 @@ jobs:
           set -euo pipefail
           python -m pip install -r frontend/requirements.txt
 
+      - name: Install tgserver dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -r tgserver/requirements.txt
+
       - name: Run backend tests
         shell: bash
         working-directory: backend/root
@@ -98,6 +104,24 @@ jobs:
           PROJECT_HOSTS: '{"frontend": "http://testserver/", "auth_server": "http://authserver:8000/", "backend": "http://back:8000/"}'
           ACCESS_TOKEN_LIFETIME: "5"
           REFRESH_TOKEN_LIFETIME: "60"
+        run: |
+          set -euo pipefail
+          pytest
+
+      - name: Run tgserver tests
+        shell: bash
+        working-directory: tgserver
+        env:
+          TGTOKEN: "123456789:ci-tg-token-for-tests"
+          MY_TG_ID: "1"
+          REDIS_WORKS: "false"
+          REDIS_HOST: redis
+          REDIS_PORT: "6379"
+          REDIS_USER: redisuser
+          REDIS_USER_PASSWORD: redis-password
+          INTERNAL_SERVICE_TOKEN: ci-internal-service-token
+          DEBUG: "true"
+          PROJECT_HOSTS: '{"backend":"http://back:8000/","auth_server":"http://authserver:8000/","tg_server":"http://botapi:8000/"}'
         run: |
           set -euo pipefail
           pytest
