@@ -25,6 +25,11 @@ if REDIS_WORKS:
 router = APIRouter()
 
 
+@router.get("/health/", tags=["service"])
+async def healthcheck():
+    return {"status": "ok", "service": "tgserver"}
+
+
 @router.post(
     "/bot/create-notice/",
     tags=['From TG'],
