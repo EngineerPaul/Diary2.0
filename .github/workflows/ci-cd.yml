@@ -57,6 +57,12 @@ jobs:
           set -euo pipefail
           python -m pip install -r tgserver/requirements.txt
 
+      - name: Install tgbot dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -r tgbot/requirements.txt
+
       - name: Run backend tests
         shell: bash
         working-directory: backend/root
@@ -120,6 +126,19 @@ jobs:
           REDIS_USER: redisuser
           REDIS_USER_PASSWORD: redis-password
           INTERNAL_SERVICE_TOKEN: ci-internal-service-token
+          DEBUG: "true"
+          PROJECT_HOSTS: '{"backend":"http://back:8000/","auth_server":"http://authserver:8000/","tg_server":"http://botapi:8000/"}'
+        run: |
+          set -euo pipefail
+          pytest
+
+      - name: Run tgbot tests
+        shell: bash
+        working-directory: tgbot
+        env:
+          TOKEN: "123456789:ci-tg-token-for-tests"
+          ID: "1"
+          SITELINK: "https://example.test/diary"
           DEBUG: "true"
           PROJECT_HOSTS: '{"backend":"http://back:8000/","auth_server":"http://authserver:8000/","tg_server":"http://botapi:8000/"}'
         run: |
