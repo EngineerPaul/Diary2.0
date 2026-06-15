@@ -1,9 +1,13 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+import logging
 
-from main.models import RecordFolder, NoticeFolder
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from main.models import NoticeFolder, RecordFolder
 from main.permissions import ServiceTokenPermission
+
+logger = logging.getLogger(__name__)
 
 
 class FirstSetUp(APIView):
@@ -29,7 +33,7 @@ class FirstSetUp(APIView):
             title='root',
             parent_id=None
         )
-        print('works')
+        logger.info('Root folders created', extra={'extra_fields': {'user_id': user_id}})
 
         msg = 'Корневые папки созданы'
         return Response(msg, status=status.HTTP_201_CREATED)

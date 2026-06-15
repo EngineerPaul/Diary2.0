@@ -1,8 +1,12 @@
+import logging
+
 from api.schemas import (
     NewNoticeSchema, NoticeShiftSchema, UserInfoSchema
 )
 from config import PROJECT_HOSTS
 from utils.service_auth import service_auth_headers
+
+logger = logging.getLogger(__name__)
 
 
 # async def send_test_to_Django(data):
@@ -75,7 +79,10 @@ async def send_mailing_list_report(data: dict, session):  # отправка о�
 
     async with session.post(url, json=data, headers=headers) as resp:
         if resp.status != 200:
-            print("Error: send_mailing_list_report doesn't work")
+            logger.error(
+                'send_mailing_list_report failed',
+                extra={'extra_fields': {'status': resp.status}},
+            )
         return
 
 

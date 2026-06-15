@@ -1,7 +1,10 @@
-from datetime import datetime
 import json
+import logging
+from datetime import datetime
 
-from .client import api_client, api_tg_client, api_auth_client
+from .client import api_auth_client, api_client, api_tg_client
+
+logger = logging.getLogger(__name__)
 
 
 # def send_hour_repeat(user_id: int, reminder_id: int) -> bool:  # перенос уведомления на час
@@ -57,7 +60,7 @@ def send_notice_shift(user_id: int, reminder_id: int, mode: str, chat_id: int) -
     """ Cмещение уведомления на день """
     url = 'tgapi/bot/notice-shift/'
     if not (mode == 'day' or mode == 'hour'):
-        print('Error: wrong mode')
+        logger.error(f'Invalid notice shift mode: {mode}')
         return None
 
     body = {

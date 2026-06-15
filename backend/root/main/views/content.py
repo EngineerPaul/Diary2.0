@@ -1,4 +1,6 @@
+import logging
 import os
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,6 +18,8 @@ from main.serializers.contentSerializer import (
     ImagesGetSerializer, ImagesCreateSerializer,
     ImageNoticeCreateSerializer, ImageNoticeGetSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class BlankDataAPI(APIView):
@@ -56,11 +60,11 @@ class BlankDataAPI(APIView):
         image3 = self.create_image_from_file(msg2, img_3_path, user_id)
 
         imgs = Image.objects.all()
-        print(imgs)
+        logger.debug('Test images: %s', list(imgs))
         for img in imgs:
-            print(img.file)
+            logger.debug('Image file: %s', img.file)
             full_url = request.build_absolute_uri(img.file.url)
-            print(full_url)
+            logger.debug('Image URL: %s', full_url)
 
     def create_image_from_file(self, msg, file_path, user_id):
         """Создать Image из файла на диске"""

@@ -1,9 +1,13 @@
+import json
+import logging
 import os
 import re
 from pathlib import Path
-import json
 from typing import Any
+
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 # Загружаем .env для разработки
 load_dotenv()
@@ -58,7 +62,7 @@ def parse_secrets_file(file_path: str) -> dict:
             secrets[current_key] = ''.join(current_parts).strip()
 
     except Exception as e:
-        print(f"Warning: Could not parse secrets file {file_path}: {e}")
+        logger.warning("Could not parse secrets file %s: %s", file_path, e)
 
     return secrets
 
@@ -98,6 +102,6 @@ def get_json_secret(secret_name: str, default: Any = None) -> Any:
     try:
         return json.loads(secret_value)
     except json.JSONDecodeError as e:
-        msg = f"Warning: Could not parse JSON secret {secret_name}: {e}"
-        print(msg)
+        msg = f"Could not parse JSON secret {secret_name}: {e}"
+        logger.warning(msg)
         return default

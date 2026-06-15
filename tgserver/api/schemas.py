@@ -1,6 +1,10 @@
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from typing import Literal
+import logging
 from datetime import datetime
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+logger = logging.getLogger(__name__)
 
 
 class ReminderCreater(BaseModel):  # тест (удалить!)
@@ -16,7 +20,7 @@ class ReminderCreater(BaseModel):  # тест (удалить!)
     @field_validator('nickname')
     def check_at(cls, value):
         if value[0] != '@':
-            print(value[0])
+            logger.debug(f'Invalid nickname prefix: {value[0]}')
             raise ValueError('Никнейм должен начинаться на @')
         return value
 

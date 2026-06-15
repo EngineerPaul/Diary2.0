@@ -2,6 +2,9 @@ from celery import Celery
 from datetime import timedelta
 
 from config import redis_host, redis_port, redis_username, redis_user_password
+from utils.logging_config import setup_logging
+
+setup_logging('tgserver-celery')
 
 
 # Redis settings

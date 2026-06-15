@@ -1,10 +1,14 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
+import logging
+
 from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from main.permissions import CustomPermission
 from main.serializers.utils import PeriodicDate
 from main.queries import test_get, test_post
+
+logger = logging.getLogger(__name__)
 
 
 class PublicAPI(APIView):
@@ -73,9 +77,12 @@ class TestDateAPI(APIView):
             'success': True,
             'next_date': next_date,
         }
-        print('initial date= ', initial_date)
-        print('period= ', period)
-        print('next date= ', resp['next_date'])
+        logger.debug(
+            'Periodic date test: initial=%s period=%s next=%s',
+            initial_date,
+            period,
+            resp['next_date'],
+        )
         return Response(resp, status=status.HTTP_200_OK)
 
 
@@ -85,12 +92,12 @@ class TestTGAPI(APIView):
     permission_classes = []
 
     def get(self, request):
-        print('get fastapi')
+        logger.debug('Test TG API GET')
         test_get()  # queries.py
         return Response()
 
     def post(self, request):
-        print('post fastapi')
+        logger.debug('Test TG API POST')
         test_post()  # queries.py
         return Response()
 
@@ -101,12 +108,11 @@ class TestFromTGAPI(APIView):
     permission_classes = []
 
     def get(self, request):
-        print('get запрос получен')
+        logger.debug('Test from-TG GET received')
         return Response()
 
     def post(self, request):
-        print('post запрос получен')
-        print(f'{request.data=}')
+        logger.debug('Test from-TG POST received', extra={'extra_fields': {'data': request.data}})
         return Response()
 
 
@@ -114,5 +120,5 @@ class TestAPI(APIView):
     """ Апи для проверки конкретного функционала """
 
     def get(self, request):
-        print('TestAPI works')
+        logger.debug('TestAPI called')
         return Response('test data', status=status.HTTP_200_OK)

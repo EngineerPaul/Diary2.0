@@ -1,7 +1,9 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+import logging
+
 from django.db import transaction
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from main.permissions import CustomPermission
 
@@ -13,6 +15,8 @@ from main.serializers.FSRecordSerializers import (
     RecordGetSerializer, RecordCreateSerializer, RecordUpdateSerializer,
     FolderGetSerializer, FolderCreateSerializer, FolderUpdateSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class BlankFileSystemAPI(APIView):
@@ -59,7 +63,7 @@ class BlankFileSystemAPI(APIView):
         f_r.save()
 
     def set_blank_over(self):
-        print('set_blank_over works')
+        logger.debug('set_blank_over works')
         user_id = 1
 
         root = RecordFolder.objects.create(
@@ -145,18 +149,17 @@ class BlankFileSystemAPI(APIView):
                   folder_3_1_1],
             fields=['nested_folders', 'nested_objects']
         )
-        print('Record: ', Record.objects.all())
+        logger.debug('Records: %s', list(Record.objects.all()))
 
     def get_blank(self):
         """ Вывод новых данных """
         folders = RecordFolder.objects.all()
         record = Record.objects.all()
-        print(folders)
-        print(record)
+        logger.debug('folders=%s record=%s', folders, record)
 
         f_r = RecordFolder.objects.prefetch_related('records').all()
-        print(list(f_r))
-        print(list(f_r.values('pk', 'title', 'records__pk', 'records__title')))
+        logger.debug('folder_records=%s', list(f_r))
+        logger.debug('folder_records_values=%s', list(f_r.values('pk', 'title', 'records__pk', 'records__title')))
 
 
 class RecordsFSAPI(APIView):
@@ -203,7 +206,7 @@ class RecordsAPI(APIView):
 
         serializer = RecordCreateSerializer(data=request.data)
         if not serializer.is_valid():
-            print(serializer.errors)
+            logger.warning('Serializer validation failed: %s', serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         validated_data = serializer.validated_data

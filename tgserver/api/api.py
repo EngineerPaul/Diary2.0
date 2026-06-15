@@ -1,7 +1,8 @@
-from datetime import datetime, timedelta
-import aiohttp
 import json
+import logging
+from datetime import datetime, timedelta
 
+import aiohttp
 from fastapi import APIRouter, Response, Depends
 from fastapi.responses import JSONResponse
 
@@ -17,6 +18,8 @@ from queries.to_server import (
 )
 from config import MY_TG_ID, REDIS_WORKS, DEBUG
 from dependencies import get_session, verify_service_token
+
+logger = logging.getLogger(__name__)
 
 if REDIS_WORKS:
     from services import RemindData
@@ -183,7 +186,7 @@ if DEBUG:
         summary="Получение post запроса от Django"
     )
     async def test_dajngo_get():  # получение тестового get запроса от backend
-        print('Получен get запрос от Django')
+        logger.info('Received test GET request from Django')
         return {"detail": "success"}
 
 
@@ -193,8 +196,7 @@ if DEBUG:
         summary="Получение post запроса от Django"
     )
     async def test_dajngo_post(req: TestDjango):  # получение тестового post запроса от backend
-        print('Получен post запрос от Django')
-        print(req)
+        logger.info('Received test POST request from Django', extra={'extra_fields': {'body': req.model_dump()}})
         return {"detail": "success"}
 
 
@@ -206,7 +208,7 @@ if DEBUG:
     async def from_tg_to_django(
         session: aiohttp.ClientSession = Depends(get_session),
     ):
-        print('Получен post запрос от TG')
+        logger.info('Received POST request from TG bot')
         await send_test_to_Django(data='data', session=session)
         return {"detail": "success"}
 

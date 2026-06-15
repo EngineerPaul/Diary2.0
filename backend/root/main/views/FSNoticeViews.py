@@ -1,8 +1,10 @@
+import logging
 from datetime import datetime
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+
 from django.db import transaction
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from main.permissions import CustomPermission
 
@@ -21,6 +23,8 @@ from main.utils.timezone_utils import (
     convert_user_datetime_to_utc,
     convert_utc_datetime_to_user
 )
+
+logger = logging.getLogger(__name__)
 
 
 class BlankFileSystemAPI2(APIView):
@@ -69,7 +73,7 @@ class BlankFileSystemAPI2(APIView):
         f_r.save()
 
     def set_blank_over(self):
-        print('set_blank_over works')
+        logger.debug('set_blank_over works')
         user_id = 1
 
         root = NoticeFolder.objects.create(
@@ -180,18 +184,17 @@ class BlankFileSystemAPI2(APIView):
                   folder_3_1_1],
             fields=['nested_folders', 'nested_objects']
         )
-        print('Notice: ', Notice.objects.all())
+        logger.debug('Notices: %s', list(Notice.objects.all()))
 
     def get_blank(self):
         """ Вывод новых данных """
         folders = NoticeFolder.objects.all()
         notice = Notice.objects.all()
-        print(folders)
-        print(notice)
+        logger.debug('folders=%s notice=%s', folders, notice)
 
         f_r = NoticeFolder.objects.prefetch_related('notices').all()
-        print(list(f_r))
-        print(list(f_r.values('pk', 'title', 'notices__pk', 'notices__title')))
+        logger.debug('folder_notices=%s', list(f_r))
+        logger.debug('folder_notices_values=%s', list(f_r.values('pk', 'title', 'notices__pk', 'notices__title')))
 
 
 class NoticesFSAPI(APIView):

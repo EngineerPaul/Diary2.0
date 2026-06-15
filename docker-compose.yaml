@@ -10,6 +10,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
+      - SERVICE_NAME=frontend
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
     command: >
       sh -c "
         python3 manage.py collectstatic --noinput &&
@@ -39,6 +42,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
+      - SERVICE_NAME=authserver
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
     # entrypoint: ["/home/authserverapp/auth/entrypoint.sh", "python3", "manage.py", "runserver", "0.0.0.0:8000"]
     entrypoint: ["/home/authserverapp/auth/entrypoint.sh", "python3", "-m", "gunicorn", "--config", "/home/authserverapp/auth/gunicorn.conf.py", "root.wsgi:application"]
     ports:
@@ -65,6 +71,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
+      - SERVICE_NAME=backend
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
     # entrypoint: ["/home/backendapp/back/entrypoint.sh", "python3", "manage.py", "runserver", "0.0.0.0:8000"]
     entrypoint: ["/home/backendapp/back/entrypoint.sh", "python3", "-m", "gunicorn", "--config", "/home/backendapp/back/gunicorn.conf.py", "root.wsgi:application"]
     ports:
@@ -138,6 +147,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
+      - SERVICE_NAME=tgbot
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
     command: python3 main.py
     secrets:
       - bot_secrets
@@ -157,6 +169,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
+      - SERVICE_NAME=tgserver
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
     command: python3 main.py
     ports:
       - 8003:8000
@@ -226,6 +241,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
+      - SERVICE_NAME=tgserver-celery-worker
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
     secrets:
       - tgserver_secrets
       - redis_secrets
@@ -248,6 +266,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
+      - SERVICE_NAME=tgserver-celery-beat
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
     secrets:
       - tgserver_secrets
       - redis_secrets

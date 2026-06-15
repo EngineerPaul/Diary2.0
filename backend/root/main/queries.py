@@ -1,4 +1,6 @@
+import logging
 from typing import List, Tuple, Dict, Any, Optional, Union
+
 import requests
 from django.db.models.functions import Cast, Concat
 from django.db.models import DateTimeField, Value
@@ -11,6 +13,8 @@ from django.db import models
 from root.settings import PROJECT_HOSTS
 from utils.service_auth import service_auth_headers
 from .models import Notice
+
+logger = logging.getLogger(__name__)
 
 
 def test_get():
@@ -27,13 +31,16 @@ def test_get():
             url, headers=headers, timeout=15
         )
 
-        print(response)
-        print(response.status_code)
-        print(response.text)  # текст ответа
-        print(response.json())  # JSON ответ (если сервер возвращает JSON)
+        logger.info(
+            'TG server test GET response',
+            extra={'extra_fields': {
+                'status_code': response.status_code,
+                'body': response.text,
+            }},
+        )
 
     except requests.exceptions.RequestException:
-        print('RequestException')
+        logger.exception('TG server test GET request failed')
         # Недоступность сервера - ConnectionError
         # Превышение таймаута (5 секунд)
         # Превышение редиректов - TooManyRedirects
@@ -41,7 +48,7 @@ def test_get():
         # HTTP-ошибки (4xx, 5xx) - HTTPError
         return False
     except Exception:
-        print('Exception')
+        logger.exception('TG server test GET unexpected error')
         return False
 
 
@@ -60,13 +67,16 @@ def test_post():
             url, json=data, headers=headers, timeout=15
         )
 
-        print(response)
-        print(response.status_code)
-        print(response.text)  # текст ответа
-        print(response.json())  # JSON ответ (если сервер возвращает JSON)
+        logger.info(
+            'TG server test GET response',
+            extra={'extra_fields': {
+                'status_code': response.status_code,
+                'body': response.text,
+            }},
+        )
 
     except requests.exceptions.RequestException:
-        print('RequestException')
+        logger.exception('TG server test GET request failed')
         # Недоступность сервера - ConnectionError
         # Превышение таймаута (5 секунд)
         # Превышение редиректов - TooManyRedirects
@@ -74,7 +84,7 @@ def test_post():
         # HTTP-ошибки (4xx, 5xx) - HTTPError
         return False
     except Exception:
-        print('Exception')
+        logger.exception('TG server test POST unexpected error')
         return False
 
 
@@ -144,7 +154,7 @@ class UpcomingNoticeList:
         min_datetime = closest_notice.combined_datetime
         # убираю инфу о часовом поясе для сравнения в main!
         min_datetime = min_datetime.replace(tzinfo=None)
-        print(min_datetime)
+        logger.debug('Closest notice datetime: %s', min_datetime)
 
         next_notices = Notice.objects.filter(
             next_date=min_datetime.date(),
@@ -175,7 +185,7 @@ class UpcomingNoticeList:
         self, next_notices: List[Notice], chat_ids: List[Dict[str, int]]
     ) -> List[Dict[str, Any]]:
         """ Mapping notice info and chat ids """
-        print(chat_ids)
+        logger.debug('Resolved chat ids: %s', chat_ids)
 
         # Создаем словарь user_id -> chat_id для быстрого доступа
         user_chat_map = {

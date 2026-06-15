@@ -2,6 +2,7 @@ import datetime
 from pathlib import Path
 import os
 from utils.secrets import get_secret, get_json_secret
+from utils.logging_config import get_logging_config
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'utils.request_id_middleware.RequestIdMiddleware',
     "corsheaders.middleware.CorsMiddleware",  # должен стоять после SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -173,3 +175,6 @@ if SSL:
     SECURE_HSTS_SECONDS = 31536000  # 1 год браузер помнит что нужно только HTTPS
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # HSTS применяется ко всем поддоменам
     SECURE_HSTS_PRELOAD = True  # Сайт можно добавить в preload список браузеров
+
+
+LOGGING = get_logging_config()

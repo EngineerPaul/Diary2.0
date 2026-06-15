@@ -67,6 +67,8 @@ jobs:
         shell: bash
         working-directory: backend/root
         env:
+          SERVICE_NAME: backend
+          LOG_LEVEL: INFO
           SECRET_KEY: ci-not-a-secret
           INTERNAL_SERVICE_TOKEN: ci-internal-service-token
           DEBUG: "true"
@@ -84,6 +86,8 @@ jobs:
         shell: bash
         working-directory: authserver
         env:
+          SERVICE_NAME: authserver
+          LOG_LEVEL: INFO
           SECRET_KEY: ci-not-a-secret
           INTERNAL_SERVICE_TOKEN: ci-internal-service-token
           DEBUG: "true"
@@ -102,6 +106,8 @@ jobs:
         shell: bash
         working-directory: frontend
         env:
+          SERVICE_NAME: frontend
+          LOG_LEVEL: INFO
           SECRET_KEY: ci-not-a-secret
           DEBUG: "true"
           SSL: "false"
@@ -118,6 +124,8 @@ jobs:
         shell: bash
         working-directory: tgserver
         env:
+          SERVICE_NAME: tgserver
+          LOG_LEVEL: INFO
           TGTOKEN: "123456789:ci-tg-token-for-tests"
           MY_TG_ID: "1"
           REDIS_WORKS: "false"
@@ -136,6 +144,8 @@ jobs:
         shell: bash
         working-directory: tgbot
         env:
+          SERVICE_NAME: tgbot
+          LOG_LEVEL: INFO
           TOKEN: "123456789:ci-tg-token-for-tests"
           ID: "1"
           SITELINK: "https://example.test/diary"

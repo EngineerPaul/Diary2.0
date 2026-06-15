@@ -1,7 +1,12 @@
 import asyncio
+import logging
+
 import aiohttp
 
 from config import PROJECT_HOSTS
+from utils.request_context import merge_request_headers
+
+logger = logging.getLogger(__name__)
 
 
 class APIClient:
@@ -25,6 +30,7 @@ class APIClient:
             str: ответ от сервера, или None в случае ошибки
         """
         url = self.base_url + endpoint
+        headers = merge_request_headers()
 
         try:
             async with aiohttp.ClientSession(
@@ -33,40 +39,52 @@ class APIClient:
                 method_upper = method.upper()
                 if method_upper == 'POST':
                     async with session.post(
-                        url, json=json_data
+                        url, json=json_data, headers=headers
                     ) as resp:
                         resp.raise_for_status()
                         res = await resp.text()
-                        print(f'Закончил выполнение: {res}')
+                        logger.info(
+                            'HTTP request completed',
+                            extra={'extra_fields': {'method': 'POST', 'endpoint': endpoint, 'status': resp.status}},
+                        )
                         return res
                 elif method_upper == 'GET':
-                    async with session.get(url, params=params) as resp:
+                    async with session.get(url, params=params, headers=headers) as resp:
                         resp.raise_for_status()
                         res = await resp.text()
-                        print(f'Закончил выполнение: {res}')
+                        logger.info(
+                            'HTTP request completed',
+                            extra={'extra_fields': {'method': 'GET', 'endpoint': endpoint, 'status': resp.status}},
+                        )
                         return res
                 elif method_upper == 'PATCH':
                     async with session.patch(
-                        url, json=json_data
+                        url, json=json_data, headers=headers
                     ) as resp:
                         resp.raise_for_status()
                         res = await resp.text()
-                        print(f'Закончил выполнение: {res}')
+                        logger.info(
+                            'HTTP request completed',
+                            extra={'extra_fields': {'method': 'PATCH', 'endpoint': endpoint, 'status': resp.status}},
+                        )
                         return res
                 elif method_upper == 'DELETE':
-                    async with session.delete(url) as resp:
+                    async with session.delete(url, headers=headers) as resp:
                         resp.raise_for_status()
                         res = await resp.text()
-                        print(f'Закончил выполнение: {res}')
+                        logger.info(
+                            'HTTP request completed',
+                            extra={'extra_fields': {'method': 'DELETE', 'endpoint': endpoint, 'status': resp.status}},
+                        )
                         return res
         except aiohttp.ClientError as e:
-            print(f'Ошибка при отправке запроса: {e}')
+            logger.error(f'HTTP client error: {e}', extra={'extra_fields': {'endpoint': endpoint}})
             return None
         except asyncio.TimeoutError:
-            print('Таймаут при отправке запроса')
+            logger.error('HTTP request timeout', extra={'extra_fields': {'endpoint': endpoint}})
             return None
         except Exception as e:
-            print(f'Неожиданная ошибка: {e}')
+            logger.exception(f'Unexpected HTTP error: {e}', extra={'extra_fields': {'endpoint': endpoint}})
             return None
 
     def post(self, endpoint, json_data):
@@ -74,9 +92,10 @@ class APIClient:
         try:
             async def _post():
                 return await self._request('POST', endpoint, json_data)
+
             return asyncio.run(_post())
         except RuntimeError as e:
-            print(f'Ошибка event loop: {e}')
+            logger.error(f'Event loop error: {e}')
             return None
 
     def get(self, endpoint, params=None):
@@ -84,9 +103,10 @@ class APIClient:
         try:
             async def _get():
                 return await self._request('GET', endpoint, params=params)
+
             return asyncio.run(_get())
         except RuntimeError as e:
-            print(f'Ошибка event loop: {e}')
+            logger.error(f'Event loop error: {e}')
             return None
 
     def patch(self, endpoint, json_data):
@@ -94,9 +114,10 @@ class APIClient:
         try:
             async def _patch():
                 return await self._request('PATCH', endpoint, json_data)
+
             return asyncio.run(_patch())
         except RuntimeError as e:
-            print(f'Ошибка event loop: {e}')
+            logger.error(f'Event loop error: {e}')
             return None
 
     def delete(self, endpoint):
@@ -104,9 +125,10 @@ class APIClient:
         try:
             async def _delete():
                 return await self._request('DELETE', endpoint)
+
             return asyncio.run(_delete())
         except RuntimeError as e:
-            print(f'Ошибка event loop: {e}')
+            logger.error(f'Event loop error: {e}')
             return None
 
 

@@ -1,10 +1,14 @@
+import logging
 import socket
 import time
 from datetime import datetime, timedelta
+
 import pytz
 
-from config import MAX_YEAR
 from api.server.queries import get_userinfo
+from config import MAX_YEAR
+
+logger = logging.getLogger(__name__)
 
 
 def get_date(str_date: str) -> dict:
@@ -77,10 +81,10 @@ def check_connection(tries: int = 5):
         try:
             sock = socket.create_connection(("www.google.com", 80))
         except BaseException:
-            print('Error: connection not established. Try again in 3s')
+            logger.warning('Connection not established, retrying in 3s')
             time.sleep(3)
         else:
-            print('Internet connection established successfully')
+            logger.info('Internet connection established successfully')
             # print(f'Socket: {sock}')
             sock.close()
             break

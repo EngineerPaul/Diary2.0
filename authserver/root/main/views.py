@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 from rest_framework.views import APIView
@@ -16,6 +17,8 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.exceptions import InvalidToken
 from django.conf import settings
 from .models import UserDetails
+
+logger = logging.getLogger(__name__)
 
 from .serializers import (
     RegSerializer,
@@ -599,7 +602,8 @@ class GetUserInfo(APIView):
 class TestRequest(APIView):
 
     def get(self, request):
-        print(request.COOKIES.get('refresh_token'))
-        print(request.COOKIES.get('access_token'))
-        print(request.data)
+        logger.debug(
+            'TestRequest debug endpoint called',
+            extra={'extra_fields': {'has_cookies': bool(request.COOKIES), 'data_keys': list(request.data.keys())}},
+        )
         return Response()
