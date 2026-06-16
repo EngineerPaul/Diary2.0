@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -49,9 +50,15 @@ def test_normalize_with_get_date_short_formats():
 
 
 def test_normalize_with_get_date_time_only_today():
-    now = datetime.now().replace(hour=10, minute=0, second=0, microsecond=0)
-    normalized = normalize_reminder_date_input('15:30', now=now)
-    result = get_date(normalized)
+    fixed_now = datetime(2030, 1, 15, 10, 0, 0)  # 15.01.2030 10:00
+    normalized = normalize_reminder_date_input('15:30', now=fixed_now)
+    assert normalized == '15.01.2030 15.30'
+
+    with patch('utils.utils.datetime') as mock_dt:
+        mock_dt.now.return_value = fixed_now
+        mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
+        result = get_date(normalized)
+
     assert result['status'] is True
     assert result['details'].hour == 15
     assert result['details'].minute == 30
