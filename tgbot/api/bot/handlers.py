@@ -9,6 +9,7 @@ from api.server.queries import (
     send_new_reminder, send_info,
     send_django, send_notice_shift
 )
+from utils.date_input import normalize_reminder_date_input
 from utils.utils import get_date, get_now_format
 
 logger = logging.getLogger(__name__)
@@ -157,23 +158,28 @@ def create_reminder_title(msg, bot):  # создание нового уведо
         ('Укажите дату формата ДД.ММ.ГГГГ ЧЧ:ММ\n'
          '(или отмена)\n'
          f'Сейчас {get_now_format(msg.chat.id)}'),  # вставляем сообщение
+         # Форматы: ДД.ММ.ГГГГ ЧЧ:ММ, ДД.ММ ЧЧ:ММ, ДД ЧЧ:ММ, ЧЧ:ММ, ЧЧ, ДД.ММ.ГГГГ
     )
     bot.register_next_step_handler(msg, create_reminder_date, bot, msg.text)
 
 
 def create_reminder_date(msg, bot, title):  # создание нового уведомления (шаг 3)
-    """ Запускается последователно при создании уведомления.
+    """ Запускается последовательно при создании уведомления.
     Сохраняет дату """
     if msg.text.lower() == 'отмена':
         return
 
-    date = get_date(msg.text)
+    normalized_date = normalize_reminder_date_input(msg.text)
+    date = get_date(normalized_date) if normalized_date else {
+        'status': False,
+        'details': 'Неверный формат даты.\nПопробуйте снова (или отмена)',
+    }
     if not date['status']:
         bot.send_message(  # отправляем сообщение пользователю
             msg.chat.id,  # находим чат
             date['details'],  # вставляем сообщение
         )
-        bot.register_next_step_handler(msg, create_reminder_date, bot, msg.text)
+        bot.register_next_step_handler(msg, create_reminder_date, bot, title)
         return
 
     response = send_new_reminder(msg.from_user.username, title, date['details'], msg.chat.id)

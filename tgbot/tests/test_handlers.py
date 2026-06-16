@@ -99,13 +99,29 @@ def test_create_reminder_date_invalid_repeats_step(bot):
     from api.bot.handlers import create_reminder_date
 
     msg = FakeMessage("bad date", chat_id=11, from_user_id=22)
-    with patch("api.bot.handlers.get_date", return_value={"status": False, "details": "bad"}):
+    with patch("api.bot.handlers.normalize_reminder_date_input", return_value=None):
         create_reminder_date(msg, bot, "Title")
 
-    assert bot.sent_messages[-1]["text"] == "bad"
-    # next step handler should point back to create_reminder_date
-    _, fn, _args = bot.next_step_handlers[-1]
+    assert bot.sent_messages[-1]["text"].startswith("Неверный формат даты")
+    # next step handler should point back to create_reminder_date with original title
+    _, fn, args = bot.next_step_handlers[-1]
     assert fn == create_reminder_date
+    assert args == (bot, "Title")
+
+
+def test_create_reminder_date_short_format(bot):
+    from api.bot.handlers import create_reminder_date
+
+    future = datetime.now() + timedelta(days=5)
+    msg = FakeMessage(f"{future.day} 12:00", chat_id=11, from_user_id=22)
+    with patch("api.bot.handlers.send_new_reminder", return_value=True) as send_new:
+        create_reminder_date(msg, bot, "My title")
+
+    send_new.assert_called_once()
+    sent_date = send_new.call_args.args[2]
+    assert sent_date.hour == 12
+    assert sent_date.minute == 0
+    assert bot.sent_messages[-1]["text"] == "Напоминание успешно создано"
 
 
 def test_callback_repeat_hour_success(bot):
