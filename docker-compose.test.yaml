@@ -1,0 +1,124 @@
+# Запуск тестов без Make:
+# docker compose -p diary-tests -f docker-compose.yaml -f docker-compose.test.yaml run --rm --no-deps bot
+
+# Примечания:
+# x-test-common  - якорь для копирования настроек. префикс x- значит, что это не сервис
+# PYTEST_ADDOPTS - перемещаем кэш pytest во временную папку /tmp контейнера; не копируется в смонтированный проект
+# !override      - поле заменяет поле из основного compose. По умолчанию поле дополняется.
+# volume         - код с хоста без rebuild
+# user: "0:0"    - root из-за bind mount на Windows
+
+x-test-common: &test-common
+  entrypoint: []
+  restart: "no"
+  depends_on: !override {}
+  ports: !override []
+  secrets: !override []
+  healthcheck:
+    disable: true
+
+x-test-env: &test-env
+  PYTHONUNBUFFERED: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+  LOG_LEVEL: INFO
+  DEBUG: "true"
+  PYTEST_ADDOPTS: "-o cache_dir=/tmp/.pytest_cache"
+
+services:
+  back:
+    <<: *test-common
+    container_name: diary_tests_back
+    working_dir: /home/backendapp/back/root
+    user: "0:0"
+    environment: !override
+      <<: *test-env
+      SERVICE_NAME: backend
+      SECRET_KEY: ci-fake-django-secret-key-for-unit-tests-only-not-for-production
+      INTERNAL_SERVICE_TOKEN: ci-internal-service-token
+      DJANGO_ALLOWED_HOSTS: "[]"
+      CORS_ALLOWED_ORIGINS: "[]"
+      CORS_ALLOW_CREDENTIALS: "false"
+      PROJECT_HOSTS: "[]"
+      ACCESS_TOKEN_LIFETIME: "5"
+      REFRESH_TOKEN_LIFETIME: "60"
+    volumes: !override
+      - ./backend:/home/backendapp/back
+    command: ["python3", "manage.py", "test"]
+
+  authserver:
+    <<: *test-common
+    container_name: diary_tests_authserver
+    working_dir: /home/authserverapp/auth
+    user: "0:0"
+    environment: !override
+      <<: *test-env
+      SERVICE_NAME: authserver
+      SECRET_KEY: ci-fake-django-secret-key-for-unit-tests-only-not-for-production
+      INTERNAL_SERVICE_TOKEN: ci-internal-service-token
+      SSL: "false"
+      DJANGO_ALLOWED_HOSTS: "[]"
+      CORS_ALLOWED_ORIGINS: "[]"
+      CORS_ALLOW_CREDENTIALS: "false"
+      PROJECT_HOSTS: "[]"
+      ACCESS_TOKEN_LIFETIME: "5"
+      REFRESH_TOKEN_LIFETIME: "60"
+    volumes: !override
+      - ./authserver:/home/authserverapp/auth
+    command: ["python3", "-m", "pytest"]
+
+  front:
+    <<: *test-common
+    container_name: diary_tests_front
+    working_dir: /home/frontendapp/front
+    user: "0:0"
+    environment: !override
+      <<: *test-env
+      SERVICE_NAME: frontend
+      SECRET_KEY: ci-fake-django-secret-key-for-unit-tests-only-not-for-production
+      SSL: "false"
+      SINGLE_USER: "false"
+      DJANGO_ALLOWED_HOSTS: '["testserver"]'
+      PROJECT_HOSTS: '{"frontend":"http://testserver/","auth_server":"http://authserver:8000/","backend":"http://back:8000/"}'
+      ACCESS_TOKEN_LIFETIME: "5"
+      REFRESH_TOKEN_LIFETIME: "60"
+    volumes: !override
+      - ./frontend:/home/frontendapp/front
+    command: ["python3", "-m", "pytest"]
+
+  botapi:
+    <<: *test-common
+    container_name: diary_tests_botapi
+    working_dir: /home/tgserverapp/tgserver
+    user: "0:0"
+    environment: !override
+      <<: *test-env
+      SERVICE_NAME: tgserver
+      TGTOKEN: "123456789:ci-tg-token-for-tests"
+      MY_TG_ID: "1"
+      REDIS_WORKS: "false"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_USER: redisuser
+      REDIS_USER_PASSWORD: redis-password
+      INTERNAL_SERVICE_TOKEN: ci-internal-service-token
+      PROJECT_HOSTS: '{"backend":"http://back:8000/","auth_server":"http://authserver:8000/","tg_server":"http://botapi:8000/"}'
+    volumes: !override
+      - ./tgserver:/home/tgserverapp/tgserver
+    command: ["python3", "-m", "pytest"]
+
+  bot:
+    <<: *test-common
+    container_name: diary_tests_bot
+    working_dir: /home/botapp/bot
+    user: "0:0"
+    environment: !override
+      <<: *test-env
+      SERVICE_NAME: tgbot
+      TOKEN: "123456789:ci-tg-token-for-tests"
+      ID: "1"
+      SITELINK: "https://example.test/diary"
+      MAX_YEAR: "5"
+      PROJECT_HOSTS: '{"backend":"http://back:8000/","auth_server":"http://authserver:8000/","tg_server":"http://botapi:8000/"}'
+    volumes: !override
+      - ./tgbot:/home/botapp/bot
+    command: ["python3", "-m", "pytest"]

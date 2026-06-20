@@ -69,7 +69,7 @@ jobs:
         env:
           SERVICE_NAME: backend
           LOG_LEVEL: INFO
-          SECRET_KEY: ci-not-a-secret
+          SECRET_KEY: ci-fake-django-secret-key-for-unit-tests-only-not-for-production
           INTERNAL_SERVICE_TOKEN: ci-internal-service-token
           DEBUG: "true"
           DJANGO_ALLOWED_HOSTS: "[]"
@@ -88,7 +88,7 @@ jobs:
         env:
           SERVICE_NAME: authserver
           LOG_LEVEL: INFO
-          SECRET_KEY: ci-not-a-secret
+          SECRET_KEY: ci-fake-django-secret-key-for-unit-tests-only-not-for-production
           INTERNAL_SERVICE_TOKEN: ci-internal-service-token
           DEBUG: "true"
           SSL: "false"
@@ -108,7 +108,7 @@ jobs:
         env:
           SERVICE_NAME: frontend
           LOG_LEVEL: INFO
-          SECRET_KEY: ci-not-a-secret
+          SECRET_KEY: ci-fake-django-secret-key-for-unit-tests-only-not-for-production
           DEBUG: "true"
           SSL: "false"
           SINGLE_USER: "false"

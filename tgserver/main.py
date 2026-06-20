@@ -1,4 +1,5 @@
 import uuid
+from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
@@ -11,7 +12,15 @@ from utils.request_context import REQUEST_ID_HEADER, set_request_id
 
 setup_logging()
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await set_session()
+    yield
+    await close_session()
+
+
+app = FastAPI(lifespan=lifespan)
 app.include_router(main_router)
 
 
@@ -30,16 +39,6 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
 
 
 app.add_middleware(RequestIdMiddleware)
-
-
-@app.on_event("startup")
-async def startup_event():
-    await set_session()
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    await close_session()
 
 
 if __name__ == '__main__':

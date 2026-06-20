@@ -24,3 +24,13 @@ _redis/
 github_actions_ed25519
 github_actions_ed25519.pub
 github-actions-link.url
+
+# артефакты тестов / dev (volume make test, локальный pytest, coverage)
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+test_db*.sqlite3
