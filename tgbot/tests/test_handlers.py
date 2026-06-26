@@ -112,13 +112,23 @@ def test_create_reminder_date_invalid_repeats_step(bot):
 def test_create_reminder_date_short_format(bot):
     from api.bot.handlers import create_reminder_date
 
-    future = datetime.now() + timedelta(days=5)
-    msg = FakeMessage(f"{future.day} 12:00", chat_id=11, from_user_id=22)
-    with patch("api.bot.handlers.send_new_reminder", return_value=True) as send_new:
+    fixed_now = datetime(2030, 1, 15, 14, 30)
+    msg = FakeMessage("20 12:00", chat_id=11, from_user_id=22)
+
+    with (
+        patch("utils.date_input.datetime") as mock_dt_input,
+        patch("utils.utils.datetime") as mock_dt_utils,
+        patch("api.bot.handlers.send_new_reminder", return_value=True) as send_new,
+    ):
+        mock_dt_input.now.return_value = fixed_now
+        mock_dt_input.side_effect = lambda *args, **kw: datetime(*args, **kw)
+        mock_dt_utils.now.return_value = fixed_now
+        mock_dt_utils.side_effect = lambda *args, **kw: datetime(*args, **kw)
         create_reminder_date(msg, bot, "My title")
 
     send_new.assert_called_once()
     sent_date = send_new.call_args.args[2]
+    assert sent_date == datetime(2030, 1, 20, 12, 0)
     assert sent_date.hour == 12
     assert sent_date.minute == 0
     assert bot.sent_messages[-1]["text"] == "Напоминание успешно создано"
