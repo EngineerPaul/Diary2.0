@@ -1,4 +1,14 @@
-from django.test import Client, TestCase
+from datetime import datetime
+from types import SimpleNamespace
+
+from django.test import Client, SimpleTestCase, TestCase
+
+from main.utils.tg_notice_content import (
+    NOTICE_TITLE_MAX_LENGTH,
+    notice_delivery_text,
+    split_telegram_notice_text,
+    telegram_notice_title_placeholder,
+)
 
 
 class TestOfTestDateAPI(TestCase):
@@ -231,3 +241,44 @@ class TestOfTestDateAPI(TestCase):
         response = self.client.post(path=self.path, data=body)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['next_date'], '2025-12-29')
+
+
+class TestTelegramNoticeContent(SimpleTestCase):
+    """Тесты для функции split_telegram_notice_text"""
+    # SimpleTestCase не создает БД, в отличии от TestCase
+
+    def test_short_text_stays_in_title(self):
+        title, desc = split_telegram_notice_text('еда', datetime(2026, 6, 26, 12, 0))
+        self.assertEqual(title, 'еда')
+        self.assertIsNone(desc)
+
+    def test_exactly_max_length_stays_in_title(self):
+        text = 'а' * NOTICE_TITLE_MAX_LENGTH
+        title, desc = split_telegram_notice_text(text, datetime(2026, 6, 26))
+        self.assertEqual(title, text)
+        self.assertIsNone(desc)
+
+    def test_long_text_goes_to_description(self):
+        user_text = 'а' * (NOTICE_TITLE_MAX_LENGTH + 1)
+        msg_datetime = datetime(2026, 6, 26, 15, 30)
+        title, desc = split_telegram_notice_text(user_text, msg_datetime)
+        self.assertEqual(title, 'telegram напоминание от 26.06.26')
+        self.assertEqual(desc, user_text)
+        self.assertLessEqual(len(title), NOTICE_TITLE_MAX_LENGTH)
+
+    def test_placeholder_format(self):
+        self.assertEqual(
+            telegram_notice_title_placeholder(datetime(2026, 6, 26)),
+            'telegram напоминание от 26.06.26',
+        )
+
+    def test_delivery_text_prefers_description(self):
+        notice = SimpleNamespace(
+            title='telegram напоминание от 26.06.26',
+            description='Длинный текст',
+        )
+        self.assertEqual(notice_delivery_text(notice), 'Длинный текст')
+
+    def test_delivery_text_falls_back_to_title(self):
+        notice = SimpleNamespace(title='еда', description=None)
+        self.assertEqual(notice_delivery_text(notice), 'еда')

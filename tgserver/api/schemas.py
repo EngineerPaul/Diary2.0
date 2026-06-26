@@ -35,7 +35,7 @@ class NewNoticeSchema(BaseModel):
     """ Схема для создания напоминания внутри бота """
 
     username: str = Field(max_length=33, min_length=6)
-    title: str = Field(max_length=100)
+    title: str = Field(max_length=4096)
     date: str = datetime
     chat_id: int
 

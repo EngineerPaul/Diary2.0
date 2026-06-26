@@ -13,6 +13,7 @@ from django.db import models
 from root.settings import PROJECT_HOSTS
 from utils.service_auth import service_auth_headers
 from .models import Notice
+from .utils.tg_notice_content import notice_delivery_text
 
 logger = logging.getLogger(__name__)
 
@@ -200,7 +201,7 @@ class UpcomingNoticeList:
             if chat_id:  # Только если есть chat_id
                 notice_data = {
                     'user_id': notice.user_id,
-                    'text': notice.title,
+                    'text': notice_delivery_text(notice),
                     'reminder_id': notice.id,
                     'chat_id': chat_id
                 }

@@ -17,8 +17,9 @@ from main.serializers.utils import PeriodicDate
 from main.utils.timezone_utils import (
     convert_user_datetime_to_utc,
     convert_utc_datetime_to_user,
-    get_user_now_datetime
+    get_user_now_datetime,
 )
+from main.utils.tg_notice_content import split_telegram_notice_text
 
 
 class CreateNoticeAPI(APIView):
@@ -59,13 +60,17 @@ class CreateNoticeAPI(APIView):
             )
 
             folder = NoticeFolder.objects.get(user_id=user_id, title='root')
+            user_text = serializer.validated_data['title']
+            notice_title, notice_description = split_telegram_notice_text(
+                user_text, user_now
+            )
             try:
                 with transaction.atomic():
                     notice = Notice.objects.create(
                         user_id=user_id,
                         folder_id=folder,
-                        title=serializer.validated_data['title'],
-                        # description=serializer.validated_data['description'],
+                        title=notice_title,
+                        description=notice_description,
                         # color=serializer.validated_data['color'],
                         next_date=utc_date,  # Сохраняем в UTC
                         time=utc_time,  # Сохраняем в UTC

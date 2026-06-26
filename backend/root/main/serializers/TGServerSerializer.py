@@ -4,7 +4,7 @@ from rest_framework import serializers
 class NewNoticeSerializer(serializers.Serializer):
     """ Сериализатор для создания нового напоминания """
     username = serializers.CharField(max_length=33, min_length=6)
-    title = serializers.CharField(max_length=100)
+    title = serializers.CharField(max_length=4096)
     date = serializers.DateTimeField()
     chat_id = serializers.IntegerField()
 
@@ -21,6 +21,6 @@ class UpcomingNoticeListSerializer(serializers.Serializer):
     """ Сериализатор для получения списка напоминаний """
 
     user_id = serializers.IntegerField(min_value=1)
-    text = serializers.CharField(max_length=100)
+    text = serializers.CharField(max_length=4096)
     chat_id = serializers.IntegerField()
     reminder_id = serializers.IntegerField(min_value=1)
