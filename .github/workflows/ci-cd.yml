@@ -27,6 +27,14 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
 
+      - name: Validate Docker Compose configs
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker compose -f docker-compose.yaml config --quiet
+          docker compose -f docker-compose.yaml -f docker-compose.prod.yaml config --quiet
+          docker compose -p diary-tests -f docker-compose.yaml -f docker-compose.test.yaml config --quiet
+
       - name: Syntax check (compileall)
         shell: bash
         run: |

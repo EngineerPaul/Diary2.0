@@ -1,0 +1,13 @@
+# Production override 
+#
+# Запуск:
+#   docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d
+#   make up-prod
+
+services:
+  nginx:
+    volumes: !override
+      - static_volume:/var/www/static  # Статические файлы Django (без изменения)
+      - ./_media/data:/var/www/media  # медиа файлы (без изменения)
+      - ./nginx/conf.d/prod.conf:/etc/nginx/conf.d/default.conf  # nginx.conf для production
+      - ./nginx/ssl:/etc/nginx/ssl:ro  # ssl сертификаты (только для production)

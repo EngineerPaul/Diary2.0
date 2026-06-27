@@ -12,6 +12,11 @@ if [[ ! -f docker-compose.yaml ]]; then
   exit 2
 fi
 
+if [[ ! -f docker-compose.prod.yaml ]]; then
+  echo "docker-compose.prod.yaml not found in DEPLOY_PATH=$DEPLOY_PATH" >&2
+  exit 2
+fi
+
 echo "==> Updating repo in $DEPLOY_PATH (branch: $DEPLOY_BRANCH)"
 git fetch --prune origin
 git reset --hard "origin/${DEPLOY_BRANCH}"
@@ -41,8 +46,21 @@ if [[ "$missing" -ne 0 ]]; then
   exit 3
 fi
 
-echo "==> Deploying with docker compose"
-docker compose up -d --build
+echo "==> Checking production SSL files"
+for f in nginx/ssl/cert.pem nginx/ssl/key.pem; do
+  if [[ ! -f "$f" ]]; then
+    echo "Missing: $DEPLOY_PATH/$f (required for prod nginx)" >&2
+    missing=1
+  fi
+done
+
+if [[ "$missing" -ne 0 ]]; then
+  echo "Production SSL files are missing. Aborting deploy." >&2
+  exit 5
+fi
+
+echo "==> Deploying with docker compose (prod)"
+docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d --build
 
 echo "==> Showing status"
-docker compose ps
+docker compose -f docker-compose.yaml -f docker-compose.prod.yaml ps

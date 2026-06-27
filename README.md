@@ -155,7 +155,8 @@ backend     ──►  back_db   (PostgreSQL)
 ├── _back_db/          # Секреты и данные PostgreSQL (backend)
 ├── _redis/            # Секреты и данные Redis
 ├── _media/            # Загруженные пользовательские файлы
-├── docker-compose.yaml
+├── docker-compose.yaml        # база: dev (HTTP, nginx local.conf)
+├── docker-compose.prod.yaml   # override для production (HTTPS, nginx prod.conf + ssl)
 ├── docker-compose.test.yaml   # override для unit-тестов (make test)
 ├── Makefile                   # команды up / down / test
 └── start-with-secrets.sh      # первый запуск: секреты + up (вызывается из make start)
@@ -325,17 +326,12 @@ docker compose up -d --build
 
 ### 4. Открыть приложение
 
-| Режим | URL | Nginx config |
-|-------|-----|--------------|
-| Локально (HTTP) | http://localhost | `nginx/conf.d/local.conf` |
-| Production (HTTPS) | https://your-domain.com | `nginx/conf.d/prod.conf` |
+| Режим | URL | Compose |
+|-------|-----|---------|
+| Локально (HTTP) | http://localhost | `docker-compose.yaml` — `make up` |
+| Production (HTTPS) | https://your-domain.com | `+ docker-compose.prod.yaml` — `make up-prod` |
 
-Для локальной разработки в `docker-compose.yaml` заменить монтирование конфига:
-
-```yaml
-# вместо prod.conf:
-- ./nginx/conf.d/local.conf:/etc/nginx/conf.d/default.conf
-```
+Nginx: dev — `nginx/conf.d/local.conf`, prod — `nginx/conf.d/prod.conf` + `nginx/ssl/` (подключается через prod-override, в базовом compose переключать вручную не нужно).
 
 Прямой доступ к сервисам (без Nginx): frontend `:8000`, auth `:8001`, backend `:8002`, tgserver `:8003`.
 
@@ -359,14 +355,19 @@ make help
 
 | Команда | Действие |
 |---------|----------|
-| `make start` | Первый запуск: генерация секретов, сборка, `up -d` |
+| `make start` | Первый запуск (dev): генерация секретов, сборка, `up -d` |
 | `make secrets` | Только перегенерировать `*-secrets.txt` |
-| `make up` | Поднять стек |
-| `make up-build` | Поднять стек с пересборкой образов |
-| `make down` | Остановить и удалить контейнеры |
-| `make restart` | Перезапустить все сервисы |
-| `make ps` | Статус контейнеров |
-| `make logs` | Логи всех сервисов (follow) |
+| `make up` | Поднять **dev**-стек (HTTP) |
+| `make up-build` | Поднять dev-стек с пересборкой образов |
+| `make up-prod` | Поднять **prod**-стек (HTTPS) |
+| `make up-build-prod` | Поднять prod-стек с пересборкой образов |
+| `make down` | Остановить dev-стек |
+| `make down-prod` | Остановить prod-стек |
+| `make restart` | Перезапустить dev-стек |
+| `make restart-prod` | Перезапустить prod-стек |
+| `make ps` | Статус dev-контейнеров |
+| `make ps-prod` | Статус prod-контейнеров |
+| `make logs` | Логи dev-стека (follow) |
 | `make logs SERVICES="bot botapi"` | Логи выбранных сервисов |
 | `make test` | Unit-тесты всех сервисов (back, authserver, front, botapi, bot) |
 | `make test SERVICES="bot botapi"` | Тесты выбранных сервисов |
@@ -424,10 +425,12 @@ docker compose -p diary-tests -f docker-compose.yaml -f docker-compose.test.yaml
 
 ## Production и SSL
 
-1. Настроить `prod.conf`: заменить `server_name` на нужный домен.  
+1. В `nginx/conf.d/prod.conf` заменить `server_name` на нужный домен.  
 2. Получить сертификаты через [`ssl-factory`](ssl-factory/README.md) и положить `cert.pem` / `key.pem` в `nginx/ssl/`.  
 3. В `.env` сервисов: `DEBUG=false`, `SSL=true`, актуальные `DJANGO_ALLOWED_HOSTS` и `CORS_ALLOWED_ORIGINS`; **один prod-`INTERNAL_SERVICE_TOKEN`** в `authserver`, `backend`, `tgserver`.  
-4. Перегенерировать секреты и перезапустить стек.
+4. Перегенерировать секреты (`make secrets`) и поднять стек: **`make up-build-prod`** (или `docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d --build`).
+
+Деплой по push в `master` (CI) использует тот же prod-override в `.github/deploy_ssh.sh`.
 
 Подробности обновления сертификатов без простоя — в `ssl-factory/README.md`.
 
