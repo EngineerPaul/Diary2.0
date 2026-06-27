@@ -184,9 +184,14 @@ def create_reminder_date(msg, bot, title):  # создание нового ув
 
     response = send_new_reminder(msg.from_user.username, title, date['details'], msg.chat.id)
     if response:
+        reminder_dt = date['details']
+        reminder_when = (
+            f'{reminder_dt.day:02d}.{reminder_dt.month:02d}.{reminder_dt.year} '
+            f'{reminder_dt.hour:02d}.{reminder_dt.minute:02d}'
+        )
         bot.send_message(  # отправляем сообщение пользователю
             msg.chat.id,  # находим чат
-            'Напоминание успешно создано',  # вставляем сообщение
+            f'Напоминание успешно создано\nДата и время: {reminder_when}',  # вставляем сообщение
         )
     else:
         bot.send_message(  # отправляем сообщение пользователю

@@ -92,7 +92,11 @@ def test_create_reminder_flow_success(bot):
         create_reminder_date(msg3, bot, "My title")
 
     send_new.assert_called_once()
-    assert bot.sent_messages[-1]["text"] == "Напоминание успешно создано"
+    dt = target_date
+    assert bot.sent_messages[-1]["text"] == (
+        f'Напоминание успешно создано\nДата и время: '
+        f'{dt.day:02d}.{dt.month:02d}.{dt.year} {dt.hour:02d}.{dt.minute:02d}'
+    )
 
 
 def test_create_reminder_date_invalid_repeats_step(bot):
@@ -131,7 +135,9 @@ def test_create_reminder_date_short_format(bot):
     assert sent_date == datetime(2030, 1, 20, 12, 0)
     assert sent_date.hour == 12
     assert sent_date.minute == 0
-    assert bot.sent_messages[-1]["text"] == "Напоминание успешно создано"
+    assert bot.sent_messages[-1]["text"] == (
+        "Напоминание успешно создано\nДата и время: 20.01.2030 12.00"
+    )
 
 
 def test_callback_repeat_hour_success(bot):
